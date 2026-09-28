@@ -1,6 +1,6 @@
 package com.sem.pmiautoevaluacion.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.sem.pmiautoevaluacion.exception.ApiErrorResponse;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
