@@ -1,7 +1,8 @@
 package com.sem.pmiautoevaluacion.users.service;
 
-import com.sem.pmiautoevaluacion.entity.Secretary;
 import java.util.UUID;
+
+import com.sem.pmiautoevaluacion.users.entity.Secretary;
 
 public interface SecretaryService {
     Secretary create(

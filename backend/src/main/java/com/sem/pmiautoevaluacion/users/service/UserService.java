@@ -2,7 +2,7 @@ package com.sem.pmiautoevaluacion.users.service;
 
 import java.util.UUID;
 
-import com.sem.pmiautoevaluacion.entity.User;
+import com.sem.pmiautoevaluacion.users.entity.User;
 
 public interface UserService {
     User findById(UUID id);

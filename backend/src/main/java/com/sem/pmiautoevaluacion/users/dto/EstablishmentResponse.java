@@ -2,7 +2,7 @@ package com.sem.pmiautoevaluacion.users.dto;
 
 import java.util.UUID;
 
-import com.sem.pmiautoevaluacion.entity.Establishment;
+import com.sem.pmiautoevaluacion.users.entity.Establishment;
 
 public class EstablishmentResponse {
     private UUID id;

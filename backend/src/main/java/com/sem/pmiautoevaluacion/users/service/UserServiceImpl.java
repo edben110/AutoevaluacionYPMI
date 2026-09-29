@@ -4,8 +4,8 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import com.sem.pmiautoevaluacion.entity.User;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
+import com.sem.pmiautoevaluacion.users.entity.User;
 import com.sem.pmiautoevaluacion.users.repository.UserRepository;
 
 @Service 

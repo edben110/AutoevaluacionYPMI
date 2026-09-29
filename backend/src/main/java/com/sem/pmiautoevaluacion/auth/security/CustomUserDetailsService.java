@@ -1,6 +1,6 @@
 package com.sem.pmiautoevaluacion.auth.security;
 
-import com.sem.pmiautoevaluacion.entity.User;
+import com.sem.pmiautoevaluacion.users.entity.User;
 import com.sem.pmiautoevaluacion.users.repository.EstablishmentRepository;
 import com.sem.pmiautoevaluacion.users.repository.UserRepository;
 

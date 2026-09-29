@@ -3,9 +3,9 @@ package com.sem.pmiautoevaluacion.users.dto;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.sem.pmiautoevaluacion.entity.Establishment;
-import com.sem.pmiautoevaluacion.entity.Secretary;
-import com.sem.pmiautoevaluacion.entity.User;
+import com.sem.pmiautoevaluacion.users.entity.Establishment;
+import com.sem.pmiautoevaluacion.users.entity.Secretary;
+import com.sem.pmiautoevaluacion.users.entity.User;
 
 /**
  * Datos del usuario actualmente autenticado (endpoing GET: /api/me)

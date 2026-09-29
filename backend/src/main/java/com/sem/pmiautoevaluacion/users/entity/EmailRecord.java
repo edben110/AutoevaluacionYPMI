@@ -1,4 +1,4 @@
-package com.sem.pmiautoevaluacion.entity;
+package com.sem.pmiautoevaluacion.users.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

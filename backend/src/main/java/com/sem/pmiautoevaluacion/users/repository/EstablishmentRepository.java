@@ -1,8 +1,8 @@
 package com.sem.pmiautoevaluacion.users.repository;
 
-import com.sem.pmiautoevaluacion.entity.Establishment;
-
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.sem.pmiautoevaluacion.users.entity.Establishment;
 
 import java.util.Optional;
 import java.util.UUID;

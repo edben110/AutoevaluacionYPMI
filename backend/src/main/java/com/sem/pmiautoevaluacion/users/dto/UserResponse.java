@@ -1,7 +1,8 @@
 package com.sem.pmiautoevaluacion.users.dto;
 
-import com.sem.pmiautoevaluacion.entity.User;
 import java.util.UUID;
+
+import com.sem.pmiautoevaluacion.users.entity.User;
 
 public class UserResponse {
     private UUID id;

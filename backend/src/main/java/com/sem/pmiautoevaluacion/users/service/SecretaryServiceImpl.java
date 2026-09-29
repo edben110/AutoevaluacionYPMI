@@ -1,15 +1,14 @@
 package com.sem.pmiautoevaluacion.users.service;
 
-import com.sem.pmiautoevaluacion.entity.Secretary;
-
 import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.sem.pmiautoevaluacion.entity.EmailRecord;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
+import com.sem.pmiautoevaluacion.users.entity.EmailRecord;
+import com.sem.pmiautoevaluacion.users.entity.Secretary;
 import com.sem.pmiautoevaluacion.users.repository.UserRepository;
 
 @Service 

@@ -4,10 +4,10 @@ import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.sem.pmiautoevaluacion.entity.EmailRecord;
-import com.sem.pmiautoevaluacion.entity.Establishment;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
+import com.sem.pmiautoevaluacion.users.entity.EmailRecord;
+import com.sem.pmiautoevaluacion.users.entity.Establishment;
 import com.sem.pmiautoevaluacion.users.repository.EstablishmentRepository;
 
 public class EstablishmentServiceImpl implements EstablishmentService {

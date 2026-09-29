@@ -11,9 +11,9 @@ import com.sem.pmiautoevaluacion.auth.dto.LoginResponse;
 import com.sem.pmiautoevaluacion.auth.dto.SecretaryLoginRequest;
 import com.sem.pmiautoevaluacion.auth.security.CustomUserDetails;
 import com.sem.pmiautoevaluacion.auth.security.JwtService;
-import com.sem.pmiautoevaluacion.entity.Establishment;
-import com.sem.pmiautoevaluacion.entity.Secretary;
-import com.sem.pmiautoevaluacion.entity.User;
+import com.sem.pmiautoevaluacion.users.entity.Establishment;
+import com.sem.pmiautoevaluacion.users.entity.Secretary;
+import com.sem.pmiautoevaluacion.users.entity.User;
 
 @Service 
 public class AuthServiceImpl implements AuthService {
