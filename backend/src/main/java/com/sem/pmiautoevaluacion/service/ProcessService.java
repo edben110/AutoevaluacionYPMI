@@ -9,6 +9,7 @@ import com.sem.pmiautoevaluacion.entity.Area;
 import com.sem.pmiautoevaluacion.entity.Process;
 import com.sem.pmiautoevaluacion.repository.AreaRepository;
 import com.sem.pmiautoevaluacion.repository.ProcessRepository;
+import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
 
@@ -40,6 +41,12 @@ public class ProcessService {
             .orElseThrow(() -> new ResourceNotFoundException(
                 "No se encontro el area con el Id proporcionado"
             ));
+
+        if (area.getState() != UseState.ACTIVE) {
+            throw new BadRequestException(
+                "El area no se encuentra activa para uso o registro"
+            );
+        }
         
         Process process = new Process(name, description);
         // Mantiene sincronizados ambos finales
@@ -55,11 +62,24 @@ public class ProcessService {
             ));     
     }
 
+    public Process findActiveById(UUID id) {
+        return processRepository.findByIdAndState(id, UseState.ACTIVE)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "No se encontro un proceso activo con el Id Proporcionado"
+            ));
+    }
+
     public Process findByName(String name){
         return processRepository.findByName(name)
-            .map(process -> (Process)process)
             .orElseThrow(() -> new ResourceNotFoundException(
                 "No se encontro el proceso con el nombre espeficado"
+            ));
+    }
+
+    public Process findActiveByName(String name){
+        return processRepository.findByNameAndState(name, UseState.ACTIVE)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "No se encontro un proceso activo con el nombre proporcionado"
             ));
     }
 
@@ -70,5 +90,26 @@ public class ProcessService {
             );
         } 
         return processRepository.findByAreaId(areaId);
+    }
+
+    public List<Process> findActiveByAreaId(UUID areaId) {
+        if(!areaRepository.existsByIdAndState(areaId, UseState.ACTIVE)){
+            throw new ResourceNotFoundException(
+                "No se encontro un area activa con el Id Proporcionado"
+            );
+        }
+
+        return processRepository.findByAreaIdAndState(
+            areaId,
+            UseState.ACTIVE
+        );
+    }
+
+    public List<Process> findAll() {
+        return processRepository.findAll();
+    }
+
+    public List<Process> findAllActive() {
+        return processRepository.findByState(UseState.ACTIVE);
     }
 }

@@ -7,11 +7,19 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.sem.pmiautoevaluacion.entity.Process;
+import com.sem.pmiautoevaluacion.shared.enums.UseState;
 
 public interface ProcessRepository extends JpaRepository<Process,UUID>{
-    Optional<Process> findByName(String name);
+    Optional<Process> findByIdAndState(UUID id, UseState state);
 
-    boolean existsByName(String name);
+    Optional<Process> findByName(String name);
+    Optional<Process> findByNameAndState(String name, UseState state);
 
     List<Process> findByAreaId(UUID areaId);
+    List<Process> findByAreaIdAndState(UUID areaId, UseState state);
+    
+    List<Process> findByState(UseState state);
+
+    boolean existsByName(String name);
+    boolean existsByIdAndState(UUID id, UseState state);
 }

@@ -9,6 +9,7 @@ import com.sem.pmiautoevaluacion.entity.Process;
 import com.sem.pmiautoevaluacion.entity.Component;
 import com.sem.pmiautoevaluacion.repository.ComponentRepository;
 import com.sem.pmiautoevaluacion.repository.ProcessRepository;
+import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
 
@@ -40,6 +41,12 @@ public class ComponentService {
             .orElseThrow(() -> new ResourceNotFoundException(
                 "No se encontro el proceso con el Id proporcionado"
             ));
+
+        if(process.getState() != UseState.ACTIVE) {
+            throw new BadRequestException(
+                "El proceso no se encuentra activo para su uso o registro"
+            );
+        }
         
         Component component = new Component(name, description);
         // Mantiene sincronizados ambos finales
@@ -55,11 +62,25 @@ public class ComponentService {
             ));
     }
 
+    public Component findActiveById(UUID id){
+        return componentRepository.findByIdAndState(id, UseState.ACTIVE)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "No se encontro un componente activo con el Id proporcionado"
+            ));
+    }
+
     public Component findByName(String name){
         return componentRepository.findByName(name)
             .map(component -> (Component)component)
             .orElseThrow(() -> new ResourceNotFoundException(
                 "No se encontro el componente con el nombre proporcionado"
+            ));
+    }
+
+    public Component findActiveByName(String name) {
+        return componentRepository.findByNameAndState(name, UseState.ACTIVE)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "No se encontro un componente activo con el nombre proporcionado"
             ));
     }
 
@@ -71,5 +92,23 @@ public class ComponentService {
         }
 
         return componentRepository.findByProcessId(processId);
+    }
+
+    public List<Component> findActiveByProcessId(UUID processId){
+        if(!processRepository.existsByIdAndState(processId, UseState.ACTIVE)){
+            throw new ResourceNotFoundException(
+                "No se encontro un proceso activo con el Id proporcionado"  
+            );
+        }
+
+        return componentRepository.findByProcessIdAndState(processId, UseState.ACTIVE);
+    }
+
+    public List<Component> findAll() {
+        return componentRepository.findAll();
+    }
+
+    public List<Component> findAllActive() {
+        return componentRepository.findByState(UseState.ACTIVE);
     }
 }

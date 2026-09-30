@@ -1,5 +1,5 @@
 package com.sem.pmiautoevaluacion.entity;
-
+import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import java.util.UUID;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -17,6 +17,9 @@ public abstract class IntegralManagement {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Enumerated (EnumType.STRING)
+    private UseState state;
+
     protected IntegralManagement(){
         // Constructor vacio para JPA
     }
@@ -24,6 +27,7 @@ public abstract class IntegralManagement {
     protected IntegralManagement(String name, String description){
         this.name = name;
         this.description = description;
+        this.state = UseState.ACTIVE;
     }
 
     public UUID getId() {
@@ -49,6 +53,13 @@ public abstract class IntegralManagement {
     public void setDescription(String description) {
         this.description = description;
     }
+    
+    public UseState getState() {
+        return state;
+    }
 
+    public void setState(UseState state) {
+        this.state = state;
+    }
     
 }

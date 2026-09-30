@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.sem.pmiautoevaluacion.entity.Area;
 import com.sem.pmiautoevaluacion.repository.AreaRepository;
+import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
 
@@ -39,15 +40,32 @@ public class AreaService {
             ));
     }
 
+    public Area findActiveById(UUID id) {
+        return areaRepository.findByIdAndState(id, UseState.ACTIVE)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "No se encontro un area activa con el Id proporcionado"
+            ));
+    }
+
     public Area findByName(String name){
         return areaRepository.findByName(name)
-            .map(area -> (Area)area)
             .orElseThrow(()-> new ResourceNotFoundException(
                 "No se encontro el area con el nombre especificado"
             ));
     }
 
-    public List<Area> getAll() {
+    public Area findActiveByName(String name){
+        return areaRepository.findByNameAndState(name, UseState.ACTIVE)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "No se encontro un area activa con el nombre proporcionado"
+            ));
+    }
+
+    public List<Area> findAll() {
         return areaRepository.findAll();
+    }
+
+    public List<Area> findAllActive() {
+        return areaRepository.findByState(UseState.ACTIVE);
     }
 }
