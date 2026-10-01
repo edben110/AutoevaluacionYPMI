@@ -1,4 +1,4 @@
-package com.sem.pmiautoevaluacion.controller;
+package com.sem.pmiautoevaluacion.integralManagement.controller;
 
 import java.net.URI;
 import java.util.List;
@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.sem.pmiautoevaluacion.dto.CreateProcessRequest;
-import com.sem.pmiautoevaluacion.dto.ProcessResponse;
-import com.sem.pmiautoevaluacion.service.ProcessService;
-import com.sem.pmiautoevaluacion.entity.Process;
+import com.sem.pmiautoevaluacion.integralManagement.dto.CreateProcessRequest;
+import com.sem.pmiautoevaluacion.integralManagement.dto.ProcessResponse;
+import com.sem.pmiautoevaluacion.integralManagement.entity.Process;
+import com.sem.pmiautoevaluacion.integralManagement.service.ProcessService;
 
 import jakarta.validation.Valid;
 

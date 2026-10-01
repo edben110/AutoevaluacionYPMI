@@ -1,4 +1,4 @@
-package com.sem.pmiautoevaluacion.entity;
+package com.sem.pmiautoevaluacion.integralManagement.entity;
 import java.util.ArrayList;
 import java.util.List;
 

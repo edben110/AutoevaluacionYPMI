@@ -1,8 +1,8 @@
-package com.sem.pmiautoevaluacion.dto;
+package com.sem.pmiautoevaluacion.integralManagement.dto;
 
 import java.util.UUID;
 
-import com.sem.pmiautoevaluacion.entity.Area;
+import com.sem.pmiautoevaluacion.integralManagement.entity.Area;
 import com.sem.pmiautoevaluacion.shared.enums.UseState;
 
 // DTO de salida para areas

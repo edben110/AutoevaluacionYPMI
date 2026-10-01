@@ -1,4 +1,4 @@
-package com.sem.pmiautoevaluacion.repository;
+package com.sem.pmiautoevaluacion.integralManagement.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.sem.pmiautoevaluacion.entity.Area;
+import com.sem.pmiautoevaluacion.integralManagement.entity.Area;
 import com.sem.pmiautoevaluacion.shared.enums.UseState;
 
 public interface AreaRepository extends JpaRepository<Area,UUID>{

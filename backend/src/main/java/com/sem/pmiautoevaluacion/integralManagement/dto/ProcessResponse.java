@@ -1,9 +1,9 @@
-package com.sem.pmiautoevaluacion.dto;
+package com.sem.pmiautoevaluacion.integralManagement.dto;
 
 import java.util.UUID;
 
+import com.sem.pmiautoevaluacion.integralManagement.entity.Process;
 import com.sem.pmiautoevaluacion.shared.enums.UseState;
-import com.sem.pmiautoevaluacion.entity.Process;
 
 // DTO de salida para procesos
 public record ProcessResponse(

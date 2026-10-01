@@ -1,4 +1,4 @@
-package com.sem.pmiautoevaluacion.controller;
+package com.sem.pmiautoevaluacion.integralManagement.controller;
 
 import java.net.URI;
 import java.util.List;
@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.sem.pmiautoevaluacion.dto.ComponentResponse;
-import com.sem.pmiautoevaluacion.dto.CreateComponentRequest;
-import com.sem.pmiautoevaluacion.entity.Component;
-import com.sem.pmiautoevaluacion.service.ComponentService;
+import com.sem.pmiautoevaluacion.integralManagement.dto.ComponentResponse;
+import com.sem.pmiautoevaluacion.integralManagement.dto.CreateComponentRequest;
+import com.sem.pmiautoevaluacion.integralManagement.entity.Component;
+import com.sem.pmiautoevaluacion.integralManagement.service.ComponentService;
 
 import jakarta.validation.Valid;
 

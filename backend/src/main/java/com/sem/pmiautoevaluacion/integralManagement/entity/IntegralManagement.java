@@ -1,4 +1,4 @@
-package com.sem.pmiautoevaluacion.entity;
+package com.sem.pmiautoevaluacion.integralManagement.entity;
 import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import java.util.UUID;
 import jakarta.persistence.*;

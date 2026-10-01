@@ -1,12 +1,12 @@
-package com.sem.pmiautoevaluacion.service;
+package com.sem.pmiautoevaluacion.integralManagement.service;
 
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import com.sem.pmiautoevaluacion.entity.Area;
-import com.sem.pmiautoevaluacion.repository.AreaRepository;
+import com.sem.pmiautoevaluacion.integralManagement.entity.Area;
+import com.sem.pmiautoevaluacion.integralManagement.repository.AreaRepository;
 import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
