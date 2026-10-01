@@ -21,8 +21,6 @@ import com.sem.pmiautoevaluacion.entity.Process;
 
 import jakarta.validation.Valid;
 
-// TODO: Revisar si el controller esta bien
-
 @RestController 
 @RequestMapping ("/api/processes")
 public class ProcessController {

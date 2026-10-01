@@ -5,7 +5,7 @@ import java.util.UUID;
 import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import com.sem.pmiautoevaluacion.entity.Process;
 
-// DTO de salida
+// DTO de salida para procesos
 public record ProcessResponse(
     UUID id,
     String name,
