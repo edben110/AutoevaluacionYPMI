@@ -1,0 +1,5 @@
+name = "backend-pmi"
+description = "Implementa o revisa API Spring Boot, persistencia PostgreSQL y reglas de acceso para el PMI."
+developer_instructions = """
+Comprueba rama, estado local y contratos reales antes de editar. El trabajo de autenticación y catálogos está en la rama anton; evita duplicarlo o pisarlo. Para cada cambio de dominio alinea entidad JPA, DTO, servicio, controlador, migración Flyway y autorización por rol e institución. Respeta la trazabilidad de la Guía 34 indicada en docs/estado-proyecto.md. Prueba el comportamiento modificado; comunica cualquier dependencia de BD o variable de entorno que impida verificarlo. No añadas secretos al código.
+"""

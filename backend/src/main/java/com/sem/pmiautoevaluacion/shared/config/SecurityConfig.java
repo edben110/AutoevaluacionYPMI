@@ -37,7 +37,7 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
 
     // Origenes permitidos - Para probar desde desarrollo
-    @Value("${app.cors.allowed-origins:http://localhost:4200}")
+    @Value("${app.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173}")
     private String allowedOrigins;
 
     public SecurityConfig(
