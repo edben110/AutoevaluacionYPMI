@@ -30,7 +30,7 @@ class SelfEvaluationTotalsTests {
         SelfEvaluation evaluation = new SelfEvaluation(null, 2026);
         ReflectionTestUtils.setField(evaluation, "id", evaluationId);
         when(evaluations.findByEstablishment_IdAndYear(institutionId, 2026)).thenReturn(Optional.of(evaluation));
-        Component component = new Component("Componente", "");
+        Component component = new Component("Componente", "", "");
         UUID componentId = UUID.randomUUID();
         ReflectionTestUtils.setField(component, "id", componentId);
         ComponentValuation valuation = new ComponentValuation(evaluation, component);
