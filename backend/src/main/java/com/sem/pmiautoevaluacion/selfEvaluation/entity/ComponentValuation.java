@@ -1,6 +1,8 @@
 package com.sem.pmiautoevaluacion.selfEvaluation.entity;
 
 import com.sem.pmiautoevaluacion.integralManagement.entity.Component;
+import com.sem.pmiautoevaluacion.selfEvaluation.state.ValuationState;
+import com.sem.pmiautoevaluacion.selfEvaluation.state.ValuationTotals;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -24,6 +26,9 @@ public class ComponentValuation {
     @Column(name = "level", nullable = false)
     private short level;
 
+    @Transient
+    private ValuationState valuationState;
+
     @Column(name = "evidence_url", length = 1000)
     private String evidenceUrl;
 
@@ -41,7 +46,10 @@ public class ComponentValuation {
     }
 
     public void update(short level, String evidenceUrl, String evidenceNote) {
-        this.level = level;
+        // La elección es manual y puede cambiar directamente a cualquiera de los cuatro estados.
+        ValuationState selectedState = ValuationState.fromLevel(level);
+        this.valuationState = selectedState;
+        this.level = selectedState.level();
         this.evidenceUrl = evidenceUrl;
         this.evidenceNote = evidenceNote;
         this.updatedAt = Instant.now();
@@ -51,6 +59,11 @@ public class ComponentValuation {
     public SelfEvaluation getEvaluation() { return evaluation; }
     public Component getComponent() { return component; }
     public short getLevel() { return level; }
+    public ValuationState getValuationState() {
+        if (valuationState == null) valuationState = ValuationState.fromLevel(level);
+        return valuationState;
+    }
+    public void countInto(ValuationTotals totals) { getValuationState().countInto(totals); }
     public String getEvidenceUrl() { return evidenceUrl; }
     public String getEvidenceNote() { return evidenceNote; }
     public Instant getUpdatedAt() { return updatedAt; }

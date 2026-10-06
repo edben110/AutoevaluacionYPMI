@@ -1,6 +1,6 @@
 # Estado y fuentes del proyecto
 
-Revisión: 1 de octubre de 2026. Esta nota resume lo que se pudo leer del repositorio, su wiki, dos diagramas adjuntos y la Guía 34 enlazada. No reemplaza los artefactos originales.
+Revisión: 6 de octubre de 2026. Esta nota resume lo que se pudo leer del repositorio, su wiki, dos diagramas adjuntos y la Guía 34 enlazada. No reemplaza los artefactos originales.
 
 ## Fuentes
 
@@ -28,7 +28,7 @@ El diagrama de clases presenta como diseño `User`, `Establishment`, `Secretary`
 | --- | --- |
 | `main` | Commit inicial `853d358`; Spring Boot y Vue de arranque. |
 | `origin/anton` | Commit `079a03c`; autenticación JWT para SEM e institución, `/api/me`, entidades de usuario, catálogos `Area` → `Process` → `Component`, controladores y servicios iniciales. |
-| `JuanM` local | Avanzó hasta `079a03c` incorporando `anton` sin modificar la rama de Antonio. Contiene cambios locales para una pantalla de acceso Vue y configuración del proyecto, aún sin publicar. |
+| `JuanM` | Borrador anual e interfaz inicial publicados en `e29f155`, incluyendo los commits de `anton` hasta `079a03c`. La adaptación State y los conteos del 6 de octubre están en cambios locales. |
 | `backend` | Java 21, Spring Boot 4.1.1, PostgreSQL, JPA, Flyway, validación y Spring Security. Configuración de BD y JWT mediante variables de entorno o perfil `local` ignorado por Git. V4 agrega el catálogo; V5 agrega el borrador anual y valoraciones por componente. El arranque con PostgreSQL local y `ddl-auto=validate` fue verificado. |
 | `frontend` | Vue 3, TypeScript, Vite y router. En `JuanM` local hay acceso de institución/SEM, pantalla de sesión y primera vista de borrador anual. La vista muestra el catálogo cuando tenga componentes activos. La pantalla del PMI sigue pendiente. |
 
@@ -38,6 +38,8 @@ Los controladores de catálogo de `anton` exponen creación y consulta de áreas
 
 - `PUT /api/self-evaluations/{year}` crea o recupera el borrador de la institución autenticada. `GET /api/self-evaluations/{year}` lo consulta y `GET /api/self-evaluations` lista sus años. Secretaría no puede usar estas rutas.
 - `PUT /api/self-evaluations/{year}/valuations/{componentId}` guarda nivel 1-4 y, opcionalmente en el borrador, un enlace HTTP(S) y una nota de evidencia. Solo acepta componentes activos.
+- La institución elige manualmente Existencia, Pertinencia, Apropiación o Mejoramiento continuo. El backend aplica State mediante `ValuationState` y cuatro clases concretas; cada estado identifica su código/etiqueta y aporta una unidad a su subtotal. Se mantienen los códigos 1–4 en BD y API para conservar los registros existentes.
+- La consulta del borrador añade `totals` por estado y total de valoraciones guardadas. La vista presenta los nombres, subtotales por proceso y totales por área y borrador, sin CSS adicional. Fuente del conteo: el formato Excel descrito por Juan el 6 de octubre (una marca por componente en una sola columna), en correspondencia con la matriz del anexo 2. Detalles en [valoración de componentes](valoracion-componentes.md).
 - La implementación supone un borrador por institución y año, protegido por una restricción única en PostgreSQL. La guía describe un ciclo anual; **la unicidad exacta y los estados posteriores** son decisiones de producto que debe confirmar el equipo.
 - Fuente funcional: Guía 34 de 2026, etapa de autoevaluación (pp. 49-74) y matriz de valoración con evidencias (anexo 2, pp. 164-167). El diagrama de flujo de la wiki propone el diligenciamiento por componentes y el envío posterior a revisión.
 - El catálogo todavía carece de carga inicial. Debe añadirse una migración con las áreas, procesos y componentes oficiales antes de usar la matriz con datos reales.
@@ -48,6 +50,7 @@ Los controladores de catálogo de `anton` exponen creación y consulta de áreas
 - El diagrama de flujo propone priorizar hasta dos componentes y seleccionar por puntaje de urgencia/tendencia/impacto. Contrastarlo con la metodología de la guía, que parte de oportunidades por las cuatro áreas (p. 77), antes de fijarlo en datos o validaciones.
 - Quién puede crear o editar el catálogo de áreas, procesos y componentes, y cómo se publica/versiona para cada año escolar.
 - Estados y permisos de borrador, envío, observación, corrección y cierre de autoevaluaciones/PMI; reglas de unicidad por institución y periodo.
+- Cómo se seleccionan los componentes candidatos por estados bajos y cómo se priorizan las oportunidades mediante urgencia, tendencia e impacto (Guía 34, pp. 77-80). El subtotal describe la distribución; la priorización requiere mantener las valoraciones individuales. Todavía no existe selección automática de componentes críticos.
 - Contrato para evidencias: hoy el flujo dibuja enlaces y notas sobre ubicación; definir almacenamiento, acceso, privacidad y conservación antes de implementar cargas de archivos.
 
 Actualizar esta nota cuando se integren ramas, cambie la wiki o el equipo cierre las decisiones anteriores.

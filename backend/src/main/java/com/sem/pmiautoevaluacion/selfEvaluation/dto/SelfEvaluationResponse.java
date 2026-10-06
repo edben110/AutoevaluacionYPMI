@@ -11,11 +11,13 @@ public record SelfEvaluationResponse(
         String status,
         Instant createdAt,
         Instant updatedAt,
-        List<ValuationResponse> valuations
+        List<ValuationResponse> valuations,
+        ValuationTotalsResponse totals
 ) {
-    public static SelfEvaluationResponse from(SelfEvaluation evaluation, List<ValuationResponse> valuations) {
+    public static SelfEvaluationResponse from(SelfEvaluation evaluation, List<ValuationResponse> valuations,
+            ValuationTotalsResponse totals) {
         return new SelfEvaluationResponse(
                 evaluation.getId(), evaluation.getYear(), evaluation.getStatus().name(),
-                evaluation.getCreatedAt(), evaluation.getUpdatedAt(), valuations);
+                evaluation.getCreatedAt(), evaluation.getUpdatedAt(), valuations, totals);
     }
 }

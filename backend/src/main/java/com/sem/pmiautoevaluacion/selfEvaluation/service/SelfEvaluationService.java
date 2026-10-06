@@ -6,10 +6,12 @@ import com.sem.pmiautoevaluacion.selfEvaluation.dto.SelfEvaluationResponse;
 import com.sem.pmiautoevaluacion.selfEvaluation.dto.SelfEvaluationSummary;
 import com.sem.pmiautoevaluacion.selfEvaluation.dto.ValuationRequest;
 import com.sem.pmiautoevaluacion.selfEvaluation.dto.ValuationResponse;
+import com.sem.pmiautoevaluacion.selfEvaluation.dto.ValuationTotalsResponse;
 import com.sem.pmiautoevaluacion.selfEvaluation.entity.ComponentValuation;
 import com.sem.pmiautoevaluacion.selfEvaluation.entity.SelfEvaluation;
 import com.sem.pmiautoevaluacion.selfEvaluation.repository.ComponentValuationRepository;
 import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationRepository;
+import com.sem.pmiautoevaluacion.selfEvaluation.state.ValuationTotals;
 import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
@@ -83,9 +85,12 @@ public class SelfEvaluationService {
     }
 
     private SelfEvaluationResponse response(SelfEvaluation evaluation) {
-        List<ValuationResponse> items = valuations.findByEvaluation_Id(evaluation.getId()).stream()
+        List<ComponentValuation> saved = valuations.findByEvaluation_Id(evaluation.getId());
+        ValuationTotals totals = new ValuationTotals();
+        saved.forEach(valuation -> valuation.countInto(totals));
+        List<ValuationResponse> items = saved.stream()
                 .map(ValuationResponse::from).toList();
-        return SelfEvaluationResponse.from(evaluation, items);
+        return SelfEvaluationResponse.from(evaluation, items, ValuationTotalsResponse.from(totals));
     }
 
     private void validateYear(int year) {

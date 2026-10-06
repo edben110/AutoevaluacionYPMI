@@ -46,4 +46,10 @@ Con el token de una institución educativa, usa estas rutas:
 | Listar años propios | `GET http://localhost:8080/api/self-evaluations` | Sin cuerpo |
 | Guardar valoración | `PUT http://localhost:8080/api/self-evaluations/2026/valuations/<componentId>` | `{"level":3,"evidenceUrl":"https://ejemplo.org/evidencia","evidenceNote":"Descripción de la evidencia"}` |
 
-El nivel debe estar entre 1 y 4. La nota y el enlace son opcionales mientras el registro esté en borrador. El componente debe existir y estar activo en el catálogo. El catálogo aún necesita su carga inicial con datos oficiales; una lista vacía en la vista de autoevaluación es esperable hasta entonces.
+`level` identifica el estado elegido manualmente: `1` = Existencia, `2` = Pertinencia, `3` = Apropiación y `4` = Mejoramiento continuo. La nota y el enlace son opcionales mientras el registro esté en borrador. El componente debe existir y estar activo en el catálogo. El catálogo aún necesita su carga inicial con datos oficiales; una lista vacía en la vista de autoevaluación es esperable hasta entonces.
+
+La respuesta de una valoración conserva `level` y añade `state` (por ejemplo, `APPROPRIATION`) y `stateLabel` (`Apropiación`). La consulta o creación del borrador devuelve además `totals`, con el número de valoraciones guardadas en `existence`, `pertinence`, `appropriation`, `continuousImprovement` y su `total`. Un componente aporta una unidad a su estado, sin multiplicar por el código 1–4. El borrador sin valoraciones devuelve todos los conteos en cero.
+
+La vista muestra los estados por nombre y calcula subtotales por proceso y totales por área a partir del catálogo visible y las valoraciones guardadas. El total del borrador incluye todas sus valoraciones, también las de componentes desactivados posteriormente. Seleccionar otro estado sin guardar todavía no modifica los conteos. No se requiere una migración adicional: los registros numéricos existentes se reconstruyen como objetos State al consultarlos.
+
+Consulta [valoración de componentes](valoracion-componentes.md) para el diseño State y la relación con la futura priorización del PMI.

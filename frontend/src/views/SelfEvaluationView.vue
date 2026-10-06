@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import ValuationTotals from '@/components/ValuationTotals.vue'
+import { valuationStates, type Valuation, type ValuationLevel } from '@/selfEvaluation/valuation'
 import {
   authorizedFetch,
   currentProfile,
@@ -12,13 +14,6 @@ import {
 interface Area { id: string; name: string }
 interface Process { id: string; areaId: string; name: string }
 interface Component { id: string; processId: string; name: string; description: string }
-interface Valuation {
-  componentId: string
-  level: number
-  evidenceUrl: string | null
-  evidenceNote: string | null
-  updatedAt: string
-}
 interface Evaluation {
   id: string
   year: number
@@ -28,7 +23,7 @@ interface Evaluation {
   valuations: Valuation[]
 }
 interface ComponentForm extends Component {
-  level: number | ''
+  level: ValuationLevel | ''
   evidenceUrl: string
   evidenceNote: string
   saved: boolean
@@ -46,18 +41,28 @@ const areas = ref<Area[]>([])
 const processes = ref<Process[]>([])
 const components = ref<ComponentForm[]>([])
 
+// Los subtotales se calculan sobre los datos guardados y los componentes del catálogo visible.
+function savedValuationsFor(items: Component[]): Valuation[] {
+  const ids = new Set(items.map((component) => component.id))
+  return evaluation.value?.valuations.filter((valuation) => ids.has(valuation.componentId)) ?? []
+}
+
 const groups = computed(() =>
   areas.value
-    .map((area) => ({
-      ...area,
-      processes: processes.value
+    .map((area) => {
+      const areaProcesses = processes.value
         .filter((process) => process.areaId === area.id)
-        .map((process) => ({
-          ...process,
-          components: components.value.filter((component) => component.processId === process.id),
-        }))
-        .filter((process) => process.components.length > 0),
-    }))
+        .map((process) => {
+          const items = components.value.filter((component) => component.processId === process.id)
+          return { ...process, components: items, valuations: savedValuationsFor(items) }
+        })
+        .filter((process) => process.components.length > 0)
+      return {
+        ...area,
+        processes: areaProcesses,
+        valuations: savedValuationsFor(areaProcesses.flatMap((process) => process.components)),
+      }
+    })
     .filter((area) => area.processes.length > 0),
 )
 const valuedCount = computed(() =>
@@ -221,6 +226,12 @@ onMounted(async () => {
           <span>{{ valuedCount }} de {{ components.length }} componentes valorados</span>
         </div>
 
+        <section class="status-card" aria-label="Conteo de componentes por estado">
+          <h2>Componentes valorados por estado</h2>
+          <ValuationTotals title="Total del borrador" :valuations="evaluation.valuations" />
+          <p>Cada componente guardado cuenta una vez en el estado elegido por la institución. El conteo incluye todas las valoraciones del borrador, incluso si un componente fue desactivado después.</p>
+        </section>
+
         <section v-if="components.length === 0" class="evaluation-empty">
           <h2>El catálogo todavía no tiene componentes activos</h2>
           <p>El borrador ya está guardado. Podrás valorar los componentes cuando se cargue el catálogo de la Guía 34.</p>
@@ -241,13 +252,10 @@ onMounted(async () => {
 
               <div class="valuation-fields">
                 <label>
-                  Nivel de desarrollo
+                  Estado de valoración
                   <select v-model.number="component.level" @change="component.saved = false">
-                    <option value="">Selecciona un nivel</option>
-                    <option :value="1">1 · Existencia</option>
-                    <option :value="2">2 · Pertinencia</option>
-                    <option :value="3">3 · Apropiación</option>
-                    <option :value="4">4 · Mejoramiento continuo</option>
+                    <option value="">Selecciona un estado</option>
+                    <option v-for="state in valuationStates" :key="state.state" :value="state.level">{{ state.label }}</option>
                   </select>
                 </label>
                 <label>
@@ -264,7 +272,9 @@ onMounted(async () => {
                 {{ component.saving ? 'Guardando…' : 'Guardar valoración' }}
               </button>
             </article>
+            <ValuationTotals title="Subtotal del proceso" :valuations="process.valuations" />
           </div>
+          <ValuationTotals title="Total del área" :valuations="area.valuations" />
         </section>
       </template>
     </div>
