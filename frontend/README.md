@@ -1,48 +1,32 @@
-# frontend
+# Frontend de AutoevaluacionYPMI
 
-This template should help get you started developing with Vue 3 in Vite.
+Aplicación Vue 3, TypeScript y Vite. La primera pantalla conecta el inicio de sesión de instituciones educativas y Secretaría de Educación Municipal (SEM) con la API del proyecto.
 
-## Recommended IDE Setup
+## Desarrollo local
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+Requiere Node.js compatible con `package.json`. En PowerShell, usar `npm.cmd`:
 
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
+```powershell
+npm.cmd ci
+npm.cmd run dev
 ```
 
-### Compile and Hot-Reload for Development
+El servidor de Vite envía las peticiones `/api` a `http://localhost:8080`; inicia el backend por separado en ese puerto. Si el backend no está disponible, el formulario mostrará un error de conexión.
 
-```sh
-npm run dev
+## Contrato usado
+
+- Institución: `POST /api/auth/establishment/login` con `daneCode` y `password`.
+- SEM: `POST /api/auth/secretary/login` con `email` y `password`.
+- Perfil: `GET /api/me` con el token recibido en `Authorization: Bearer ...`.
+
+El token se conserva en `sessionStorage` durante la pestaña actual y se elimina al cerrar sesión o si el servidor rechaza la sesión. La pantalla `/dashboard` muestra el perfil. La formulación del PMI se integrará después.
+La institución puede abrir `/autoevaluacion` desde su espacio, crear un borrador para un año y guardar valoraciones de componentes activos. El catálogo oficial todavía requiere una carga inicial en la base de datos.
+
+## Verificación
+
+```powershell
+npm.cmd run build
+npm.cmd exec eslint src -- --no-fix
 ```
 
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+La compilación incluye la comprobación de tipos. El inicio de sesión completo requiere backend, base de datos y usuarios de prueba configurados.
