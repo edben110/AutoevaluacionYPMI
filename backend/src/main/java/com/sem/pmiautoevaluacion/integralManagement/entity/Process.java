@@ -62,6 +62,5 @@ public class Process extends IntegralManagement{
 
     public void activate() {
         this.setState(UseState.ACTIVE);
-        components.forEach(Component::activate);
     }
 }

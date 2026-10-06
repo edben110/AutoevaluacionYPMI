@@ -49,6 +49,5 @@ public class Area extends IntegralManagement{
 
     public void activate() {
         this.setState(UseState.ACTIVE);
-        processes.forEach(Process::activate);
     }
 }

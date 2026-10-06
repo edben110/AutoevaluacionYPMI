@@ -17,6 +17,11 @@ public interface AreaRepository extends JpaRepository<Area,UUID>{
     
     List<Area> findByState(UseState state);
 
+    // Esta pieza de codigo es un ejemplo de lo que habria de hacerse en caso de necesitar optimizar consultas a gestion integral
+    // @Modifying 
+    // @Query ("UPDATE Component c SET c.state = :state WHERE c.process.area.id = :areaId")
+    // void updateStateByAreaId(UUID areaId, UseState state);
+
     boolean existsByName(String name);
     boolean existsByIdAndState(UUID id, UseState state);
 }
