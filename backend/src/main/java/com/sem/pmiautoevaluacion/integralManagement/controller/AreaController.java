@@ -35,6 +35,8 @@ public class AreaController {
         this.areaService = areaService;
     }
 
+    // Rutas Post - Creacion
+
     @PostMapping 
     public ResponseEntity<AreaResponse> create(
         @Valid @RequestBody CreateAreaRequest request
@@ -52,6 +54,8 @@ public class AreaController {
         return ResponseEntity.created(location)
             .body(AreaResponse.from(area));
     }
+
+    // Rutas Put o Patch - Actualizacion
 
     @PutMapping ("/{id}")
     public AreaResponse update(
@@ -76,6 +80,8 @@ public class AreaController {
     public AreaResponse activate(@PathVariable UUID id) {
         return AreaResponse.from(areaService.activate(id));
     }
+
+    // Rutas Get - Extraccion
 
     @GetMapping ("/{id}")
     public AreaResponse findById(

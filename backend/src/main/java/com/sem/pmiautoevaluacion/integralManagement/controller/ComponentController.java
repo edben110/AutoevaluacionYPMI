@@ -36,6 +36,8 @@ public class ComponentController {
         this.componentService = componentService;
     }
 
+    // Rutas Post - Creacion
+
     @PostMapping 
     public ResponseEntity<ComponentResponse> create(
         @Valid @RequestBody CreateComponentRequest request
@@ -56,6 +58,8 @@ public class ComponentController {
         return ResponseEntity.created(location)
             .body(ComponentResponse.from(component));
     }
+
+    // Rutas Put o Patch - Actualizacion
 
     @PutMapping ("/{id}")
     public ComponentResponse update(
@@ -91,6 +95,8 @@ public class ComponentController {
             componentService.changeProcess(id, request.processId())
         );
     }
+
+    // Rutas Get - Extraccion
 
     @GetMapping ("/{id}")
     public ComponentResponse findById(

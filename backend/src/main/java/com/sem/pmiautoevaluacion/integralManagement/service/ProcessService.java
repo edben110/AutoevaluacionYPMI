@@ -28,6 +28,7 @@ public class ProcessService {
         this.areaRepository = areaRepository;
     }
 
+    // Creacion
     public Process create(
         UUID areaId,
         String name,
@@ -57,6 +58,7 @@ public class ProcessService {
         return processRepository.save(process);
     }
 
+    // Actualizacion
     @Transactional 
     public Process update(
         UUID id,
@@ -78,6 +80,7 @@ public class ProcessService {
         return process;
     }
 
+    // Desactivar un proceso -> Resulta en desactivacion en cascada
     @Transactional 
     public Process deactivate(UUID id) {
         Process process = findById(id);
@@ -92,6 +95,7 @@ public class ProcessService {
         return process;
     }
 
+    // Activar un proceso
     @Transactional 
     public Process activate(UUID id) {
         Process process = findById(id);
@@ -112,6 +116,7 @@ public class ProcessService {
         return process;
     }
 
+    // Cambiar el area padre de un proceso
     @Transactional 
     public Process changeArea(UUID id,UUID areaId) {
         Process process = findById(id);
@@ -137,6 +142,7 @@ public class ProcessService {
         return process;
     }
 
+    // Encontrar por Id
     public Process findById(UUID id){
         return processRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -144,6 +150,7 @@ public class ProcessService {
             ));     
     }
 
+    // Encontrar por Id, filtrando por estado Activo
     public Process findActiveById(UUID id) {
         return processRepository.findByIdAndState(id, UseState.ACTIVE)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -151,6 +158,7 @@ public class ProcessService {
             ));
     }
 
+    // Encontrar por Nombre
     public Process findByName(String name){
         return processRepository.findByName(name)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -158,6 +166,7 @@ public class ProcessService {
             ));
     }
 
+    // Encontrar por Nombre, filtrando por estado Activo
     public Process findActiveByName(String name){
         return processRepository.findByNameAndState(name, UseState.ACTIVE)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -165,6 +174,7 @@ public class ProcessService {
             ));
     }
 
+    // Encontrar usando el Id de un Area
     public List<Process> findByAreaId(UUID areaId) {
         if(!areaRepository.existsById(areaId)){
             throw new ResourceNotFoundException(
@@ -174,6 +184,7 @@ public class ProcessService {
         return processRepository.findByAreaId(areaId);
     }
 
+    // Encontrar usando el Id de un Area, filtrando por Activo
     public List<Process> findActiveByAreaId(UUID areaId) {
         if(!areaRepository.existsByIdAndState(areaId, UseState.ACTIVE)){
             throw new ResourceNotFoundException(
@@ -187,10 +198,12 @@ public class ProcessService {
         );
     }
 
+    // Encontrar todos
     public List<Process> findAll() {
         return processRepository.findAll();
     }
 
+    // Encontrar todos los procesos con estado Activo
     public List<Process> findAllActive() {
         return processRepository.findByState(UseState.ACTIVE);
     }

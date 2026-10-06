@@ -28,6 +28,7 @@ public class ComponentService {
         this.processRepository = processRepository;
     }
 
+    // Creacion
     public Component create(
         UUID processId,
         String name,
@@ -58,6 +59,7 @@ public class ComponentService {
         return componentRepository.save(component);
     }
 
+    // Actualizacion
     @Transactional 
     public Component update(
         UUID id,
@@ -81,6 +83,7 @@ public class ComponentService {
         return component;
     }
 
+    // Desactivar un componente
     @Transactional 
     public Component deactivate(UUID id) {
         Component component = findById(id);
@@ -95,6 +98,7 @@ public class ComponentService {
         return component;
     }
 
+    // Activar un componente
     @Transactional 
     public Component activate(UUID id) {
         Component component = findById(id);
@@ -109,6 +113,7 @@ public class ComponentService {
         return component;
     }
 
+    // Cambiar el proceso padre de un componente
     @Transactional 
     public Component changeProcess(UUID id, UUID processId){
         Component component = findById(id);
@@ -136,6 +141,7 @@ public class ComponentService {
         return component;
     }
 
+    // Encontrar por Id
     public Component findById(UUID id){
         return componentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -143,6 +149,7 @@ public class ComponentService {
             ));
     }
 
+    // Encontrar por Id, filtrando por estado Activo
     public Component findActiveById(UUID id){
         return componentRepository.findByIdAndState(id, UseState.ACTIVE)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -150,6 +157,7 @@ public class ComponentService {
             ));
     }
 
+    // Encontrar por Nombre
     public Component findByName(String name){
         return componentRepository.findByName(name)
             .map(component -> (Component)component)
@@ -158,6 +166,7 @@ public class ComponentService {
             ));
     }
 
+    // Encontrar por Nombre, filtrando por estado Activo
     public Component findActiveByName(String name) {
         return componentRepository.findByNameAndState(name, UseState.ACTIVE)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -165,6 +174,7 @@ public class ComponentService {
             ));
     }
 
+    // Encontrar usando el Id de un proceso
     public List<Component> findByProcessId(UUID processId){
         if(!processRepository.existsById(processId)){
             throw new ResourceNotFoundException(
@@ -175,6 +185,7 @@ public class ComponentService {
         return componentRepository.findByProcessId(processId);
     }
 
+    // Encontrar usando el Id de un proceso, filtrando por estado Activo
     public List<Component> findActiveByProcessId(UUID processId){
         if(!processRepository.existsByIdAndState(processId, UseState.ACTIVE)){
             throw new ResourceNotFoundException(
@@ -185,10 +196,12 @@ public class ComponentService {
         return componentRepository.findByProcessIdAndState(processId, UseState.ACTIVE);
     }
 
+    // Encontrar todos
     public List<Component> findAll() {
         return componentRepository.findAll();
     }
 
+    // Encontrar todos los componentes con estado Activo
     public List<Component> findAllActive() {
         return componentRepository.findByState(UseState.ACTIVE);
     }

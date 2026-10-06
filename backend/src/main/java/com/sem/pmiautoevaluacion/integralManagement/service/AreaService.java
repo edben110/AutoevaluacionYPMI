@@ -21,6 +21,8 @@ public class AreaService {
         this.areaRepository = areaRepository;
     }
 
+    // Creacion
+
     public Area create(
         String name,
         String description
@@ -34,6 +36,8 @@ public class AreaService {
         Area area = new Area(name,description);
         return areaRepository.save(area);
     }
+
+    // Actualizacion
 
     @Transactional 
     public Area update(
@@ -55,6 +59,7 @@ public class AreaService {
         return area;
     }
 
+    // Desactivar un area -> Resulta en desactivacion en cascada
     @Transactional 
     public Area deactivate(UUID id) {
         Area area = findById(id);
@@ -69,6 +74,7 @@ public class AreaService {
         return area;
     }
 
+    // Activar un area
     @Transactional 
     public Area activate(UUID id) {
         Area area = findById(id);
@@ -84,6 +90,7 @@ public class AreaService {
         return area;
     }
 
+    // Encontrar por Id
     public Area findById(UUID id){
         return areaRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -91,6 +98,7 @@ public class AreaService {
             ));
     }
 
+    // Encontrar por Id, filtrando por estado Activo
     public Area findActiveById(UUID id) {
         return areaRepository.findByIdAndState(id, UseState.ACTIVE)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -98,6 +106,7 @@ public class AreaService {
             ));
     }
 
+    // Encontrar por nombre
     public Area findByName(String name){
         return areaRepository.findByName(name)
             .orElseThrow(()-> new ResourceNotFoundException(
@@ -105,6 +114,7 @@ public class AreaService {
             ));
     }
 
+    // Encontrar por nombre, filtrando por estado Activo
     public Area findActiveByName(String name){
         return areaRepository.findByNameAndState(name, UseState.ACTIVE)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -112,10 +122,12 @@ public class AreaService {
             ));
     }
 
+    // Encontrar todos
     public List<Area> findAll() {
         return areaRepository.findAll();
     }
 
+    // Encontrar todos con estado Activo
     public List<Area> findAllActive() {
         return areaRepository.findByState(UseState.ACTIVE);
     }

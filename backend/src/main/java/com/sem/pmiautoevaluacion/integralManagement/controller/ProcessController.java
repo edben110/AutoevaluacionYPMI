@@ -36,6 +36,8 @@ public class ProcessController {
         this.processService = processService;
     }
 
+    // Rutas post - Creacion
+
     @PostMapping
     public ResponseEntity<ProcessResponse> create(
         @Valid @RequestBody CreateProcessRequest request
@@ -54,6 +56,8 @@ public class ProcessController {
         return ResponseEntity.created(location)
             .body(ProcessResponse.from(process));
     }
+
+    // Rutas Put o Path - Actualizacion
 
     @PutMapping("/{id}")
     public ProcessResponse update(
@@ -88,6 +92,8 @@ public class ProcessController {
             processService.changeArea(id, request.areaId())
         );
     }
+
+    // Rutas get - Extraccion
 
     @GetMapping ("/{id}")
     public ProcessResponse findById(
