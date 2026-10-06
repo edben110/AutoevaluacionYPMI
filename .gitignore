@@ -1,2 +1,7 @@
 .vscode/
 .idea
+
+# Configuración local de agentes y skills
+/.agents/
+/.codex/
+/AGENTS.md
