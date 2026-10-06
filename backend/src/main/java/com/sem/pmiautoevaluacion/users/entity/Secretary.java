@@ -14,6 +14,8 @@ import jakarta.persistence.Entity;
  * NO requiere una tabla física "secretary": basta con la fila en "user"
  * marcada con role = 'SECRETARY'.
  */
+// TODO: En caso de que email se vuelva un atributo exclusivo de secretaria tocaria darle su propia tabla y demas cosas que vienen con el atributo
+//      de seguro sera como un mini refactor del codigo relacionado.
 @Entity
 @DiscriminatorValue("SECRETARY")
 public class Secretary extends User {

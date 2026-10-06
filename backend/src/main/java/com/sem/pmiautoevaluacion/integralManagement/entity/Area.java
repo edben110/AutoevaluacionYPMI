@@ -2,6 +2,8 @@ package com.sem.pmiautoevaluacion.integralManagement.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sem.pmiautoevaluacion.shared.enums.UseState;
+
 import jakarta.persistence.*;
 
 @Entity 
@@ -38,5 +40,15 @@ public class Area extends IntegralManagement{
     public void removeProcess(Process process){
         processes.remove(process);
         process.setArea(null);
+    }
+
+    public void deactivate() {
+        this.setState(UseState.INACTIVE);
+        processes.forEach(Process::deactivate);
+    }
+
+    public void activate() {
+        this.setState(UseState.ACTIVE);
+        processes.forEach(Process::activate);
     }
 }

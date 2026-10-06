@@ -13,6 +13,8 @@ import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
 
+import jakarta.transaction.Transactional;
+
 @Service 
 public class ProcessService {
     private final ProcessRepository processRepository;
@@ -53,6 +55,86 @@ public class ProcessService {
         area.addProcess(process);
 
         return processRepository.save(process);
+    }
+
+    @Transactional 
+    public Process update(
+        UUID id,
+        String name,
+        String description
+    ) {
+        Process process = findById(id);
+
+        if(!process.getName().equalsIgnoreCase(name)
+            && processRepository.existsByName(name)) {
+                throw new BadRequestException(
+                    "Ya existe un proceso con ese nombre"
+                );
+        }
+
+        process.setName(name);
+        process.setDescription(description);
+
+        return process;
+    }
+
+    @Transactional 
+    public Process deactivate(UUID id) {
+        Process process = findById(id);
+
+        if (process.getState() == UseState.INACTIVE) {
+            throw new BadRequestException(
+                "El proceso ya se encuentra inactivo"
+            );
+        }
+
+        process.deactivate();
+        return process;
+    }
+
+    @Transactional 
+    public Process activate(UUID id) {
+        Process process = findById(id);
+
+        if(process.getState() == UseState.ACTIVE) {
+            throw new BadRequestException(
+                "El proceso ya se encuentra activo"
+            );
+        }
+
+        if(process.getArea().getState() == UseState.INACTIVE) {
+            throw new BadRequestException(
+                "No se puede activar un proceso cuyo area se encuentra inactiva"
+            );
+        }
+
+        process.activate();
+        return process;
+    }
+
+    @Transactional 
+    public Process changeArea(UUID id,UUID areaId) {
+        Process process = findById(id);
+
+        Area oldArea = process.getArea();
+        if (oldArea.getId().equals(areaId)) {
+            throw new BadRequestException("El proceso ya pertenece a esa area");
+        }
+
+        Area newArea = areaRepository.findById(areaId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "No se encontro un area con el Id proporcionado"
+            ));
+
+        if(newArea.getState() != UseState.ACTIVE) {
+            throw new BadRequestException(
+                "El area debe estar Activa para poder usarla"
+            );
+        }
+
+        oldArea.removeProcess(process);
+        newArea.addProcess(process);
+        return process;
     }
 
     public Process findById(UUID id){

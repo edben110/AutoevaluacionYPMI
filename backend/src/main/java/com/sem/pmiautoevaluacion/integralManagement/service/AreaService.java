@@ -11,6 +11,8 @@ import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
 
+import jakarta.transaction.Transactional;
+
 @Service 
 public class AreaService {
     private final AreaRepository areaRepository;
@@ -31,6 +33,55 @@ public class AreaService {
 
         Area area = new Area(name,description);
         return areaRepository.save(area);
+    }
+
+    @Transactional 
+    public Area update(
+        UUID id,
+        String name,
+        String description
+    ) {
+        Area area = findById(id);
+
+        if(!area.getName().equalsIgnoreCase(name)
+            && areaRepository.existsByName(name)) {
+                throw new BadRequestException(
+                    "Ya existe un area con ese nombre"
+                );
+        }
+
+        area.setName(name);
+        area.setDescription(description);
+        return area;
+    }
+
+    @Transactional 
+    public Area deactivate(UUID id) {
+        Area area = findById(id);
+
+        if(area.getState() == UseState.INACTIVE) {
+            throw new BadRequestException(
+                "El area ya se encuentra inactiva"
+            );
+        }
+
+        area.deactivate();  
+        return area;
+    }
+
+    @Transactional 
+    public Area activate(UUID id) {
+        Area area = findById(id);
+
+        if(area.getState() == UseState.ACTIVE) {
+            throw new BadRequestException(
+                "El area ya se encuentra activa"
+            );
+        }
+
+        area.activate();
+
+        return area;
     }
 
     public Area findById(UUID id){

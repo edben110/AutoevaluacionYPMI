@@ -6,16 +6,20 @@ import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.sem.pmiautoevaluacion.integralManagement.dto.ChangeProcessRequest;
 import com.sem.pmiautoevaluacion.integralManagement.dto.ComponentResponse;
 import com.sem.pmiautoevaluacion.integralManagement.dto.CreateComponentRequest;
+import com.sem.pmiautoevaluacion.integralManagement.dto.UpdateComponentRequest;
 import com.sem.pmiautoevaluacion.integralManagement.entity.Component;
 import com.sem.pmiautoevaluacion.integralManagement.service.ComponentService;
 
@@ -39,7 +43,8 @@ public class ComponentController {
         Component component = componentService.create(
             request.processId(),
             request.name(),
-            request.description()
+            request.description(),
+            request.expectedEvidence()
         );
 
         URI location = ServletUriComponentsBuilder
@@ -50,6 +55,41 @@ public class ComponentController {
         
         return ResponseEntity.created(location)
             .body(ComponentResponse.from(component));
+    }
+
+    @PutMapping ("/{id}")
+    public ComponentResponse update(
+        @PathVariable UUID id,
+        @Valid @RequestBody UpdateComponentRequest request
+    ) {
+        return ComponentResponse.from(
+            componentService.update(
+                id,
+                request.name(),
+                request.description(),
+                request.expectedEvidence()
+            )
+        );
+    }
+
+    @PatchMapping ("/{id}/deactivate")
+    public ComponentResponse deactivate(@PathVariable UUID id) {
+        return ComponentResponse.from(componentService.deactivate(id));
+    }
+
+    @PatchMapping ("/{id}/activate")
+    public ComponentResponse activate(@PathVariable UUID id) {
+        return ComponentResponse.from(componentService.activate(id));
+    }
+
+    @PatchMapping ("/{id}/change_process")
+    public ComponentResponse changeProcess(
+        @PathVariable UUID id,
+        @Valid @RequestBody ChangeProcessRequest request
+    ) {
+        return ComponentResponse.from(
+            componentService.changeProcess(id, request.processId())
+        );
     }
 
     @GetMapping ("/{id}")

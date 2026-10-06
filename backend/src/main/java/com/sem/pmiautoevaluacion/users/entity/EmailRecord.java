@@ -5,6 +5,7 @@ import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
+// TODO: Revisar si aqui mismo se puede realizar la verificacion de que los correos terminen con el dominio especificado por la secretaria de educacion.
 @Embeddable 
 public class EmailRecord {
     private static final String EMAIL_PATTERN =
