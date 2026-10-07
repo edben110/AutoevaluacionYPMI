@@ -15,6 +15,7 @@ import com.sem.pmiautoevaluacion.users.entity.Establishment;
 import com.sem.pmiautoevaluacion.users.entity.Secretary;
 import com.sem.pmiautoevaluacion.users.entity.User;
 
+// TODO: Hace falta crear los metodos para registro para crear un flujo disponible para front para crear usuarios con sus respectivos roles
 @Service 
 public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;

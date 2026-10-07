@@ -19,6 +19,8 @@ import jakarta.validation.Valid;
  * esto para que puedan realizarse los logins correctamente
  * AuthController
  */
+// TODO: Falta agregar los metodos de registro, resulta complicado realizar un registro para instituciones
+//      Dudas, comunicarse con Antonio frente al registro de instituciones.
 @RestController 
 @RequestMapping ("/api/auth")
 public class AuthController {

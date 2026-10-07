@@ -36,7 +36,7 @@ public class EstablishmentServiceImpl implements EstablishmentService {
         }
 
         String encodedPassword = passwordEncoder.encode(password);
-        // TODO: Eliminar name e EmailRecord si se remueven los emails de Establishment
+        // TODO: Eliminar name y EmailRecord si se remueven los emails de Establishment
         Establishment establishment = new Establishment(
             name,
             encodedPassword,

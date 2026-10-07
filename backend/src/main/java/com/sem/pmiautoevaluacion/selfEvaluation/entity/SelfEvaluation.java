@@ -3,6 +3,8 @@ package com.sem.pmiautoevaluacion.selfEvaluation.entity;
 import com.sem.pmiautoevaluacion.users.entity.Establishment;
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -23,6 +25,9 @@ public class SelfEvaluation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "period_year")
     private SelfEvaluationPeriod period;
+
+    @OneToMany (mappedBy = "self_evaluation", fetch = FetchType.LAZY)
+    private List<ComponentValuation> valuations = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -57,4 +62,12 @@ public class SelfEvaluation {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void touch() { updatedAt = Instant.now(); }
+
+    public List<ComponentValuation> getValuations() {
+        return valuations;
+    }
+
+    public void setValuations(List<ComponentValuation> valuations) {
+        this.valuations = valuations;
+    }
 }

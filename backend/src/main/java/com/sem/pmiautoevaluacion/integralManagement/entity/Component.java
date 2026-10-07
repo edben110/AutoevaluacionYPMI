@@ -1,4 +1,8 @@
 package com.sem.pmiautoevaluacion.integralManagement.entity;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.sem.pmiautoevaluacion.selfEvaluation.entity.ComponentValuation;
 import com.sem.pmiautoevaluacion.shared.enums.UseState;
 
 import jakarta.persistence.*;
@@ -12,6 +16,9 @@ public class Component extends IntegralManagement{
     @ManyToOne (fetch = FetchType.LAZY, optional = false)
     @JoinColumn (name = "process_id", nullable = false)
     private Process process;
+
+    @OneToMany (mappedBy = "component", fetch = FetchType.LAZY)
+    private List<ComponentValuation> valuations = new ArrayList<>();
 
     protected Component(){
         super();
@@ -38,6 +45,14 @@ public class Component extends IntegralManagement{
         this.process = process;
     }
 
+    public List<ComponentValuation> getValuations() {
+        return valuations;
+    }
+
+    public void setValuations(List<ComponentValuation> valuations) {
+        this.valuations = valuations;
+    }
+    
     public void deactivate() {
         this.setState(UseState.INACTIVE);
     }
