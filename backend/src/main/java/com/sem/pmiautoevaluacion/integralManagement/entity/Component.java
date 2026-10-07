@@ -1,4 +1,6 @@
 package com.sem.pmiautoevaluacion.integralManagement.entity;
+import com.sem.pmiautoevaluacion.shared.enums.UseState;
+
 import jakarta.persistence.*;
 
 @Entity 
@@ -15,8 +17,9 @@ public class Component extends IntegralManagement{
         super();
     }
 
-    public Component(String name, String description){
+    public Component(String name, String description, String expectedEvidence){
         super(name,description);
+        this.expectedEvidence = expectedEvidence;
     }
 
     public String getExpectedEvidence() {
@@ -35,5 +38,11 @@ public class Component extends IntegralManagement{
         this.process = process;
     }
 
+    public void deactivate() {
+        this.setState(UseState.INACTIVE);
+    }
 
+    public void activate() {
+        this.setState(UseState.ACTIVE);
+    }
 }

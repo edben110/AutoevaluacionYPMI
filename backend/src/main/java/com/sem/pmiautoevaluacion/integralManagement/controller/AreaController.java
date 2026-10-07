@@ -6,8 +6,10 @@ import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +18,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.sem.pmiautoevaluacion.integralManagement.dto.AreaResponse;
 import com.sem.pmiautoevaluacion.integralManagement.dto.CreateAreaRequest;
+import com.sem.pmiautoevaluacion.integralManagement.dto.UpdateAreaRequest;
 import com.sem.pmiautoevaluacion.integralManagement.entity.Area;
 import com.sem.pmiautoevaluacion.integralManagement.service.AreaService;
 
@@ -31,6 +34,8 @@ public class AreaController {
     ) {
         this.areaService = areaService;
     }
+
+    // Rutas Post - Creacion
 
     @PostMapping 
     public ResponseEntity<AreaResponse> create(
@@ -49,6 +54,34 @@ public class AreaController {
         return ResponseEntity.created(location)
             .body(AreaResponse.from(area));
     }
+
+    // Rutas Put o Patch - Actualizacion
+
+    @PutMapping ("/{id}")
+    public AreaResponse update(
+        @PathVariable UUID id,
+        @Valid @RequestBody UpdateAreaRequest request
+    ) {
+        return AreaResponse.from(
+            areaService.update(
+                id,
+                request.name(),
+                request.description()
+            )
+        );
+    }
+
+    @PatchMapping ("/{id}/deactivate")
+    public AreaResponse deactivate(@PathVariable UUID id){
+        return AreaResponse.from(areaService.deactivate(id));
+    }
+
+    @PatchMapping ("/{id}/activate")
+    public AreaResponse activate(@PathVariable UUID id) {
+        return AreaResponse.from(areaService.activate(id));
+    }
+
+    // Rutas Get - Extraccion
 
     @GetMapping ("/{id}")
     public AreaResponse findById(

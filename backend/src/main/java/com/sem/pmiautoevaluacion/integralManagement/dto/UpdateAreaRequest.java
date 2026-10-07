@@ -3,11 +3,10 @@ package com.sem.pmiautoevaluacion.integralManagement.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record CreateAreaRequest(
+public record UpdateAreaRequest(
     @NotBlank (message = "El nombre no puede estar vacio")
-    @Size(max = 255, message = "El nombre no puede superar 255 caracteres")
+    @Size (max = 255)
     String name,
-
     String description
 ) {
 

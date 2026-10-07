@@ -37,6 +37,8 @@ Las rutas de login devuelven un `token`. `/api/me` requiere ese token; sin él r
 
 ## Borrador anual
 
+Secretaría debe publicar primero el período con inicio y fin. Desde su espacio, **Administrar períodos** crea automáticamente los borradores de las instituciones registradas. Las escrituras institucionales de esta sección requieren un período abierto; la pantalla de institución muestra las cuatro áreas únicamente durante sus fechas y no ofrece creación manual. Detalles y API en [períodos de autoevaluación](periodos-autoevaluacion.md).
+
 Con el token de una institución educativa, usa estas rutas:
 
 | Acción | Método y URL | Cuerpo |
@@ -68,7 +70,7 @@ Al cambiar de estado, un texto que deja de corresponder permanece visible. Puede
 
 ### Acceso por área
 
-Desde `/dashboard`, las instituciones ven cuatro tarjetas con los nombres del catálogo. Cada tarjeta abre `/autoevaluacion/<UUID de área>`, donde aparecen únicamente sus procesos y componentes. El avance, el resumen y el total corresponden al área elegida. La entrada antigua `/autoevaluacion` vuelve al selector del espacio institucional. Un área inexistente o desactivada muestra un aviso y un enlace para regresar.
+Desde `/dashboard`, las instituciones ven cuatro tarjetas con los nombres del catálogo cuando Secretaría tiene un período abierto. Cada tarjeta abre `/autoevaluacion/<UUID de área>?year=<año habilitado>`, donde aparecen únicamente sus procesos y componentes. Sin un período abierto, el espacio muestra un aviso de espera y los enlaces directos no cargan el formulario. El avance, el resumen y el total corresponden al área elegida. La entrada antigua `/autoevaluacion` vuelve al espacio institucional. Un área inexistente o desactivada muestra un aviso y un enlace para regresar.
 
 La división organiza las pantallas y conserva el registro anual existente; no requiere otra migración. Las tablas tienen bordes, encabezados y una fila de porcentajes diferenciada; en móvil se desplazan dentro de su contenedor. Los procesos se distinguen con encabezados verde oscuro. Este diseño modesto fue solicitado por Juan y sigue siendo provisional mientras se define el manual de imagen.
 
@@ -84,4 +86,4 @@ Authorization: Bearer <token de Secretaría>
 
 Secretaría sin selector recibe `400`. Una institución puede omitirlo para consultar sus propios registros; si intenta indicar una institución distinta recibe `403`. Consultar una institución inexistente o una autoevaluación anual inexistente devuelve `404`, mientras que una institución existente sin autoevaluaciones tiene una lista vacía. Secretaría recibe `403` al intentar crear borradores o cambiar valoraciones mediante PUT.
 
-El frontend de Secretaría y el registro de observaciones todavía no están implementados; este acceso de consulta se puede verificar en Postman. En el borrador actual también se consultan registros `DRAFT`; el flujo formal de envío, revisión y devolución requiere sus propios estados y permisos.
+Secretaría ya dispone de la pantalla de períodos, con publicación, edición y eliminación conservando respuestas. Su pantalla de consulta de respuestas por institución y el registro de observaciones siguen pendientes; este acceso de consulta se puede verificar en Postman. En el borrador actual también se consultan registros `DRAFT`; el flujo formal de envío, revisión y devolución requiere sus propios estados y permisos.

@@ -13,6 +13,8 @@ import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
 
+import jakarta.transaction.Transactional;
+
 @Service 
 public class ComponentService {
     private final ComponentRepository componentRepository;
@@ -26,10 +28,12 @@ public class ComponentService {
         this.processRepository = processRepository;
     }
 
+    // Creacion
     public Component create(
         UUID processId,
         String name,
-        String description
+        String description,
+        String expectedEvidence
     ) {
         if(componentRepository.existsByName(name)){
             throw new BadRequestException(
@@ -48,13 +52,96 @@ public class ComponentService {
             );
         }
         
-        Component component = new Component(name, description);
+        Component component = new Component(name, description, expectedEvidence);
         // Mantiene sincronizados ambos finales
         process.addComponent(component);
         
         return componentRepository.save(component);
     }
 
+    // Actualizacion
+    @Transactional 
+    public Component update(
+        UUID id,
+        String name,
+        String description,
+        String expectedEvidence
+    ) {
+        Component component = findById(id);
+
+        if(!component.getName().equalsIgnoreCase(name)
+            && componentRepository.existsByName(name)) {
+                throw new BadRequestException(
+                    "Ya existe un componente con ese nombre"
+                );
+        }
+
+        component.setName(name);
+        component.setDescription(description);
+        component.setExpectedEvidence(expectedEvidence);
+        
+        return component;
+    }
+
+    // Desactivar un componente
+    @Transactional 
+    public Component deactivate(UUID id) {
+        Component component = findById(id);
+
+        if(component.getState() == UseState.INACTIVE) {
+            throw new BadRequestException(
+                "El componente ya se encuentra inactivo"
+            );
+        }
+
+        component.deactivate();
+        return component;
+    }
+
+    // Activar un componente
+    @Transactional 
+    public Component activate(UUID id) {
+        Component component = findById(id);
+
+        if(component.getState() == UseState.ACTIVE) {
+            throw new BadRequestException(
+                "El componente ya se encuentra activo"
+            );
+        }
+
+        component.activate();
+        return component;
+    }
+
+    // Cambiar el proceso padre de un componente
+    @Transactional 
+    public Component changeProcess(UUID id, UUID processId){
+        Component component = findById(id);
+
+        Process oldProcess = component.getProcess();
+        if(oldProcess.getId().equals(processId)) {
+            throw new BadRequestException(
+                "El componente ya pertenece a este proceso"
+            );
+        }
+
+        Process newProcess = processRepository.findById(processId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "No se encontro un proceso con el Id proporcionado"
+            ));
+        
+        if(newProcess.getState() != UseState.ACTIVE) {
+            throw new BadRequestException(
+                "El proceso debe estar activo para poder usarlo"
+            );
+        }
+
+        oldProcess.removeComponent(component);
+        newProcess.addComponent(component);
+        return component;
+    }
+
+    // Encontrar por Id
     public Component findById(UUID id){
         return componentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -62,6 +149,7 @@ public class ComponentService {
             ));
     }
 
+    // Encontrar por Id, filtrando por estado Activo
     public Component findActiveById(UUID id){
         return componentRepository.findByIdAndState(id, UseState.ACTIVE)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -69,6 +157,7 @@ public class ComponentService {
             ));
     }
 
+    // Encontrar por Nombre
     public Component findByName(String name){
         return componentRepository.findByName(name)
             .map(component -> (Component)component)
@@ -77,6 +166,7 @@ public class ComponentService {
             ));
     }
 
+    // Encontrar por Nombre, filtrando por estado Activo
     public Component findActiveByName(String name) {
         return componentRepository.findByNameAndState(name, UseState.ACTIVE)
             .orElseThrow(() -> new ResourceNotFoundException(
@@ -84,6 +174,7 @@ public class ComponentService {
             ));
     }
 
+    // Encontrar usando el Id de un proceso
     public List<Component> findByProcessId(UUID processId){
         if(!processRepository.existsById(processId)){
             throw new ResourceNotFoundException(
@@ -94,6 +185,7 @@ public class ComponentService {
         return componentRepository.findByProcessId(processId);
     }
 
+    // Encontrar usando el Id de un proceso, filtrando por estado Activo
     public List<Component> findActiveByProcessId(UUID processId){
         if(!processRepository.existsByIdAndState(processId, UseState.ACTIVE)){
             throw new ResourceNotFoundException(
@@ -104,10 +196,12 @@ public class ComponentService {
         return componentRepository.findByProcessIdAndState(processId, UseState.ACTIVE);
     }
 
+    // Encontrar todos
     public List<Component> findAll() {
         return componentRepository.findAll();
     }
 
+    // Encontrar todos los componentes con estado Activo
     public List<Component> findAllActive() {
         return componentRepository.findByState(UseState.ACTIVE);
     }

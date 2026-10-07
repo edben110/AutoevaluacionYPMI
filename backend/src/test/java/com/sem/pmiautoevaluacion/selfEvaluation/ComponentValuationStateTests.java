@@ -100,7 +100,7 @@ class ComponentValuationStateTests {
     }
 
     private static ComponentValuation draftValuation() {
-        return new ComponentValuation(new SelfEvaluation(null, 2026), new Component("Componente", ""));
+        return new ComponentValuation(new SelfEvaluation(null, 2026), new Component("Componente", "", ""));
     }
 
     private static ComponentValuation valued(short level) {

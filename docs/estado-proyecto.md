@@ -27,8 +27,8 @@ El diagrama de clases presenta como diseño `User`, `Establishment`, `Secretary`
 | Ubicación | Estado al revisar |
 | --- | --- |
 | `main` | Commit inicial `853d358`; Spring Boot y Vue de arranque. |
-| `origin/anton` | Commit `079a03c`; autenticación JWT para SEM e institución, `/api/me`, entidades de usuario, catálogos `Area` → `Process` → `Component`, controladores y servicios iniciales. |
-| `JuanM` | Borrador anual e interfaz inicial en `e29f155`; limpieza de agentes/skills en `1e03577`; patrón State y conteos publicados en `c8e2bec`. Incluye los commits de `anton` hasta `079a03c`. La carga V6, el acceso de consulta de Secretaría y la clasificación State del diagrama están en cambios locales. |
+| `origin/anton` | Commit `f0b18b0`, consultado el 6 de octubre de 2026. Además de autenticación y catálogos, incorpora actualización, activación/desactivación, cambio de área/proceso padre y captura de `expectedEvidence` al crear/editar componentes. Sus cinco commits posteriores a `c8e2bec` incluyen una integración previa de `JuanM` y comentarios. |
+| `JuanM` | Borrador e interfaz inicial en `e29f155`; limpieza de agentes/skills en `1e03577`; State inicial en `c8e2bec`; autoevaluación completa y períodos de Secretaría en `8df88de`. Integra `origin/anton` hasta `f0b18b0`, preservando sus cambios y las nuevas pruebas institucionales. Incluye V6–V8, textos, porcentajes, permisos y acceso por áreas solo durante períodos abiertos. |
 | `backend` | Java 21, Spring Boot 4.1.1, PostgreSQL, JPA, Flyway, validación y Spring Security. Configuración de BD y JWT mediante variables de entorno o perfil `local` ignorado por Git. V4 crea las tablas del catálogo; V5 agrega el borrador anual y valoraciones por componente; V6 carga el inventario oficial de 2026. El arranque con PostgreSQL local y `ddl-auto=validate` fue verificado. |
 | `frontend` | Vue 3, TypeScript, Vite y router. En `JuanM` local hay acceso de institución/SEM, pantalla de sesión y primera vista de borrador anual. La vista muestra el catálogo cuando tenga componentes activos. La pantalla del PMI sigue pendiente. |
 
