@@ -9,14 +9,24 @@ public record ValuationResponse(
         short level,
         String state,
         String stateLabel,
+        boolean improvementChance,
+        boolean strength,
+        boolean strengthsAllowed,
+        boolean improvementOpportunitiesAllowed,
         String evidenceUrl,
         String evidenceNote,
+        String strengths,
+        String improvementOpportunities,
         Instant updatedAt
 ) {
     public static ValuationResponse from(ComponentValuation valuation) {
         return new ValuationResponse(
                 valuation.getComponent().getId(), valuation.getLevel(),
                 valuation.getValuationState().code(), valuation.getValuationState().label(),
-                valuation.getEvidenceUrl(), valuation.getEvidenceNote(), valuation.getUpdatedAt());
+                valuation.isImprovementChance(), valuation.isStrength(),
+                valuation.getValuationState().allowsStrengths(),
+                valuation.getValuationState().allowsImprovementOpportunities(),
+                valuation.getEvidenceUrl(), valuation.getEvidenceNote(),
+                valuation.getStrengths(), valuation.getImprovementOpportunities(), valuation.getUpdatedAt());
     }
 }

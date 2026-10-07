@@ -1,22 +1,25 @@
 package com.sem.pmiautoevaluacion.selfEvaluation.state;
 
-import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
-
 /** Estado elegido manualmente por la institución; cada estado aporta a su propio subtotal. */
 public sealed interface ValuationState permits ExistenceState, PertinenceState,
         AppropriationState, ContinuousImprovementState {
-    short level();
-    String code();
-    String label();
+    ComponentValue getValue();
+    boolean isImprovementChance();
+    boolean isStrength();
+    // Aptitud de los textos institucionales confirmada por Juan; la clasificación del PMI es independiente.
+    default boolean allowsStrengths() { return isStrength(); }
+    default boolean allowsImprovementOpportunities() { return isImprovementChance(); }
+    default short level() { return getValue().getLevel(); }
+    default String code() { return getValue().name(); }
+    default String label() { return getValue().getLabel(); }
     void countInto(ValuationTotals totals);
 
     static ValuationState fromLevel(int level) {
-        return switch (level) {
-            case 1 -> ExistenceState.INSTANCE;
-            case 2 -> PertinenceState.INSTANCE;
-            case 3 -> AppropriationState.INSTANCE;
-            case 4 -> ContinuousImprovementState.INSTANCE;
-            default -> throw new BadRequestException("Selecciona un estado de valoración válido (1 a 4)");
+        return switch (ComponentValue.fromLevel(level)) {
+            case EXISTENCE -> ExistenceState.INSTANCE;
+            case PERTINENCE -> PertinenceState.INSTANCE;
+            case APPROPRIATION -> AppropriationState.INSTANCE;
+            case CONTINUOUS_IMPROVEMENT -> ContinuousImprovementState.INSTANCE;
         };
     }
 }

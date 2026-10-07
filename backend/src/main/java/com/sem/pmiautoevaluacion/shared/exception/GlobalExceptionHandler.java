@@ -1,6 +1,8 @@
 package com.sem.pmiautoevaluacion.shared.exception;
 
 import io.jsonwebtoken.JwtException;
+import com.sem.pmiautoevaluacion.selfEvaluation.service.SelfEvaluationPeriodClosedException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,23 @@ import org.springframework.web.multipart.MultipartException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnreadableRequest(
+            HttpMessageNotReadableException exception,
+            HttpServletRequest request) {
+        return ResponseEntity.badRequest().body(new ApiErrorResponse(
+                400, "Bad Request", "Verifica los datos enviados; las fechas deben usar el formato AAAA-MM-DD",
+                request.getRequestURI()));
+    }
+
+    @ExceptionHandler(SelfEvaluationPeriodClosedException.class)
+    public ResponseEntity<ApiErrorResponse> handleClosedSelfEvaluationPeriod(
+            SelfEvaluationPeriodClosedException exception,
+            HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiErrorResponse(
+                403, "Forbidden", exception.getMessage(), request.getRequestURI()));
+    }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleMissingRoute(

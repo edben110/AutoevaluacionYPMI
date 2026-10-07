@@ -4,6 +4,11 @@ import { hasSession } from '@/auth/session'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    {
+      path: '/secretaria/periodos-autoevaluacion',
+      name: 'secretary-periods',
+      component: () => import('@/views/SecretaryPeriodsView.vue'),
+    },
     { path: '/', redirect: '/dashboard' },
     {
       path: '/login',
@@ -16,7 +21,7 @@ const router = createRouter({
       component: () => import('@/views/DashboardView.vue'),
     },
     {
-      path: '/autoevaluacion',
+      path: '/autoevaluacion/:areaId?',
       name: 'self-evaluation',
       component: () => import('@/views/SelfEvaluationView.vue'),
     },

@@ -18,12 +18,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class ComponentValuationStateTests {
     @ParameterizedTest
     @CsvSource({
-            "1, EXISTENCE, Existencia",
-            "2, PERTINENCE, Pertinencia",
-            "3, APPROPRIATION, Apropiación",
-            "4, CONTINUOUS_IMPROVEMENT, Mejoramiento continuo"
+            "1, EXISTENCE, Existencia, true, false, false, true",
+            "2, PERTINENCE, Pertinencia, true, false, true, true",
+            "3, APPROPRIATION, Apropiación, false, true, true, true",
+            "4, CONTINUOUS_IMPROVEMENT, Mejoramiento continuo, false, true, true, false"
     })
-    void restoresStateFromExistingNumericRecords(short level, String code, String label) {
+    void restoresStateFromExistingNumericRecords(short level, String code, String label,
+            boolean improvementChance, boolean strength, boolean strengthsAllowed,
+            boolean improvementOpportunitiesAllowed) {
         ComponentValuation valuation = draftValuation();
         // Simula hidratación JPA: los registros anteriores solo tienen level y ninguna instancia State.
         ReflectionTestUtils.setField(valuation, "level", level);
@@ -33,6 +35,11 @@ class ComponentValuationStateTests {
         assertEquals(level, response.level());
         assertEquals(code, response.state());
         assertEquals(label, response.stateLabel());
+        assertEquals(improvementChance, response.improvementChance());
+        assertEquals(strength, response.strength());
+        assertEquals(strengthsAllowed, response.strengthsAllowed());
+        assertEquals(improvementOpportunitiesAllowed, response.improvementOpportunitiesAllowed());
+        assertEquals(code, valuation.getValuationState().getValue().name());
         ValuationTotals totals = new ValuationTotals();
         valuation.countInto(totals);
         assertEquals(1, totals.getTotal());
@@ -43,7 +50,7 @@ class ComponentValuationStateTests {
         for (short previous = 1; previous <= 4; previous++) {
             for (short selected = 1; selected <= 4; selected++) {
                 ComponentValuation valuation = valued(previous);
-                valuation.update(selected, "https://ejemplo.org/nueva-evidencia", "Nueva evidencia");
+                valuation.update(selected, "https://ejemplo.org/nueva-evidencia", "Nueva evidencia", null, null);
 
                 assertEquals(selected, valuation.getLevel());
                 assertEquals(selected, valuation.getValuationState().level());
@@ -60,7 +67,7 @@ class ComponentValuationStateTests {
         ComponentValuation valuation = valued((short) 3);
         var updatedAt = valuation.getUpdatedAt();
 
-        assertThrows(BadRequestException.class, () -> valuation.update(selected, "otro", "otra nota"));
+        assertThrows(BadRequestException.class, () -> valuation.update(selected, "otro", "otra nota", "otra", "otra"));
 
         assertEquals(3, valuation.getLevel());
         assertEquals("APPROPRIATION", valuation.getValuationState().code());
@@ -84,7 +91,7 @@ class ComponentValuationStateTests {
         ValuationTotals original = new ValuationTotals();
         valuation.countInto(original);
 
-        valuation.update((short) 4, null, "Corrección manual");
+        valuation.update((short) 4, null, "Corrección manual", null, null);
         ValuationTotals corrected = new ValuationTotals();
         valuation.countInto(corrected);
 
@@ -98,7 +105,7 @@ class ComponentValuationStateTests {
 
     private static ComponentValuation valued(short level) {
         ComponentValuation valuation = draftValuation();
-        valuation.update(level, null, "Evidencia original");
+        valuation.update(level, null, "Evidencia original", null, null);
         return valuation;
     }
 }

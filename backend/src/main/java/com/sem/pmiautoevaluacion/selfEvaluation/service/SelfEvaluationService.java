@@ -29,18 +29,24 @@ public class SelfEvaluationService {
     private final ComponentValuationRepository valuations;
     private final EstablishmentRepository establishments;
     private final ComponentRepository components;
+    private final SelfEvaluationPeriodService periods;
 
     public SelfEvaluationService(SelfEvaluationRepository evaluations,
             ComponentValuationRepository valuations,
-            EstablishmentRepository establishments, ComponentRepository components) {
+            EstablishmentRepository establishments, ComponentRepository components,
+            SelfEvaluationPeriodService periods) {
         this.evaluations = evaluations;
         this.valuations = valuations;
         this.establishments = establishments;
         this.components = components;
+        this.periods = periods;
     }
 
     @Transactional(readOnly = true)
     public List<SelfEvaluationSummary> list(UUID establishmentId) {
+        if (!establishments.existsById(establishmentId)) {
+            throw new ResourceNotFoundException("Institución no encontrada");
+        }
         return evaluations.findByEstablishment_IdOrderByYearDesc(establishmentId).stream()
                 .map(SelfEvaluationSummary::from)
                 .toList();
@@ -54,18 +60,21 @@ public class SelfEvaluationService {
     @Transactional
     public SelfEvaluationResponse createOrFind(UUID establishmentId, int year) {
         validateYear(year);
+        var period = periods.requireWritable(year);
         SelfEvaluation evaluation = evaluations.findByEstablishment_IdAndYear(establishmentId, year)
                 .orElseGet(() -> {
                     Establishment establishment = establishments.findById(establishmentId)
                             .orElseThrow(() -> new ResourceNotFoundException("Institución no encontrada"));
                     return evaluations.save(new SelfEvaluation(establishment, year));
                 });
+        evaluation.assignPeriod(period);
         return response(evaluation);
     }
 
     @Transactional
     public ValuationResponse saveValuation(UUID establishmentId, int year, UUID componentId,
             ValuationRequest request) {
+        periods.requireWritable(year);
         SelfEvaluation evaluation = findOwned(establishmentId, year);
         Component component = components.findByIdAndState(componentId, UseState.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Componente activo no encontrado"));
@@ -73,7 +82,8 @@ public class SelfEvaluationService {
                 .findByEvaluation_IdAndComponent_Id(evaluation.getId(), componentId)
                 .orElseGet(() -> new ComponentValuation(evaluation, component));
         valuation.update(request.level().shortValue(), normalizeUrl(request.evidenceUrl()),
-                normalizeText(request.evidenceNote()));
+                normalizeText(request.evidenceNote()), normalizeText(request.strengths()),
+                normalizeText(request.improvementOpportunities()));
         evaluation.touch();
         return ValuationResponse.from(valuations.save(valuation));
     }

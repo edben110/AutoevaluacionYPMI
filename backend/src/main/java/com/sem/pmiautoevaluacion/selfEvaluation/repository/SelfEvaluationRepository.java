@@ -9,4 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface SelfEvaluationRepository extends JpaRepository<SelfEvaluation, UUID> {
     Optional<SelfEvaluation> findByEstablishment_IdAndYear(UUID establishmentId, int year);
     List<SelfEvaluation> findByEstablishment_IdOrderByYearDesc(UUID establishmentId);
+    List<SelfEvaluation> findByYear(int year);
 }

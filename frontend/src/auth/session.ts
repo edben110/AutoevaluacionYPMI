@@ -51,7 +51,7 @@ export async function authorizedFetch(path: string, options: RequestInit = {}): 
     signOut()
     throw new Error('Tu sesión terminó. Inicia sesión de nuevo.')
   }
-  if (response.status === 403) throw new Error('No tienes permiso para realizar esta acción.')
+  if (response.status === 403) throw await responseError(response)
   return response
 }
 

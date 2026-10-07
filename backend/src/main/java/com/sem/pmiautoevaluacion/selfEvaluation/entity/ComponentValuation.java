@@ -3,6 +3,7 @@ package com.sem.pmiautoevaluacion.selfEvaluation.entity;
 import com.sem.pmiautoevaluacion.integralManagement.entity.Component;
 import com.sem.pmiautoevaluacion.selfEvaluation.state.ValuationState;
 import com.sem.pmiautoevaluacion.selfEvaluation.state.ValuationTotals;
+import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -35,6 +36,12 @@ public class ComponentValuation {
     @Column(name = "evidence_note", columnDefinition = "TEXT")
     private String evidenceNote;
 
+    @Column(name = "strengths", columnDefinition = "TEXT")
+    private String strengths;
+
+    @Column(name = "improvement_opportunities", columnDefinition = "TEXT")
+    private String improvementOpportunities;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
@@ -45,13 +52,23 @@ public class ComponentValuation {
         this.component = component;
     }
 
-    public void update(short level, String evidenceUrl, String evidenceNote) {
+    public void update(short level, String evidenceUrl, String evidenceNote,
+            String strengths, String improvementOpportunities) {
         // La elección es manual y puede cambiar directamente a cualquiera de los cuatro estados.
         ValuationState selectedState = ValuationState.fromLevel(level);
+        if (!selectedState.allowsStrengths() && strengths != null && !strengths.isBlank()) {
+            throw new BadRequestException("Existencia no permite registrar fortalezas");
+        }
+        if (!selectedState.allowsImprovementOpportunities()
+                && improvementOpportunities != null && !improvementOpportunities.isBlank()) {
+            throw new BadRequestException("Mejoramiento continuo no permite registrar oportunidades de mejora");
+        }
         this.valuationState = selectedState;
         this.level = selectedState.level();
         this.evidenceUrl = evidenceUrl;
         this.evidenceNote = evidenceNote;
+        this.strengths = strengths;
+        this.improvementOpportunities = improvementOpportunities;
         this.updatedAt = Instant.now();
     }
 
@@ -64,7 +81,11 @@ public class ComponentValuation {
         return valuationState;
     }
     public void countInto(ValuationTotals totals) { getValuationState().countInto(totals); }
+    public boolean isImprovementChance() { return getValuationState().isImprovementChance(); }
+    public boolean isStrength() { return getValuationState().isStrength(); }
     public String getEvidenceUrl() { return evidenceUrl; }
     public String getEvidenceNote() { return evidenceNote; }
+    public String getStrengths() { return strengths; }
+    public String getImprovementOpportunities() { return improvementOpportunities; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

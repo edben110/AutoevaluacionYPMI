@@ -8,5 +8,7 @@ import jakarta.validation.constraints.Size;
 public record ValuationRequest(
         @NotNull @Min(1) @Max(4) Integer level,
         @Size(max = 1000) String evidenceUrl,
-        @Size(max = 10000) String evidenceNote
+        @Size(max = 10000) String evidenceNote,
+        @Size(max = 10000) String strengths,
+        @Size(max = 10000) String improvementOpportunities
 ) {}

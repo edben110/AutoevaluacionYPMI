@@ -20,6 +20,10 @@ public class SelfEvaluation {
     @Column(name = "year", nullable = false)
     private int year;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "period_year")
+    private SelfEvaluationPeriod period;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private SelfEvaluationStatus status;
@@ -43,6 +47,12 @@ public class SelfEvaluation {
     public UUID getId() { return id; }
     public Establishment getEstablishment() { return establishment; }
     public int getYear() { return year; }
+    public SelfEvaluationPeriod getPeriod() { return period; }
+    public void assignPeriod(SelfEvaluationPeriod period) {
+        if (period.getYear() != year) throw new IllegalArgumentException("El período debe corresponder al año de la autoevaluación");
+        this.period = period;
+    }
+    public void removePeriod() { this.period = null; }
     public SelfEvaluationStatus getStatus() { return status; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

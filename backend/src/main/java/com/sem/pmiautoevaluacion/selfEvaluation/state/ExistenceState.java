@@ -4,8 +4,8 @@ final class ExistenceState implements ValuationState {
     static final ExistenceState INSTANCE = new ExistenceState();
     private ExistenceState() {}
 
-    @Override public short level() { return 1; }
-    @Override public String code() { return "EXISTENCE"; }
-    @Override public String label() { return "Existencia"; }
+    @Override public ComponentValue getValue() { return ComponentValue.EXISTENCE; }
+    @Override public boolean isImprovementChance() { return true; }
+    @Override public boolean isStrength() { return false; }
     @Override public void countInto(ValuationTotals totals) { totals.countExistence(); }
 }

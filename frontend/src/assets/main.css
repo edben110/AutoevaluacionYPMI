@@ -69,6 +69,15 @@ button { cursor: pointer; }
 .profile-grid dd { margin: 0; font-weight: 650; overflow-wrap: anywhere; }
 .secondary-button { margin-top: 1rem; padding: .7rem 1.1rem; border: 1px solid #176d58; border-radius: .6rem; color: #176d58; background: white; font-weight: 700; }
 .dashboard-action { display: inline-block; text-decoration: none; }
+.area-evaluations { margin-top: 2rem; }
+.area-evaluations > h2 { color: #183c35; font-size: 1.4rem; }
+.area-evaluations > p { color: #5f7569; line-height: 1.6; }
+.area-evaluation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1.25rem; }
+.area-evaluation-card { display: flex; flex-direction: column; gap: .8rem; padding: 1.5rem; border: 1px solid #d8e5dc; border-top: 4px solid #176d58; border-radius: .85rem; background: #fff; color: #183c35; text-decoration: none; }
+.area-evaluation-card:hover { border-color: #176d58; background: #f6faf7; }
+.area-evaluation-card:focus-visible { outline: 3px solid #8cca9d; outline-offset: 2px; }
+.area-evaluation-card h3 { margin: 0; font-size: 1.1rem; line-height: 1.5; }
+.area-card-action { margin-top: auto; color: #176d58; font-size: .9rem; font-weight: 700; }
 
 .evaluation-page { min-height: 100vh; background: #f5f7f4; }
 .evaluation-header { display: flex; justify-content: space-between; gap: 1rem; padding: 1.1rem clamp(1.5rem, 6vw, 6rem); background: white; border-bottom: 1px solid #e3ebe4; }
@@ -76,9 +85,11 @@ button { cursor: pointer; }
 .evaluation-content { width: min(100% - 3rem, 1050px); margin: 3rem auto 5rem; }
 .evaluation-content > h1 { margin: .55rem 0; font-size: clamp(2rem, 4vw, 3rem); color: #183c35; }
 .evaluation-content > p { color: #5f7569; line-height: 1.6; }
+.evaluation-content > .evaluation-area-name { margin: .6rem 0; color: #176d58; font-size: 1.25rem; font-weight: 700; }
 .year-form { display: flex; align-items: end; gap: 1rem; flex-wrap: wrap; margin: 2rem 0; }
 .year-form label, .valuation-fields label { display: grid; gap: .45rem; color: #345349; font-size: .87rem; font-weight: 700; }
-.year-form input, .valuation-fields input, .valuation-fields select, .valuation-fields textarea { padding: .7rem .8rem; border: 1px solid #d6e2d9; border-radius: .6rem; color: #183c35; background: white; font: inherit; }
+.year-form input, .valuation-fields input, .valuation-fields select, .valuation-fields textarea { min-width: 0; padding: .7rem .8rem; border: 1px solid #d6e2d9; border-radius: .6rem; color: #183c35; background: white; font: inherit; }
+.valuation-fields input, .valuation-fields select, .valuation-fields textarea { width: 100%; }
 .year-form input { width: 9rem; }
 .year-form .secondary-button { margin: 0; }
 .evaluation-empty, .evaluation-summary, .evaluation-area { margin-top: 1.5rem; padding: 1.7rem; border: 1px solid #e2eae2; border-radius: 1rem; background: white; }
@@ -91,6 +102,9 @@ button { cursor: pointer; }
 .evaluation-area h2 { margin: 0 0 1.2rem; color: #183c35; font-size: 1.45rem; }
 .evaluation-process { margin-top: 1.5rem; }
 .evaluation-process h3 { color: #2d6d5b; font-size: 1.06rem; }
+.process-header { padding: 1rem 1.2rem; border-radius: .7rem; background: #185b4b; color: #fff; }
+.process-header span { color: #d0e8dc; font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
+.process-header h3 { margin: .4rem 0 0; color: #fff; font-size: 1.08rem; line-height: 1.5; }
 .evaluation-component { margin-top: .8rem; padding: 1.3rem; border: 1px solid #e2eae2; border-radius: .8rem; background: #fbfcfa; }
 .component-heading { display: flex; justify-content: space-between; gap: 1rem; }
 .component-heading h4 { margin: 0; font-size: 1rem; }
@@ -99,6 +113,7 @@ button { cursor: pointer; }
 .valuation-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.2rem; }
 .note-field { grid-column: 1 / -1; }
 .valuation-fields textarea { resize: vertical; }
+.valuation-fields textarea:disabled { color: #627369; background: #edf1ed; cursor: not-allowed; }
 .evaluation-component .secondary-button { margin-top: 1.2rem; }
 
 @media (max-width: 800px) {
@@ -111,6 +126,7 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 480px) {
+  .area-evaluation-grid { grid-template-columns: 1fr; }
   .role-option { font-size: .75rem; }
   .dashboard-content { width: min(100% - 2rem, 1050px); margin: 2rem auto; }
   .profile-grid { grid-template-columns: 1fr; }
