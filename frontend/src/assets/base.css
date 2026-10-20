@@ -20,13 +20,15 @@
   --color-background-mute: var(--sem-white-mute);
 
   --color-border: var(--sem-black-soft);
-  --color-border-hover: var(--sem-black);
+  --color-border-black: var(--sem-black);
   --color-border-highlight: var(--sem-blue);
+  --color-border-disabled: var(--sem-black-mute);
 
   --color-text: var(--sem-black);
   --color-text-highlight: var(--sem-blue);
   --color-text-red: var(--sem-red);
   --color-text-disabled: var(--sem-black-soft);
+  --color-text-white: var(--sem-white);
 }
 
 *,
