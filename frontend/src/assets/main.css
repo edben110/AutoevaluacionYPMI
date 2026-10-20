@@ -1,13 +1,28 @@
 @import './base.css';
 
-:root {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  color: #173531;
-  background: #f5f7f4;
+/* Regular: Texto general */
+body{
+  font-weight: 400;
 }
 
+/* Bold: títulos y texto destacado */
+h1,
+h2,
+h3,
+strong,
+b {
+  font-weight: 700;
+}
+
+/* Semilight: texto secundario */
+.text-semilight {
+  font-weight: 350;
+}
+
+/* TODO: Revisar todo este CSS para verificar cada uno de los estilos aplicados */
+
 * { box-sizing: border-box; }
-body { min-width: 320px; margin: 0; color: #173531; background: #f5f7f4; }
+body { min-width: 320px; margin: 0; }
 button, input { font: inherit; }
 button { cursor: pointer; }
 

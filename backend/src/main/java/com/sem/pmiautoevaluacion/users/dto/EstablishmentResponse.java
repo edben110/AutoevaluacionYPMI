@@ -7,11 +7,9 @@ import com.sem.pmiautoevaluacion.users.entity.Establishment;
 public class EstablishmentResponse {
     private UUID id;
     private String daneCode;
-    private String rector;
-
-    // TODO: En caso de que los emails se remuevan para establecimiento, quitar
     private String email;
-    private String name;
+    private String name; // Hace referencia al nombre el establecimiento
+    private String rector; // Hace referencia al nombre del rector de un establecimiento, puede y va ser cambiando con el tiempo
 
     public EstablishmentResponse() {
         // Constructor vacio requerido para serializacion JSON
@@ -21,10 +19,8 @@ public class EstablishmentResponse {
         EstablishmentResponse response = new EstablishmentResponse();
         response.setId(establishment.getId());
         response.setDaneCode(establishment.getDaneCode());
-        response.setRector(establishment.getRector());
-
-        // TODO: En caso de que los emails se remuevan para establecimiento, quitar
         response.setName(establishment.getName());
+        response.setRector(establishment.getRector());
         response.setEmail(establishment.getEmail().getValue());
 
         return response;

@@ -9,8 +9,6 @@ public interface EstablishmentService {
         String rector,
         String daneCode,
         String password,
-
-        //TODO: Si se remueven los emails para establishment:
         String name,
         String email
     );
