@@ -4,6 +4,7 @@ import java.util.UUID;
 
 // Deliberadamente no incluye email ni codigo DANE
 //  los puede conocer el frontend porque el usuario los escribe para autenticarse
+// TODO: Hace falta crear un RegisterRequest junto con el controller para crear un flujo de registro disponible para front
 public class LoginResponse {
     private String token;
     private UUID id;

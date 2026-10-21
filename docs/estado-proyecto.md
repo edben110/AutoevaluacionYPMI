@@ -1,6 +1,6 @@
 # Estado y fuentes del proyecto
 
-Revisión: 6 de octubre de 2026. Esta nota resume lo que se pudo leer del repositorio, su wiki, dos diagramas adjuntos y la Guía 34 enlazada. No reemplaza los artefactos originales.
+Revisión: 21 de octubre de 2026. Esta nota resume lo que se pudo leer del repositorio, su wiki, dos diagramas adjuntos y la Guía 34 enlazada. No reemplaza los artefactos originales.
 
 ## Fuentes
 
@@ -27,8 +27,8 @@ El diagrama de clases presenta como diseño `User`, `Establishment`, `Secretary`
 | Ubicación | Estado al revisar |
 | --- | --- |
 | `main` | Commit inicial `853d358`; Spring Boot y Vue de arranque. |
-| `origin/anton` | Commit `f0b18b0`, consultado el 6 de octubre de 2026. Además de autenticación y catálogos, incorpora actualización, activación/desactivación, cambio de área/proceso padre y captura de `expectedEvidence` al crear/editar componentes. Sus cinco commits posteriores a `c8e2bec` incluyen una integración previa de `JuanM` y comentarios. |
-| `JuanM` | Borrador e interfaz inicial en `e29f155`; limpieza de agentes/skills en `1e03577`; State inicial en `c8e2bec`; autoevaluación completa y períodos de Secretaría en `8df88de`. Integra `origin/anton` hasta `f0b18b0`, preservando sus cambios y las nuevas pruebas institucionales. Incluye V6–V8, textos, porcentajes, permisos y acceso por áreas solo durante períodos abiertos. |
+| `origin/anton` | Commit `ff6d49b`, consultado el 21 de octubre de 2026. Incorpora `JuanM` hasta `9bd3ae4` y añade cuatro commits de relaciones inversas JPA, aclaraciones funcionales, tipografía y colores. Conserva las operaciones de actualización, activación/desactivación y cambio de padre de los catálogos. |
+| `JuanM` | Borrador e interfaz inicial en `e29f155`; limpieza de agentes/skills en `1e03577`; State inicial en `c8e2bec`; autoevaluación completa y períodos de Secretaría en `8df88de`. Integra `origin/anton` hasta `ff6d49b`. Corrige `SelfEvaluation.valuations` a `mappedBy = "evaluation"`, que es el atributo propietario en `ComponentValuation`, y verifica la navegación de las relaciones persistidas. Incluye V6–V8, textos, porcentajes, permisos y acceso por áreas solo durante períodos abiertos. |
 | `backend` | Java 21, Spring Boot 4.1.1, PostgreSQL, JPA, Flyway, validación y Spring Security. Configuración de BD y JWT mediante variables de entorno o perfil `local` ignorado por Git. V4 crea las tablas del catálogo; V5 agrega el borrador anual y valoraciones por componente; V6 carga el inventario oficial de 2026. El arranque con PostgreSQL local y `ddl-auto=validate` fue verificado. |
 | `frontend` | Vue 3, TypeScript, Vite y router. En `JuanM` local hay acceso de institución/SEM, pantalla de sesión y primera vista de borrador anual. La vista muestra el catálogo cuando tenga componentes activos. La pantalla del PMI sigue pendiente. |
 
@@ -64,6 +64,24 @@ Juan aclaró que las autoevaluaciones institucionales deben aparecer solo cuando
 - El diagrama confirma como candidatos los estados 1 y 2 y propone priorizar por urgencia/tendencia/impacto. El subtotal describe la distribución; la priorización requiere mantener las valoraciones individuales y valorar U/T/I (Guía 34, pp. 77-80). `PrioritaryComponent` y la selección posterior aún están pendientes.
 - Contrato para evidencias: hoy el flujo dibuja enlaces y notas sobre ubicación; definir almacenamiento, acceso, privacidad y conservación antes de implementar cargas de archivos.
 
+### Respuestas a dudas estipuladas:
+- **¿Qué versión de la Guía 34 y qué instrucciones propias de la ciudad/SEM prevalecen si difieren del PDF de 2026 enlazado en la wiki.?**
+  La guía 34 es nuestro origen de la información y como hacer las cosas, sin embargo, si nos dicen hacer algo de cierta manera desde la sub secretaría de calidad, entonces la regla de negocio cambia para satisfacer dichas necesidades que nos estipulan allá.
+- **El diagrama de flujo propone priorizar hasta dos componentes y seleccionar por puntaje de urgencia/tendencia/impacto. Contrastarlo con la metodología de la guía, que parte de oportunidades por las cuatro áreas (p. 77), antes de fijarlo en datos o validaciones.**
+  El flujo de priorización de componentes es como nos lo han planteado desde la Secretaria de educación, su comportamiento tal y como se lo plantea de manera lógica es la interpretación mas cercana a las instrucciones dadas por la secretaría de educación.
+- **¿Quién puede crear o editar el catálogo de áreas, procesos y componentes, y cómo se publica/versiona para cada año escolar?**
+  Nos indican por un lado que toda la parte de gestión integral puede que no sufra cambios de aquí a muchos años, sin embargo, pensándolo de manera escalable no hay un consenso claro de quien es el que va cambiar dicho catalogo, apuntando vagamente al director de sistemas de información de la secretaria de educación. Por el momento tengo la intención de dejar creación y edición de gestión integral a los usuarios del tipo secretaría.
+- **Estados y permisos de borrador, envío, observación, corrección y cierre de autoevaluaciones/PMI; reglas de unicidad por institución y periodo.**
+  Recuerdo lo siguiente: las autoevaluaciones son un ejercicio moral, y aunque viene bien tener los siguientes estados: borrador, envío, observación y cierre. Cabe aclarar que cuando se realizan las observaciones por parte del personal de secretaría, ellos no esperan que la institución modifique su autoevaluación actual para cumplir con dichas observaciones, sino que tomen nota para realizarlas en la siguiente entrega.
+- **Contrato para evidencias: hoy el flujo dibuja enlaces y notas sobre ubicación; definir almacenamiento, acceso, privacidad y conservación antes de implementar cargas de archivos.**
+  Nosotros no manejamos archivos de manera propia, ni pretendemos hacerlo. Se nos estipula por parte de la secretaría de educación que las instituciones están acostumbradas a utilizar repositorios de archivos como Google Drive y prefieren mantener dichos repositorios para las entregas, a pesar de los problemas de trazabilidad que esto pueda traer o lo ineficiente que sea, esto es una decisión que nos dejaron claro prefieren mantenerlo de esta forma. Por ello, lo único que se debe solicitar es un link de acceso general hacia el repositorio con la nota que especifique la ubicación de las evidencias en las carpetas del repositorio.
+
 Actualizar esta nota cuando se integren ramas, cambie la wiki o el equipo cierre las decisiones anteriores.
+
+## Integración del 21 de octubre de 2026
+
+Se incorporan `46e5aab`, `de419f9`, `5382e4e` y `ff6d49b` en `JuanM`. Las relaciones inversas institución → autoevaluaciones, autoevaluación → valoraciones y componente → valoraciones reutilizan las claves foráneas existentes y no requieren migración. Se corrige el `mappedBy` de autoevaluación, que apuntaba al nombre de tabla en vez del atributo Java. La prueba de persistencia recarga las entidades desde PostgreSQL y comprueba sus tres relaciones.
+
+Se conservan las aclaraciones de Antonio sobre revisión para la siguiente entrega y evidencias por enlaces externos, junto con sus estilos de acceso y variables de color SEM. Los comentarios TODO de autenticación describen pendientes; no implementan registro ni recuperación de contraseña.
 
 La correspondencia entre el código actual y las clases del diagrama, incluidos los elementos pendientes, está en [alineación con el diagrama de clases](alineacion-diagrama-clases.md).

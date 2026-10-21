@@ -15,6 +15,8 @@ import com.sem.pmiautoevaluacion.users.entity.Establishment;
 import com.sem.pmiautoevaluacion.users.entity.Secretary;
 import com.sem.pmiautoevaluacion.users.entity.User;
 
+// TODO: Hace falta crear los metodos para registro para crear un flujo disponible para front para crear usuarios con sus respectivos roles
+// TODO: Hace falta revisar como se implementa el servicio de recuperar contraseña desde un correo. Ver si hace falta otra clase o se puede implementar aqui
 @Service 
 public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;

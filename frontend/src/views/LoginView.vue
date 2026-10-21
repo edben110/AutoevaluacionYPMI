@@ -69,7 +69,7 @@ async function submit(): Promise<void> {
       <div class="form-wrap">
         <span class="eyebrow eyebrow-dark">BIENVENIDO</span>
         <h2 id="login-title">Ingresa a tu espacio</h2>
-        <p class="form-description">Selecciona tu tipo de acceso para continuar.</p>
+        <p class="form-description text-semilight">Selecciona tu tipo de acceso para continuar.</p>
 
         <div class="role-selector" role="group" aria-label="Tipo de acceso">
           <button

@@ -27,7 +27,6 @@ public class EstablishmentServiceImpl implements EstablishmentService {
         String rector,
         String daneCode,
         String password,
-        // TODO: Eliminar si se remueve el email de establishment
         String email,
         String name
     ) {
@@ -36,7 +35,6 @@ public class EstablishmentServiceImpl implements EstablishmentService {
         }
 
         String encodedPassword = passwordEncoder.encode(password);
-        // TODO: Eliminar name e EmailRecord si se remueven los emails de Establishment
         Establishment establishment = new Establishment(
             name,
             encodedPassword,

@@ -1,5 +1,10 @@
 package com.sem.pmiautoevaluacion.users.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.sem.pmiautoevaluacion.selfEvaluation.entity.SelfEvaluation;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
@@ -15,6 +20,9 @@ public class Establishment extends User{
     @NotBlank (message = "El rector no puede estar vacio")
     @Column(name = "rector", nullable = false, length = 150)
     private String rector;
+
+    @OneToMany(mappedBy = "establishment", fetch = FetchType.LAZY)
+    private List<SelfEvaluation> selfEvaluations = new ArrayList<>();
 
     protected Establishment() {
         super();
@@ -48,6 +56,11 @@ public class Establishment extends User{
         this.rector = rector;
     }
 
-    // TODO: Agregar relacion @OneToMany cuando se defina la entidad relacionada a autoevaluacion
+    public List<SelfEvaluation> getSelfEvaluations() {
+        return selfEvaluations;
+    }
 
+    public void setSelfEvaluations(List<SelfEvaluation> selfEvaluations) {
+        this.selfEvaluations = selfEvaluations;
+    }
 }

@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import com.sem.pmiautoevaluacion.selfEvaluation.dto.SelfEvaluationPeriodRequest;
 import com.sem.pmiautoevaluacion.selfEvaluation.service.SelfEvaluationPeriodService;
@@ -45,6 +46,32 @@ class SelfEvaluationNarrativePersistenceTests {
                 new EmailRecord(UUID.randomUUID() + "@local.test")));
         var today = LocalDate.now(java.time.ZoneId.of("America/Bogota"));
         periods.configure(secretary.getId(), 2026, new SelfEvaluationPeriodRequest(today.minusDays(1), today.plusDays(1)));
+    }
+
+    @Test
+    void reloadedInstitutionEvaluationAndComponentExposeSavedRelationships() {
+        String suffix = UUID.randomUUID().toString();
+        var institution = establishments.save(new Establishment("Institución de prueba", "test-only",
+                new EmailRecord(suffix + "@local.test"), suffix.substring(0, 20), "Rectoría"));
+        UUID institutionId = institution.getId();
+        UUID componentId = UUID.fromString("34002026-0003-4000-8000-000000000017");
+        var draft = service.createOrFind(institutionId, 2026);
+        service.saveValuation(institutionId, 2026, componentId,
+                new ValuationRequest(2, null, "Evidencia", "Fortaleza", "Mejora"));
+        entityManager.flush();
+        entityManager.clear();
+
+        var reloaded = establishments.findById(institutionId).orElseThrow();
+        var evaluation = reloaded.getSelfEvaluations().stream()
+                .filter(item -> item.getYear() == 2026).findFirst().orElseThrow();
+        assertEquals(draft.id(), evaluation.getId());
+        assertEquals(1, evaluation.getValuations().size());
+        var valuation = evaluation.getValuations().getFirst();
+        assertEquals(evaluation.getId(), valuation.getEvaluation().getId());
+        assertEquals(componentId, valuation.getComponent().getId());
+        assertEquals("Fortaleza", valuation.getStrengths());
+        assertTrue(valuation.getComponent().getValuations().stream()
+                .anyMatch(item -> item.getId().equals(valuation.getId())));
     }
 
     @ParameterizedTest
