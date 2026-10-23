@@ -5,6 +5,21 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/pmi/:year/areas/:areaId/formulacion',
+      name: 'pmi-formulation',
+      component: () => import('@/views/PmiFormulationView.vue'),
+    },
+    {
+      path: '/pmi/:year/areas/:areaId',
+      name: 'pmi',
+      component: () => import('@/views/PmiView.vue'),
+    },
+    {
+      path: '/pmi/:year',
+      name: 'pmi-overview',
+      component: () => import('@/views/PmiOverviewView.vue'),
+    },
+    {
       path: '/secretaria/periodos-autoevaluacion',
       name: 'secretary-periods',
       component: () => import('@/views/SecretaryPeriodsView.vue'),

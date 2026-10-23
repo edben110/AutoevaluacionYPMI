@@ -138,4 +138,4 @@ No hay que copiar y ejecutar el SQL en pgAdmin ni enviar 64 solicitudes POST. Fl
 
 ## Alcance del borrador
 
-Esta carga contiene el inventario de nombres y relaciones. Los descriptores específicos de cada componente para los cuatro niveles, que están en el anexo 1 (pp. 115-163), todavía no se representan como datos de la aplicación. Deben consultarse en la guía para fundamentar la elección de la institución. Tampoco se convierte en requisito obligatorio ninguno de los ejemplos del anexo 3. La precarga de descriptores y el versionado del catálogo por periodo son trabajos posteriores.
+Esta carga contiene el inventario de nombres y relaciones. Los cuatro descriptores de nivel por componente del anexo 1 (pp. 115-163) todavía no se representan como datos de la aplicación. Por aclaración de Juan, la [ayuda del componente](ayuda-componentes-evidencias.md) añade únicamente una síntesis de qué evalúa cada ítem, ejemplos pertinentes y páginas de consulta, sin transcribir los cuatro niveles. No convierte en requisito obligatorio ninguno de los ejemplos del anexo 3. El versionado del catálogo por período sigue pendiente.

@@ -13,7 +13,9 @@ Decisión confirmada por Juan el 6 de octubre de 2026: la institución elige el 
 
 La [Guía 34 de 2026](https://www.mineducacion.gov.co/1780/articles-430002_recurso_3.pdf), anexo 1 (pp. 115-163), describe los cuatro niveles por componente; el anexo 2 (pp. 164-167) presenta la matriz con columnas 1–4 y totales. Los números conservan la correspondencia con esos niveles y el contrato existente. La marca `1` del Excel significa un componente contado en la columna elegida, independientemente del código del estado.
 
-La institución puede seleccionar cualquiera de los estados directamente y corregir su elección en el borrador. Un componente sin valoración guardada permanece pendiente y no se asigna automáticamente a Existencia. La selección y las evidencias se guardan mediante el PUT existente. Los códigos numéricos guardados anteriormente se reconstruyen como objetos State, manteniendo sus valores; no cambia el esquema ni las migraciones aplicadas.
+La institución puede seleccionar cualquiera de los estados directamente y corregir su elección en el borrador no enviado. Un componente sin valoración guardada permanece pendiente y no se asigna automáticamente a Existencia. La selección y las evidencias se guardan automáticamente mediante el PUT existente. Los códigos numéricos guardados anteriormente se reconstruyen como objetos State, manteniendo sus valores. V12 registra la entrega por área y V13 amplía la referencia de evidencia a texto sin cambiar los códigos de estado ni las migraciones anteriores.
+
+**Ayuda del componente** muestra qué evalúa el ítem y ejemplos de evidencia con su referencia documental, también en áreas enviadas. El campo `evidenceUrl` conserva el nombre de API pero admite texto o enlaces, saltos de línea y hasta 10.000 caracteres; no exige documentos digitalizados. La ayuda administrativa y financiera se limita al componente correspondiente. Véase [ayuda de componentes y evidencias](ayuda-componentes-evidencias.md).
 
 ## Implementación State
 
@@ -76,4 +78,4 @@ El diagrama de clases y el de flujo identifican los estados 1/2 como oportunidad
 
 La guía describe el análisis de oportunidades y factores críticos en las pp. 77-80. En la p. 80 propone valorar urgencia, tendencia e impacto en escala 1–5 y ordenar por su suma. Esa valoración corresponde a la priorización posterior, distinta de los códigos 1–4 de la autoevaluación.
 
-Queda por implementar `PrioritaryComponent`, con su referencia a `ComponentValuation`, factores críticos y valores de urgencia/tendencia/impacto, según el diagrama. La selección final de componentes para el PMI requiere confirmar los detalles del límite propuesto en el flujo del equipo. La implementación actual expone valoración manual, clasificación y conteo; el módulo de priorización sigue pendiente.
+`PrioritaryComponent` y el PMI por área están implementados. Tras completar y enviar la autoevaluación del área, el Anexo 2 toma únicamente los componentes del menor estado presente entre 1, 2 y 3; si todos están en 4 no hay candidatos. Después de guardar todos los U/T/I pasan uno o dos máximos al Anexo 3; con más de dos empatados la institución elige exactamente dos. Esta regla contextual aprobada por Juan amplía la clasificación inicial del diagrama. Véanse [Anexo 2](pmi-anexo2.md) y [envío por área](envio-autoevaluacion-por-area.md).

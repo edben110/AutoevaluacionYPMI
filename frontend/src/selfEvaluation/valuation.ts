@@ -37,3 +37,15 @@ export interface Valuation {
   improvementOpportunities: string | null
   updatedAt: string
 }
+
+export interface AreaEvaluationStatus {
+  year: number
+  areaId: string
+  areaName: string
+  status: 'DRAFT' | 'SUBMITTED'
+  submittedAt: string | null
+  totalComponents: number
+  valuedComponents: number
+  complete: boolean
+  canSubmit: boolean
+}

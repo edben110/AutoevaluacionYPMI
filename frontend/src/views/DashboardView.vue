@@ -4,8 +4,11 @@ import { RouterLink, useRouter } from 'vue-router'
 import { authorizedFetch, currentProfile, hasSession, loadProfile, responseError, signOut } from '@/auth/session'
 import EvaluationPeriodNotice from '@/components/EvaluationPeriodNotice.vue'
 import { type EvaluationPeriod } from '@/selfEvaluation/period'
+import type { PmiOverview } from '@/pmi/types'
+import PmiAreaCards from '@/components/PmiAreaCards.vue'
 
 interface Area { id: string; name: string }
+interface EvaluationSummary { year: number }
 
 const router = useRouter()
 const loading = ref(true)
@@ -18,6 +21,25 @@ const period = computed(() => periods.value.find(item => item.year === year.valu
 const available = computed(() => !periodLoading.value && !periodError.value && period.value?.writable === true)
 const periodLoading = ref(false)
 const periodError = ref('')
+const pmiOverviews = ref<PmiOverview[]>([])
+const pmiError = ref('')
+
+async function loadPmiYears(): Promise<void> {
+  pmiError.value = ''
+  try {
+    const response = await authorizedFetch('/api/self-evaluations')
+    if (!response.ok) throw await responseError(response)
+    const years = ((await response.json()) as EvaluationSummary[])
+      .map(item => item.year).sort((first, second) => second - first)
+    pmiOverviews.value = await Promise.all(years.map(async year => {
+      const overview = await authorizedFetch(`/api/pmi/${year}`)
+      if (!overview.ok) throw await responseError(overview)
+      return await overview.json() as PmiOverview
+    }))
+  } catch (cause) {
+    pmiError.value = cause instanceof Error ? cause.message : 'No se pudieron consultar las autoevaluaciones para el PMI.'
+  }
+}
 
 async function loadPeriod(): Promise<void> {
   periodError.value = ''
@@ -56,7 +78,7 @@ async function refreshProfile(): Promise<void> {
   areas.value = []
   try {
     const profile = await loadProfile()
-    if (profile.role === 'ESTABLISHMENT') await loadPeriod()
+    if (profile.role === 'ESTABLISHMENT') await Promise.all([loadPeriod(), loadPmiYears()])
     if (!hasSession.value) await router.replace({ name: 'login' })
   } catch (cause) {
     if (!hasSession.value) {
@@ -156,6 +178,20 @@ onUnmounted(() => window.removeEventListener('focus', refreshAvailability))
           </template>
           <button class="text-button" type="button" :disabled="periodLoading" @click="loadPeriod">Actualizar disponibilidad</button>
         </section>
+        <section v-if="currentProfile.role === 'ESTABLISHMENT'" class="status-card pmi-entry" aria-labelledby="pmi-title">
+          <span class="pmi-eyebrow">PLAN DE MEJORAMIENTO INSTITUCIONAL</span>
+          <h2 id="pmi-title">Planes de mejoramiento por área</h2>
+          <p>Cada área tiene su propio PMI. Se habilita al completar y enviar la autoevaluación de esa área.</p>
+          <div v-if="pmiError" role="alert">
+            <p class="form-error">{{ pmiError }}</p>
+            <button class="pmi-link" type="button" @click="loadPmiYears">Reintentar</button>
+          </div>
+          <p v-else-if="pmiOverviews.length === 0">Aún no tienes una autoevaluación para iniciar la priorización.</p>
+          <section v-for="overview in pmiOverviews" v-else :key="overview.year" class="pmi-year-group">
+            <h3>PMI · Autoevaluación {{ overview.year }}</h3>
+            <PmiAreaCards :overview="overview" />
+          </section>
+        </section>
         <section class="profile-card" aria-labelledby="profile-title">
           <div class="section-title">
             <span class="section-number">01</span>
@@ -184,3 +220,14 @@ onUnmounted(() => window.removeEventListener('focus', refreshAvailability))
     </div>
   </main>
 </template>
+
+<style scoped>
+.pmi-entry { border-top: 4px solid var(--sem-blue); }
+.pmi-entry h2 { margin: .5rem 0; color: var(--color-text-highlight); }
+.pmi-entry p { margin: .65rem 0; }
+.pmi-eyebrow { color: var(--color-text-highlight); font-size: .75rem; font-weight: 700; letter-spacing: .08em; }
+.pmi-year-links { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1rem; }
+.pmi-link { display: inline-block; border: 1px solid var(--sem-blue); border-radius: .6rem; background: var(--color-background-top); padding: .7rem 1rem; color: var(--color-text-highlight); font: inherit; font-weight: 700; text-decoration: none; }
+.pmi-link:hover { background: var(--color-background-mute); }
+.pmi-link:focus-visible { outline: 3px solid var(--sem-yellow); outline-offset: 3px; }
+</style>

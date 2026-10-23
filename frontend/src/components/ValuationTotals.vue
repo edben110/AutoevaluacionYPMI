@@ -43,14 +43,15 @@ const counts = computed(() =>
 </template>
 
 <style scoped>
-.valuation-table-wrap { margin-top: 1.25rem; overflow-x: auto; border: 1px solid #d5e2dc; border-radius: .65rem; background: #fff; }
-.valuation-table-wrap:focus-visible { outline: 3px solid #8cca9d; outline-offset: 2px; }
-.valuation-table { width: 100%; min-width: 580px; border-collapse: collapse; color: #234d40; font-size: .9rem; }
-.valuation-table caption { padding: .85rem 1rem; background: #f0f5f2; color: #183c35; text-align: left; font-weight: 700; }
-.valuation-table th, .valuation-table td { padding: .85rem .75rem; border-top: 1px solid #dce7e1; border-right: 1px solid #dce7e1; text-align: center; }
-.valuation-table thead { background: #e3eee7; }
+.valuation-table-wrap { margin-top: 1.25rem; overflow-x: auto; border: 1px solid var(--color-background-mute); border-radius: .65rem; background: var(--color-background-top); }
+.valuation-table-wrap:focus-visible { outline: 3px solid var(--sem-yellow); outline-offset: 2px; }
+.valuation-table { width: 100%; min-width: 580px; border-collapse: collapse; color: var(--color-text); font-size: .9rem; }
+.valuation-table caption { padding: .85rem 1rem; background: var(--color-background-mute); color: var(--color-text-highlight); text-align: left; font-weight: 700; }
+.valuation-table th, .valuation-table td { padding: .85rem .75rem; border-top: 1px solid var(--color-background-mute); border-right: 1px solid var(--color-background-mute); text-align: center; }
+.valuation-table thead { background: var(--sem-blue); color: var(--color-text-white); }
 .valuation-table th:first-child { text-align: left; }
-.valuation-table th:last-child, .valuation-table td:last-child { border-right: 0; background: #edf4ef; font-weight: 700; }
+.valuation-table th:last-child, .valuation-table td:last-child { border-right: 0; font-weight: 700; }
+.valuation-table tbody th:last-child, .valuation-table tbody td:last-child { background: var(--color-background-mute); }
 .valuation-table tbody td { font-variant-numeric: tabular-nums; }
-.valuation-table .percentage-row { background: #f8faf8; color: #496a5b; }
+.valuation-table .percentage-row { background: var(--color-background); color: var(--color-text-disabled); }
 </style>

@@ -1,6 +1,6 @@
 # Estado y fuentes del proyecto
 
-Revisión: 21 de octubre de 2026. Esta nota resume lo que se pudo leer del repositorio, su wiki, dos diagramas adjuntos y la Guía 34 enlazada. No reemplaza los artefactos originales.
+Revisión: 23 de octubre de 2026. Esta nota resume lo que se pudo leer del repositorio, su wiki, dos diagramas adjuntos y la Guía 34 enlazada. No reemplaza los artefactos originales.
 
 ## Fuentes
 
@@ -30,14 +30,14 @@ El diagrama de clases presenta como diseño `User`, `Establishment`, `Secretary`
 | `origin/anton` | Commit `ff6d49b`, consultado el 21 de octubre de 2026. Incorpora `JuanM` hasta `9bd3ae4` y añade cuatro commits de relaciones inversas JPA, aclaraciones funcionales, tipografía y colores. Conserva las operaciones de actualización, activación/desactivación y cambio de padre de los catálogos. |
 | `JuanM` | Borrador e interfaz inicial en `e29f155`; limpieza de agentes/skills en `1e03577`; State inicial en `c8e2bec`; autoevaluación completa y períodos de Secretaría en `8df88de`. Integra `origin/anton` hasta `ff6d49b`. Corrige `SelfEvaluation.valuations` a `mappedBy = "evaluation"`, que es el atributo propietario en `ComponentValuation`, y verifica la navegación de las relaciones persistidas. Incluye V6–V8, textos, porcentajes, permisos y acceso por áreas solo durante períodos abiertos. |
 | `backend` | Java 21, Spring Boot 4.1.1, PostgreSQL, JPA, Flyway, validación y Spring Security. Configuración de BD y JWT mediante variables de entorno o perfil `local` ignorado por Git. V4 crea las tablas del catálogo; V5 agrega el borrador anual y valoraciones por componente; V6 carga el inventario oficial de 2026. El arranque con PostgreSQL local y `ddl-auto=validate` fue verificado. |
-| `frontend` | Vue 3, TypeScript, Vite y router. En `JuanM` local hay acceso de institución/SEM, pantalla de sesión y primera vista de borrador anual. La vista muestra el catálogo cuando tenga componentes activos. La pantalla del PMI sigue pendiente. |
+| `frontend` | Vue 3, TypeScript, Vite y router. Acceso de institución/SEM, períodos y autoevaluación por áreas. La primera etapa del PMI dispone de matriz de factores críticos y U/T/I, ranking y selección de componentes desde las autoevaluaciones guardadas, con la paleta SEM de Antonio. |
 
 Los controladores de catálogo de `anton` exponen creación y consulta de áreas, procesos y componentes. Su implementación cambia con la rama; verificar código y contratos actuales antes de trabajar sobre ella. La rama `main` no contiene todavía estos avances.
 
 ## Primera iteración del borrador anual en `JuanM`
 
 - `PUT /api/self-evaluations/{year}` crea o recupera el borrador de la institución autenticada. `GET /api/self-evaluations/{year}` lo consulta y `GET /api/self-evaluations` lista sus años. Las consultas admiten institución y Secretaría; Secretaría debe indicar `?establishmentId=<UUID de institución>`. Crear y guardar valoraciones siguen siendo acciones de la institución sobre sus propios registros.
-- `PUT /api/self-evaluations/{year}/valuations/{componentId}` guarda nivel 1-4 y, opcionalmente en el borrador, un enlace HTTP(S), una nota de evidencia, `strengths` e `improvementOpportunities`. V7 agrega los dos textos institucionales sin alterar registros anteriores. Solo acepta componentes activos.
+- `PUT /api/self-evaluations/{year}/valuations/{componentId}` guarda nivel 1-4 y, opcionalmente, una referencia de evidencia (enlace o texto), una nota adicional, `strengths` e `improvementOpportunities`. V7 agrega los dos textos institucionales y V13 amplía la referencia a texto de hasta 10.000 caracteres, conservando el nombre JSON `evidenceUrl` por compatibilidad y los enlaces anteriores. Solo acepta componentes activos de áreas no enviadas.
 - Aptitud confirmada por Juan el 6 de octubre: Existencia permite solo oportunidades; Pertinencia y Apropiación permiten fortalezas y oportunidades; Mejoramiento continuo permite solo fortalezas. State expone `allowsStrengths()` y `allowsImprovementOpportunities()`; la API devuelve sus indicadores y rechaza textos prohibidos con `400`, sin alterar la valoración. Vue deshabilita campos no permitidos y ofrece quitar un texto incompatible antes de guardar. La clasificación del diagrama para candidatos del PMI se conserva por separado.
 - La institución elige manualmente Existencia, Pertinencia, Apropiación o Mejoramiento continuo. El backend aplica State mediante `ValuationState`, `ComponentValue` y cuatro clases concretas; cada estado identifica su código/etiqueta y aporta una unidad a su subtotal. Según el diagrama de clases, `isImprovementChance()` devuelve verdadero en Existencia/Pertinencia y `isStrength()` en Apropiación/Mejoramiento continuo. Se mantienen los códigos 1–4 en BD y API para conservar los registros existentes.
 - La consulta del borrador añade `totals` por estado, total anual de valoraciones guardadas y `totals.percentages`. Por solicitud de Juan, el espacio de la institución presenta cuatro entradas de autoevaluación por área. `/autoevaluacion/:areaId` muestra únicamente sus procesos, componentes, conteos y porcentajes, con un resumen del área y subtotales por proceso. Se agregaron estilos modestos para tablas y encabezados de procesos, autorizados por Juan mientras se define el manual de imagen. Fuente funcional: revisión directa del Anexo 1 del Excel local el 6 de octubre y confirmación de que el formato se conserva con el catálogo reducido de 2026. Detalles en [valoración de componentes](valoracion-componentes.md).
@@ -53,6 +53,38 @@ Secretaría también dispone de **Eliminar período**, con confirmación en pant
 
 Juan aclaró que las autoevaluaciones institucionales deben aparecer solo cuando Secretaría habilite el diligenciamiento: las cuatro áreas se muestran únicamente para períodos abiertos publicados. Se retiraron el año libre y la creación manual del borrador en la interfaz de institución. Los enlaces directos también comprueban el período antes de cargar respuestas o componentes. La API conserva los registros y sus permisos de consulta; la pantalla ya no expone formularios fuera del período abierto.
 
+## Ayuda de componentes y evidencias
+
+La ayuda **Ayuda del componente** incorpora una descripción breve de qué evalúa cada uno de los 45 componentes y dos ejemplos de evidencia pertinentes, con fuente y páginas. Juan pidió solo la descripción del ítem, sin los cuatro descriptores de estado. El anexo 3 oficial organiza fuentes por proceso; su selección por componente es orientativa, no una exigencia documental. Las diez ayudas administrativas/financieras se diferenciaron según el componente. El campo de evidencia admite texto para referir documentos físicos sin exigir escaneo y conserva el guardado automático. Reglas y fuente en [ayuda de componentes y evidencias](ayuda-componentes-evidencias.md).
+
+## Envío por área y guardado automático
+
+Juan solicitó un botón de envío independiente por área y guardado automático. V12 incorpora `SelfEvaluationAreaSubmission`, único por autoevaluación/área, con fecha persistida. Completar los niveles ya no habilita automáticamente el PMI: debe pulsarse **Enviar autoevaluación de esta área** dentro del período abierto. El servidor verifica completitud y conserva el envío de forma idempotente. Las respuestas del área enviada quedan para consulta, mientras las otras áreas siguen editables; cambiar o retirar el período no elimina el envío.
+
+Vue guarda cada respuesta unos 800 ms después de dejar de editar, mantiene la última versión si hay una petición en curso y permite reintentar errores. Antes de enviar espera y guarda los cambios pendientes de toda el área; si hay un fallo no ejecuta el envío. Las tarjetas del PMI distinguen completa de enviada. Los borradores existentes no se marcan enviados por migración. El registro anual conserva su estado `DRAFT`; el estado de entrega pertenece al área. Contrato y límites en [envío de autoevaluación por área](envio-autoevaluacion-por-area.md).
+
+## Primera etapa del PMI: Anexo 2
+
+Por solicitud de Juan del 21 de octubre, el Anexo 2 del Excel de evidencias implementa análisis y priorización de factores críticos. V9 agrega `PMI` y `PrioritaryComponent`; V11 separa el PMI por autoevaluación anual y área. La institución describe factores y asigna U/T/I enteros de 1 a 5; el servidor calcula la suma. La aclaración aprobada de Juan prevalece sobre la selección inicial del diagrama: completar y enviar explícitamente la autoevaluación del área habilita su PMI, con candidatos únicamente del menor estado presente (Existencia, o Pertinencia en su ausencia, o Apropiación si no hay ninguno en los dos anteriores). Si todos están en Mejoramiento continuo no hay candidatos. Esta elegibilidad depende del contexto del área, sin modificar los estados de valoración históricos.
+
+Después de puntuar todos los candidatos del área, pasan al Anexo 3 los de mayor U/T/I: uno si el máximo es único, ambos si hay dos, o exactamente dos elegidos por la institución entre tres o más empatados. No hay umbral fijo de 15 ni adicional con puntaje inferior. Los cambios de origen conservan análisis y objetivos previos; los que dejan de ser elegibles son históricos para consulta. La API permite consulta propia y de Secretaría con selector institucional, pero solo la institución escribe. El PMI no queda bloqueado por el cierre del período de autoevaluación; un calendario propio y el cierre formal siguen pendientes de definición.
+
+La entrada institucional del PMI muestra tarjetas por año y área, avance valorados/total y habilitación tras completar y enviar cada área. `/pmi/:year` resume sus áreas y `/pmi/:year/areas/:areaId` abre su Anexo 2. Los estilos utilizan las variables SEM y la tipografía de Antonio; las hojas globales se conservan. Trazabilidad, contrato y pasos de prueba en [PMI: Anexo 2](pmi-anexo2.md).
+
+## Formulación del PMI: Anexo 3
+
+Juan solicitó continuar con la hoja Anexo 3 del mismo Excel. V10 incorpora objetivos ligados a los componentes priorizados, metas y filas con nombre de indicador, bloque de actividades, costo, fuentes FSE/otra, responsable, inicio/fin e instrumentos/frecuencia de recolección. El formato permite varios indicadores por meta; se amplía la relación singular del diagrama mediante filas de actividad/indicador. Un objetivo por área y hasta cuatro actividades se presentan como orientación, sin imponer restricciones no confirmadas.
+
+La institución guarda borradores parciales por objetivo en `/pmi/:year/areas/:areaId/formulacion`, enlazado desde Anexo 2. `canFormulate` exige completar y enviar la autoevaluación del área, puntuar todos sus candidatos y resolver los máximos. Solo los componentes seleccionados y elegibles permiten crear/editar; los objetivos que pierden esa condición se conservan para consulta y solo se eliminan por acción explícita. Secretaría dispone de consulta por API con selector institucional. Los importes usan decimales exactos y distinguen vacío de cero; los totales se limitan al área, excluyen objetivos históricos y señalan campos pendientes. Se conserva la paleta de Antonio. La ficha detallada de indicadores, resultados y revisión formal siguen pendientes. Fuente, contrato, límites técnicos y pruebas en [PMI: Anexo 3](pmi-anexo3.md).
+
+## Interfaz del Anexo 3 para docentes
+
+La simplificación del Anexo 3 solicitada por Juan el 23 de octubre incorpora dos pasos: tarjetas de componentes con mayor U/T/I y **Generar formularios**, seguido del plan de cada componente con todos sus espacios iniciales preparados. Conserva la regla de uno o dos máximos y permite elegir dos cuando hay más empatados. Reutiliza datos e IDs, conserva históricos y exige guardar las respuestas por plan. La selección del Anexo 3 utiliza la misma API de priorización; no cambia las entidades ni las reglas de permisos. Detalles en [Anexo 3](pmi-anexo3.md).
+
+## Paleta visual compartida
+
+El 23 de octubre, por solicitud de Juan, se unificaron los estilos que todavía conservaban verdes de prueba con la paleta SEM definida por Antonio en `frontend/src/assets/base.css`. El panel, las áreas de autoevaluación, los encabezados de procesos, las tablas y los períodos de Secretaría utilizan azul y neutros de esas variables; rojo y amarillo conservan sus funciones de error/aviso y foco. Se verificaron compilación Vue/TypeScript y ESLint y se revisaron acceso, panel, autoevaluación y Secretaría en navegador con datos aislados.
+
 ## Decisiones por confirmar con el equipo
 
 - Los comentarios de Secretaría deben permanecer separados de las respuestas institucionales. Su registro y el flujo formal de revisión siguen pendientes.
@@ -61,7 +93,7 @@ Juan aclaró que las autoevaluaciones institucionales deben aparecer solo cuando
 - El diagrama de flujo propone priorizar hasta dos componentes y seleccionar por puntaje de urgencia/tendencia/impacto. Contrastarlo con la metodología de la guía, que parte de oportunidades por las cuatro áreas (p. 77), antes de fijarlo en datos o validaciones.
 - Quién puede crear o editar el catálogo de áreas, procesos y componentes, y cómo se publica/versiona para cada año escolar.
 - Estados y permisos de borrador, envío, observación, corrección y cierre de autoevaluaciones/PMI; reglas de unicidad por institución y periodo.
-- El diagrama confirma como candidatos los estados 1 y 2 y propone priorizar por urgencia/tendencia/impacto. El subtotal describe la distribución; la priorización requiere mantener las valoraciones individuales y valorar U/T/I (Guía 34, pp. 77-80). `PrioritaryComponent` y la selección posterior aún están pendientes.
+- La aclaración aprobada por Juan reemplaza la regla inicial del diagrama para candidatos y selección: mínimo 1/2/3 por área y hasta dos máximos U/T/I. El seguimiento y la ficha detallada de indicadores se desarrollarán en etapas siguientes.
 - Contrato para evidencias: hoy el flujo dibuja enlaces y notas sobre ubicación; definir almacenamiento, acceso, privacidad y conservación antes de implementar cargas de archivos.
 
 ### Respuestas a dudas estipuladas:

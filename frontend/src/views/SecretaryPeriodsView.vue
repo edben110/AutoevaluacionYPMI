@@ -189,15 +189,15 @@ onMounted(async () => {
 <style scoped>
 .period-form { display: grid; gap: 1rem; margin: 0; padding: 0; border: 0; min-width: 0; }
 .period-form label { display: grid; gap: .5rem; font-weight: 600; }
-.period-form input { padding: .7rem; border: 1px solid #cad9d0; border-radius: .5rem; width: min(100%, 24rem); }
+.period-form input { padding: .7rem; border: 1px solid var(--color-border-disabled); border-radius: .5rem; width: min(100%, 24rem); color: var(--color-text); background: var(--color-background-top); }
 .period-actions { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
 .period-actions button { padding: .8rem 1.2rem; }
 .period-table-wrap { overflow-x: auto; }
 .period-table { width: 100%; border-collapse: collapse; }
-.period-table caption { text-align: left; padding: .5rem 0 1rem; color: #536c60; }
-.period-table th, .period-table td { border: 1px solid #d5e1d8; padding: .7rem; text-align: left; }
-.period-table thead { color: white; background: #185b4b; }
-.delete-button { color: #8f2f31; }
-.deletion-confirmation { margin: 1rem 0; padding: 1rem; border: 1px solid #e6c8c3; border-radius: .5rem; background: #fff6f4; }
+.period-table caption { text-align: left; padding: .5rem 0 1rem; color: var(--color-text-disabled); }
+.period-table th, .period-table td { border: 1px solid var(--color-background-mute); padding: .7rem; text-align: left; }
+.period-table thead { color: var(--color-text-white); background: var(--sem-blue); }
+.delete-button { color: var(--sem-red); }
+.deletion-confirmation { margin: 1rem 0; padding: 1rem; border: 1px solid var(--sem-red); border-radius: .5rem; background: var(--color-background-mute); }
 .deletion-confirmation h3 { margin: 0; }
 </style>

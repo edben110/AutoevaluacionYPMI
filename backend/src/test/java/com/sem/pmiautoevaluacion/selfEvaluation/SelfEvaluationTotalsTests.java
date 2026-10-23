@@ -26,7 +26,8 @@ class SelfEvaluationTotalsTests {
         var valuations = mock(ComponentValuationRepository.class);
         var service = new SelfEvaluationService(evaluations, valuations,
                 mock(EstablishmentRepository.class), mock(ComponentRepository.class),
-                mock(com.sem.pmiautoevaluacion.selfEvaluation.service.SelfEvaluationPeriodService.class));
+                mock(com.sem.pmiautoevaluacion.selfEvaluation.service.SelfEvaluationPeriodService.class),
+                mock(com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationAreaSubmissionRepository.class));
         UUID institutionId = UUID.randomUUID();
         UUID evaluationId = UUID.randomUUID();
         SelfEvaluation evaluation = new SelfEvaluation(null, 2026);

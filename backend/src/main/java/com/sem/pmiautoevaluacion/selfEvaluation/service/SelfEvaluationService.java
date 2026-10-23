@@ -10,6 +10,7 @@ import com.sem.pmiautoevaluacion.selfEvaluation.dto.ValuationTotalsResponse;
 import com.sem.pmiautoevaluacion.selfEvaluation.entity.ComponentValuation;
 import com.sem.pmiautoevaluacion.selfEvaluation.entity.SelfEvaluation;
 import com.sem.pmiautoevaluacion.selfEvaluation.repository.ComponentValuationRepository;
+import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationAreaSubmissionRepository;
 import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationRepository;
 import com.sem.pmiautoevaluacion.selfEvaluation.state.ValuationTotals;
 import com.sem.pmiautoevaluacion.shared.enums.UseState;
@@ -17,7 +18,6 @@ import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
 import com.sem.pmiautoevaluacion.users.entity.Establishment;
 import com.sem.pmiautoevaluacion.users.repository.EstablishmentRepository;
-import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -30,16 +30,18 @@ public class SelfEvaluationService {
     private final EstablishmentRepository establishments;
     private final ComponentRepository components;
     private final SelfEvaluationPeriodService periods;
+    private final SelfEvaluationAreaSubmissionRepository submissions;
 
     public SelfEvaluationService(SelfEvaluationRepository evaluations,
             ComponentValuationRepository valuations,
             EstablishmentRepository establishments, ComponentRepository components,
-            SelfEvaluationPeriodService periods) {
+            SelfEvaluationPeriodService periods, SelfEvaluationAreaSubmissionRepository submissions) {
         this.evaluations = evaluations;
         this.valuations = valuations;
         this.establishments = establishments;
         this.components = components;
         this.periods = periods;
+        this.submissions = submissions;
     }
 
     @Transactional(readOnly = true)
@@ -75,13 +77,21 @@ public class SelfEvaluationService {
     public ValuationResponse saveValuation(UUID establishmentId, int year, UUID componentId,
             ValuationRequest request) {
         periods.requireWritable(year);
-        SelfEvaluation evaluation = findOwned(establishmentId, year);
+        SelfEvaluation evaluation = evaluations.findForPmiUpdate(establishmentId, year)
+                .orElseThrow(() -> new ResourceNotFoundException("Borrador de autoevaluación no encontrado"));
         Component component = components.findByIdAndState(componentId, UseState.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Componente activo no encontrado"));
+        if (component.getProcess().getState() != UseState.ACTIVE
+                || component.getProcess().getArea().getState() != UseState.ACTIVE) {
+            throw new ResourceNotFoundException("El proceso y el área del componente deben estar activos");
+        }
+        if (submissions.existsByEvaluation_IdAndArea_Id(evaluation.getId(), component.getProcess().getArea().getId())) {
+            throw new BadRequestException("Esta área de autoevaluación ya fue enviada y no permite modificar sus respuestas");
+        }
         ComponentValuation valuation = valuations
                 .findByEvaluation_IdAndComponent_Id(evaluation.getId(), componentId)
                 .orElseGet(() -> new ComponentValuation(evaluation, component));
-        valuation.update(request.level().shortValue(), normalizeUrl(request.evidenceUrl()),
+        valuation.update(request.level().shortValue(), normalizeText(request.evidenceUrl()),
                 normalizeText(request.evidenceNote()), normalizeText(request.strengths()),
                 normalizeText(request.improvementOpportunities()));
         evaluation.touch();
@@ -105,19 +115,6 @@ public class SelfEvaluationService {
 
     private void validateYear(int year) {
         if (year < 1) throw new BadRequestException("El año debe ser positivo");
-    }
-
-    private String normalizeUrl(String value) {
-        String url = normalizeText(value);
-        if (url == null) return null;
-        try {
-            URI uri = URI.create(url);
-            if (("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))
-                    && uri.getHost() != null) return url;
-        } catch (IllegalArgumentException ignored) {
-            // La respuesta de validación se envía abajo.
-        }
-        throw new BadRequestException("El enlace de evidencia debe comenzar con http:// o https://");
     }
 
     private String normalizeText(String value) {

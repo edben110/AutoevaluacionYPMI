@@ -30,7 +30,8 @@ public class ComponentValuation {
     @Transient
     private ValuationState valuationState;
 
-    @Column(name = "evidence_url", length = 1000)
+    // Nombre legado de API/columna: admite enlaces o descripción de evidencias físicas.
+    @Column(name = "evidence_url", columnDefinition = "TEXT")
     private String evidenceUrl;
 
     @Column(name = "evidence_note", columnDefinition = "TEXT")
