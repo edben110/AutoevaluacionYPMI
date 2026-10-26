@@ -236,6 +236,11 @@ onUnmounted(() => window.removeEventListener('beforeunload', beforeUnload))
           <div><span>Fecha de diligenciamiento</span><strong>{{ matrix.filledOn ? formatPeriodDate(matrix.filledOn) : 'Pendiente del primer guardado' }}</strong></div>
           <span class="pmi-badge">Borrador</span>
         </section>
+        <section v-if="matrix.periodConfigured === false" class="pmi-warning" role="status">
+          <h2>Período no publicado</h2>
+          <p>Secretaría retiró el período de este año o aún no lo ha publicado. No puedes iniciar ni guardar un PMI hasta que vuelva a publicarlo.</p>
+        </section>
+        <template v-else>
         <section v-if="!matrix.selfEvaluationComplete" class="pmi-warning" role="status">
           <h2>Autoevaluación del área incompleta</h2>
           <p>Hay {{ matrix.valuedComponents }} de {{ matrix.totalComponents }} componentes valorados. Completa esta área para habilitar la priorización de su PMI.</p>
@@ -329,6 +334,7 @@ onUnmounted(() => window.removeEventListener('beforeunload', beforeUnload))
           <RouterLink v-if="matrix.prioritizationComplete && matrix.selfEvaluationComplete && matrix.selfEvaluationSubmitted" class="pmi-button formulation-link" :to="{ name: 'pmi-formulation', params: { year, areaId } }">Elegir componentes y preparar el plan · Anexo 3 →</RouterLink>
           <p v-else class="pmi-empty-note">Completa y envía la autoevaluación y guarda los puntajes de todos los candidatos para continuar con el plan.</p>
         </section>
+        </template>
       </template>
     </div>
   </main>

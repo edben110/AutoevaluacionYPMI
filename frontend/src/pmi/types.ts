@@ -20,6 +20,7 @@ export interface PriorityComponent {
 }
 
 export interface PriorityMatrix {
+  periodConfigured?: boolean
   id: string | null
   selfEvaluationId: string
   year: number
@@ -58,7 +59,7 @@ export interface PmiAreaSummary {
   candidateCount: number
 }
 
-export interface PmiOverview { year: number; areas: PmiAreaSummary[] }
+export interface PmiOverview { year: number; areas: PmiAreaSummary[]; periodConfigured?: boolean }
 
 export interface PriorityComponentRequest {
   criticalFactors: string

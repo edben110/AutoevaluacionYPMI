@@ -70,7 +70,7 @@ async function deletePeriod(): Promise<void> {
     periods.value = periods.value.filter(period => period.year !== target.year)
     if (editing.value && year.value === target.year) newPeriod()
     pendingDeletion.value = null
-    success.value = `Período ${target.year} eliminado. El diligenciamiento quedó deshabilitado; las autoevaluaciones y respuestas se conservan para consulta.`
+    success.value = `Período ${target.year} eliminado junto con los PMI de todas las instituciones de ese año y sus anexos. Las autoevaluaciones y sus respuestas se conservan para consulta.`
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : 'No se pudo eliminar el período.'
     if (!hasSession.value) await router.replace({ name: 'login' })
@@ -156,7 +156,8 @@ onMounted(async () => {
           <h2>Períodos configurados</h2>
           <section v-if="pendingDeletion" class="deletion-confirmation" aria-labelledby="delete-period-title">
             <h3 id="delete-period-title">¿Eliminar el período {{ pendingDeletion.year }}?</h3>
-            <p>Se retirarán las fechas de habilitación y las instituciones dejarán de poder diligenciar ese año. Las autoevaluaciones y sus respuestas se conservarán para consulta.</p>
+            <p>Se retirarán las fechas de habilitación y se eliminarán los PMI de las cuatro áreas de todas las instituciones de ese año, incluidos la priorización, los planes, las fichas de indicadores y los seguimientos de los anexos 2 a 5. Esta eliminación no se puede deshacer.</p>
+            <p>Las autoevaluaciones y sus respuestas se conservarán para consulta. Las instituciones podrán iniciar nuevos PMI cuando Secretaría vuelva a publicar el período.</p>
             <div class="period-actions">
               <button class="secondary-button" type="button" :disabled="deleting" @click="pendingDeletion = null">Cancelar</button>
               <button class="secondary-button delete-button" type="button" :disabled="deleting" @click="deletePeriod">{{ deleting ? 'Eliminando…' : 'Confirmar eliminación' }}</button>

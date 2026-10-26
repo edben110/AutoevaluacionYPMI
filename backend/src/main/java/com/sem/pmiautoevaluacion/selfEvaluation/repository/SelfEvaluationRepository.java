@@ -16,6 +16,10 @@ public interface SelfEvaluationRepository extends JpaRepository<SelfEvaluation, 
     List<SelfEvaluation> findByYear(int year);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select evaluation from SelfEvaluation evaluation where evaluation.year = :year order by evaluation.id")
+    List<SelfEvaluation> findByYearForPmiDeletion(@Param("year") int year);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select evaluation from SelfEvaluation evaluation where evaluation.establishment.id = :establishmentId and evaluation.year = :year")
     Optional<SelfEvaluation> findForPmiUpdate(@Param("establishmentId") UUID establishmentId,
             @Param("year") int year);

@@ -5,7 +5,8 @@ defineProps<{ overview: PmiOverview }>()
 </script>
 
 <template>
-  <div class="pmi-area-grid">
+  <p v-if="overview.periodConfigured === false" class="pmi-locked-note" role="status">Secretaría no tiene publicado el período de {{ overview.year }}. El PMI estará disponible cuando se publique nuevamente.</p>
+  <div v-else class="pmi-area-grid">
     <article v-for="area in overview.areas" :key="area.areaId" class="pmi-area-card" :class="{ 'pmi-area-locked': !area.selfEvaluationComplete || !area.selfEvaluationSubmitted }">
       <h3>PMI · {{ area.areaName }}</h3>
       <p class="pmi-progress">Autoevaluación: {{ area.valuedComponents }} de {{ area.totalComponents }} componentes valorados</p>

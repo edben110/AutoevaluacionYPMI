@@ -9,7 +9,7 @@ Regla confirmada por Juan el 6 de octubre de 2026: **Secretaría configura las f
 3. La publicación crea un borrador vacío por institución y año. Si ya existe, conserva su identificador, sus respuestas y las fechas de diligenciamiento; solamente lo vincula al período. Volver a guardar no duplica borradores.
 4. La institución encuentra las cuatro áreas únicamente cuando existe un período abierto por Secretaría. El espacio consulta los períodos publicados; si hay varios abiertos, permite elegir uno. No hay un año libre ni un botón institucional para crear el borrador. Regla de visibilidad aclarada por Juan el 6 de octubre de 2026.
 5. Secretaría puede **Editar fechas** para ajustar o extender el período. Si está programado, cerrado, eliminado o sin configurar, las áreas y formularios no se muestran a la institución; tampoco se cargan al entrar por enlace directo. La disponibilidad se vuelve a consultar al regresar a la pestaña o actualizar el espacio.
-6. Secretaría puede **Eliminar período** y confirmar la acción. Se retiran sus fechas de habilitación y se cierra el diligenciamiento de ese año; los borradores, respuestas, evidencias y sus marcas de tiempo se conservan. Volver a configurar el mismo año vincula los borradores existentes sin duplicarlos. Esta opción fue solicitada por Juan el 6 de octubre de 2026.
+6. Secretaría puede **Eliminar período** y confirmar la acción. Se retiran sus fechas de habilitación, se cierra el diligenciamiento y se eliminan los PMI de todas las instituciones y áreas de ese año: priorización, objetivos, metas, actividades, indicadores con sus fichas y todos los controles de seguimiento (anexos 2–5). Las autoevaluaciones, respuestas, evidencias, envíos y marcas de tiempo se conservan. Volver a publicar el mismo año vincula las autoevaluaciones existentes y permite iniciar PMI nuevos; no recupera los PMI borrados. Esta ampliación fue solicitada expresamente por Juan el 24 de octubre de 2026 y reemplaza la conservación anterior del PMI al retirar la habilitación.
 
 Ambos días límite están incluidos completos, con fecha del servidor en **America/Bogota**. El cierre se calcula en cada petición; no requiere tareas programadas ni reiniciar el servidor. Un período de un solo día es válido. La fecha de fin nunca puede ser anterior al inicio.
 
@@ -24,7 +24,7 @@ Los registros anteriores a V8 se conservan. V8 no publica fechas arbitrarias. Un
 | `GET /api/self-evaluation-periods` | Consultar períodos | Consultar períodos |
 | `GET /api/self-evaluation-periods/{year}` | Consultar fechas/estado | Consultar fechas/estado |
 | `PUT /api/self-evaluation-periods/{year}` | Sin permiso | Publicar o ajustar fechas y preparar borradores |
-| `DELETE /api/self-evaluation-periods/{year}` | Sin permiso | Eliminar la habilitación, conservando autoevaluaciones; devuelve `204` |
+| `DELETE /api/self-evaluation-periods/{year}` | Sin permiso | Eliminar habilitación y todos los PMI/anexos de ese año, conservando autoevaluaciones; devuelve `204` |
 | `PUT /api/self-evaluations/{year}` | Su propio borrador, dentro del período | Sin permiso |
 | `PUT /api/self-evaluations/{year}/valuations/{componentId}` | Sus propias respuestas, dentro del período | Sin permiso |
 
@@ -49,8 +49,14 @@ El DTO devuelve `year`, `startDate`, `finishDate`, `status` (`SCHEDULED`, `OPEN`
 
 La publicación habilita el diligenciamiento y prepara borradores. El envío formal, la revisión y las observaciones de Secretaría siguen pendientes; Secretaría no edita respuestas institucionales.
 
-La eliminación desvincula los borradores y elimina el período en una sola transacción, protegida por el bloqueo de su fila. No requiere cambios de esquema ni una nueva migración: V8 ya permite conservar autoevaluaciones sin período. Eliminar un período inexistente responde `404`.
+La eliminación bloquea el período y sus autoevaluaciones (ordenadas por UUID) antes de eliminar los PMI del año y sus anexos mediante `PMIPeriodCleanupService`. Utiliza los mismos bloqueos de autoevaluación que las escrituras del PMI. Elimina primero los seguimientos, después objetivos y sus hijos mediante las cascadas existentes, prioridades y planes; finalmente desvincula las autoevaluaciones y retira el período. Todo ocurre en una transacción. No modifica datos de otros años ni requiere migración nueva: se usan las relaciones existentes. Eliminar un período inexistente responde `404` sin limpiar datos.
+
+La ausencia de período también bloquea nuevas escrituras de priorización para impedir recrear un PMI inmediatamente después de borrarlo. `periodConfigured` en el resumen y detalle del PMI identifica si existe el período; el panel institucional oculta los PMI de años retirados y los enlaces directos muestran la indisponibilidad. Cerrar por fecha o editar las fechas **no elimina** los PMI y conserva el acceso acordado después del cierre. Las respuestas de autoevaluación enviadas permanecen enviadas al volver a publicar el año.
 
 ## Verificación
 
 `SelfEvaluationPeriodTests` verifica permisos, generación de borradores, conservación al reprogramar, ausencia de período, límites incluidos, cierre, fechas inválidas y cambio de día en Bogotá. También prueba eliminación con respuestas guardadas, bloqueo de escritura posterior, reapertura sin duplicados, permisos de eliminación y conservación de otros años. Las pruebas son transaccionales: no habilitan ni eliminan un período de negocio ni conservan instituciones de prueba en la base local.
+
+`PMIPeriodDeletionTests` añade el caso completo de dos instituciones con PMI en las cuatro áreas y un año distinto conservado: comprueba eliminación de todos los anexos, conservación de respuestas/envíos, bloqueo de recreación sin período y reinicio vacío al publicarlo otra vez. Verifica además que editar/cerrar fechas conserva los PMI y que las eliminaciones no autorizadas o de períodos inexistentes no afectan los registros.
+
+Verificación del 24 de octubre: **129 pruebas de backend correctas**, compilación Vue/TypeScript y ESLint correctos. El recorrido de navegador con datos aislados comprobó el aviso de eliminación de anexos 2–5, cancelación sin petición de borrado, confirmación sobre el año elegido, conservación visual de otro año cerrado, ocultamiento del PMI retirado en el panel y ausencia de formularios en enlaces directos sin período. La confirmación se revisó a 390 px sin desbordamiento horizontal. No se eliminaron períodos de negocio durante las pruebas.

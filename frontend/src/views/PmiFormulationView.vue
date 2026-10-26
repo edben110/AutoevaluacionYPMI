@@ -233,14 +233,14 @@ function addRow(form: ObjectiveForm, goal: GoalForm): void {
 function removeGoal(form: ObjectiveForm, index: number): void {
   const goal = form.goals[index]
   if (busy.value || !editable(form) || !goal) return
-  if (goal.id && !window.confirm('¿Quitar esta meta y sus filas? La eliminación se aplicará al guardar el objetivo.')) return
+  if (goal.id && !window.confirm('¿Quitar esta meta, sus filas y las fichas de sus indicadores del Anexo 4? La eliminación se aplicará al guardar el objetivo.')) return
   form.goals.splice(index, 1)
   form.success = ''
 }
 function removeRow(form: ObjectiveForm, goal: GoalForm, index: number): void {
   const row = goal.rows[index]
   if (busy.value || !editable(form) || !row) return
-  if (row.id && !window.confirm('¿Quitar esta fila guardada? La eliminación se aplicará al guardar el objetivo.')) return
+  if (row.id && !window.confirm('¿Quitar esta fila y la ficha de su indicador del Anexo 4? La eliminación se aplicará al guardar el objetivo.')) return
   goal.rows.splice(index, 1)
   form.success = ''
 }
@@ -295,7 +295,7 @@ async function saveObjective(form: ObjectiveForm): Promise<void> {
 }
 
 async function deleteObjective(form: ObjectiveForm): Promise<void> {
-  if (busy.value || !window.confirm(form.id ? '¿Eliminar este objetivo y todas sus metas y filas guardadas? Esta acción no se puede deshacer.' : '¿Descartar este objetivo sin guardar?')) return
+  if (busy.value || !window.confirm(form.id ? '¿Eliminar este objetivo, sus metas, filas y fichas de indicadores del Anexo 4? Esta acción no se puede deshacer.' : '¿Descartar este objetivo sin guardar?')) return
   if (!form.id) { objectives.splice(objectives.indexOf(form), 1); return }
   deletingKey.value = form.key
   const sequence = loadSequence
@@ -418,6 +418,13 @@ onUnmounted(() => { loadSequence++; window.removeEventListener('beforeunload', b
           </form>
           <p v-if="objective.error" class="message error-message" role="alert">{{ objective.error }}</p><p v-if="objective.success" class="message" role="status">{{ objective.success }}</p>
           <button class="small-button delete-button objective-delete" type="button" :disabled="busy" @click="deleteObjective(objective)">{{ deletingKey === objective.key ? 'Eliminando…' : objective.id ? 'Eliminar objetivo' : 'Descartar objetivo sin guardar' }}</button>
+        </section>
+        <section class="formulation-card" aria-labelledby="indicators-next-title">
+          <h2 id="indicators-next-title">Continuar con los indicadores · Anexo 4</h2>
+          <p>Guarda el plan con los nombres de sus indicadores. En el Anexo 4 encontrarás una tabla por cada indicador para definir cómo lo medirán.</p>
+          <p v-if="hasObjectiveChanges" class="unsaved-label">Guarda los cambios pendientes para que los nuevos indicadores aparezcan en el Anexo 4.</p>
+          <RouterLink :to="{ name: 'pmi-indicators', params: { year, areaId } }">Definir las fichas de los indicadores →</RouterLink>
+          <p><RouterLink :to="{ name: 'pmi-follow-up', params: { year, areaId } }">Registrar o consultar avances · Anexo 5 →</RouterLink></p>
         </section>
         <details v-if="canCreate" class="formulation-card extra-objectives">
           <summary>¿Necesitas otro objetivo para un componente?</summary>

@@ -19,6 +19,15 @@ import org.springframework.web.multipart.MultipartException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidParameter(
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException exception,
+            HttpServletRequest request) {
+        return ResponseEntity.badRequest().body(new ApiErrorResponse(400, "Bad Request",
+                "Verifica el parámetro " + exception.getName() + "; las fechas deben usar el formato AAAA-MM-DD",
+                request.getRequestURI()));
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorResponse> handleUnreadableRequest(
             HttpMessageNotReadableException exception,

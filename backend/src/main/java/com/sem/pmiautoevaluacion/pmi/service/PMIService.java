@@ -63,7 +63,7 @@ public class PMIService {
                             analysis.valuedCount(), analysis.complete(), analysis.candidateLevel(),
                             stateLabel(analysis.candidateLevel()), analysis.candidateIds().size(),
                             analysis.submittedAt() != null, analysis.submittedAt());
-                }).toList());
+                }).toList(), evaluation.getPeriod() != null);
     }
 
     @Transactional(readOnly = true)
@@ -177,6 +177,9 @@ public class PMIService {
     }
 
     private void requireComplete(AreaAnalysis analysis) {
+        if (analysis.evaluation().getPeriod() == null) {
+            throw new BadRequestException("Secretaría debe publicar el período de este año para iniciar o guardar su PMI");
+        }
         if (!analysis.complete()) {
             throw new BadRequestException("Valora todos los componentes activos del área antes de iniciar su PMI");
         }
@@ -188,7 +191,7 @@ public class PMIService {
     private PMIResponse response(AreaAnalysis analysis, PMI plan, List<PrioritaryComponent> saved) {
         Map<UUID, PrioritaryComponent> byValuation = saved.stream().collect(Collectors.toMap(
                 item -> item.getValuation().getId(), Function.identity()));
-        boolean prioritizationComplete = analysis.complete() && analysis.submittedAt() != null
+        boolean prioritizationComplete = analysis.evaluation().getPeriod() != null && analysis.complete() && analysis.submittedAt() != null
                 && !analysis.candidateIds().isEmpty()
                 && byValuation.keySet().containsAll(analysis.candidateIds());
         List<PrioritaryComponent> candidates = saved.stream()
@@ -223,7 +226,7 @@ public class PMIService {
                 analysis.activeIds().size(), analysis.valuedCount(), analysis.candidateLevel(),
                 stateLabel(analysis.candidateLevel()), prioritizationComplete,
                 prioritizationComplete && !selected.isEmpty() && !needsReview,
-                analysis.submittedAt() != null, analysis.submittedAt());
+                analysis.submittedAt() != null, analysis.submittedAt(), evaluation.getPeriod() != null);
     }
 
     private PriorityComponentResponse componentResponse(ComponentValuation valuation, PrioritaryComponent priority,

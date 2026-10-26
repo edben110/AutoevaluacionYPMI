@@ -12,7 +12,7 @@ Implementación del 21 de octubre de 2026 en `JuanM`. Fuente principal: hoja **A
 | Actividades de la fila | Institución | Columna F | Se conserva un bloque de texto por fila. No se separa automáticamente en actividades atómicas ni se eliminan bloques repetidos. |
 | Costo, FSE y otra fuente | Institución | Columnas G–I; fila de totales 22 | Importes opcionales, no negativos y de hasta dos decimales; cero y pendiente se conservan distintos. Los ejemplos suman COP 3.000.000. No se impone igualdad entre costo y financiación, pues el formato no establece esa validación. |
 | Responsable y fechas | Institución | Columnas J–L | Textos y fechas opcionales en borrador; si están ambas fechas, fin no puede ser anterior a inicio. No se fuerza el año de la autoevaluación: el ejemplo proyecta actividades en años siguientes. |
-| Instrumentos y frecuencia de recolección | Institución | Columnas M–N | Textos opcionales por fila; todavía no se registran resultados de seguimiento. |
+| Instrumentos y frecuencia de recolección | Institución | Columnas M–N | Textos opcionales por fila. El avance de ejecución se registra aparte en Anexo 5. |
 | Un objetivo por gestión y hasta cuatro actividades | Institución | Orientaciones del encabezado del Excel | Se muestran como recomendaciones; no son límites duros. |
 | Consulta sin edición institucional ajena | Secretaría | Separación de actores del flujo del equipo | Consulta mediante `establishmentId`; no crea, modifica ni elimina respuestas institucionales. |
 | Borrador y conservación histórica | Institución | Decisión de implementación para continuidad con Anexo 2 | Crear/editar exige selección válida y componente seleccionado elegible. Una pérdida de elegibilidad o selección conserva el objetivo para consulta; eliminarlo exige una acción explícita. |
@@ -23,7 +23,7 @@ Los campos monetarios usan `NUMERIC(16,2)`: hasta 14 cifras enteras. Es un lími
 
 V10 incorpora `Objective` → `PrioritaryComponent`, `Goal` → `Objective` y `Activity` → `Goal`. Cada fila `Activity` tiene un `Indicator` propio y conserva actividades, recursos, responsable, fechas y recolección. Las metas y filas conservan su orden explícito.
 
-El diagrama dibuja un indicador por meta; el Excel contiene varios. Se amplía esa relación mediante las filas, sin perder el vínculo objetivo → meta → actividades/indicador. `Activity.description` representa el bloque de actividades de una fila del Excel. La ficha detallada de indicadores del Anexo 4, las observaciones de Secretaría, los resultados y el envío/cierre formal siguen pendientes. No se agregan campos de esos otros anexos.
+El diagrama dibuja un indicador por meta; el Excel contiene varios. Se amplía esa relación mediante las filas, sin perder el vínculo objetivo → meta → actividades/indicador. `Activity.description` representa el bloque de actividades de una fila del Excel. La ficha detallada se diligencia en [Anexo 4](pmi-anexo4.md) y el avance de ejecución por fecha en [Anexo 5](pmi-anexo5.md). Las observaciones de Secretaría, la medición numérica de las fórmulas y el envío/cierre formal siguen pendientes.
 
 ## API
 

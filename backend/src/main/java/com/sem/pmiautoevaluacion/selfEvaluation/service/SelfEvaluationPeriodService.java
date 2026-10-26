@@ -12,6 +12,7 @@ import com.sem.pmiautoevaluacion.users.entity.Secretary;
 import com.sem.pmiautoevaluacion.users.repository.UserRepository;
 import com.sem.pmiautoevaluacion.users.repository.EstablishmentRepository;
 import com.sem.pmiautoevaluacion.selfEvaluation.entity.SelfEvaluation;
+import com.sem.pmiautoevaluacion.pmi.service.PMIPeriodCleanupService;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
@@ -28,15 +29,17 @@ public class SelfEvaluationPeriodService {
     private final UserRepository users;
     private final EstablishmentRepository establishments;
     private final Clock clock;
+    private final PMIPeriodCleanupService pmiCleanup;
 
     public SelfEvaluationPeriodService(SelfEvaluationPeriodRepository periods,
             SelfEvaluationRepository evaluations, UserRepository users,
-            EstablishmentRepository establishments, Clock selfEvaluationClock) {
+            EstablishmentRepository establishments, Clock selfEvaluationClock, PMIPeriodCleanupService pmiCleanup) {
         this.periods = periods;
         this.evaluations = evaluations;
         this.users = users;
         this.establishments = establishments;
         this.clock = selfEvaluationClock;
+        this.pmiCleanup = pmiCleanup;
     }
 
     @Transactional(readOnly = true)
@@ -85,8 +88,12 @@ public class SelfEvaluationPeriodService {
         requireSecretary(secretaryId);
         SelfEvaluationPeriod period = periods.findForConfiguration(year).orElseThrow(() ->
                 new ResourceNotFoundException("El período de autoevaluación de " + year + " no existe"));
-        // Las respuestas y sus marcas de tiempo se conservan al retirar la habilitación.
-        evaluations.findByYear(year).forEach(SelfEvaluation::removePeriod);
+        // Período → autoevaluaciones: mismo orden de bloqueo que el diligenciamiento y envío.
+        // Se conservan respuestas/envíos, pero se eliminan todos los PMI del año y sus anexos.
+        evaluations.findByYearForPmiDeletion(year).forEach(evaluation -> {
+            pmiCleanup.deleteForEvaluation(evaluation.getId());
+            evaluation.removePeriod();
+        });
         evaluations.flush();
         periods.delete(period);
     }

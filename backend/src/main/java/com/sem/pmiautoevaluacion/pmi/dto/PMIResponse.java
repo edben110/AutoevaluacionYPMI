@@ -13,4 +13,4 @@ public record PMIResponse(
         UUID areaId, String areaName, boolean selfEvaluationComplete,
         int totalComponents, int valuedComponents, Integer candidateLevel, String candidateStateLabel,
         boolean prioritizationComplete, boolean canFormulate,
-        boolean selfEvaluationSubmitted, Instant submittedAt) {}
+        boolean selfEvaluationSubmitted, Instant submittedAt, boolean periodConfigured) {}

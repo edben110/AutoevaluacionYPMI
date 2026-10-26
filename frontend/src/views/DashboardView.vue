@@ -31,11 +31,12 @@ async function loadPmiYears(): Promise<void> {
     if (!response.ok) throw await responseError(response)
     const years = ((await response.json()) as EvaluationSummary[])
       .map(item => item.year).sort((first, second) => second - first)
-    pmiOverviews.value = await Promise.all(years.map(async year => {
+    const overviews = await Promise.all(years.map(async year => {
       const overview = await authorizedFetch(`/api/pmi/${year}`)
       if (!overview.ok) throw await responseError(overview)
       return await overview.json() as PmiOverview
     }))
+    pmiOverviews.value = overviews.filter(overview => overview.periodConfigured !== false)
   } catch (cause) {
     pmiError.value = cause instanceof Error ? cause.message : 'No se pudieron consultar las autoevaluaciones para el PMI.'
   }
@@ -97,7 +98,10 @@ function logout(): void {
 }
 
 function refreshAvailability(): void {
-  if (currentProfile.value?.role === 'ESTABLISHMENT' && !loading.value && !periodLoading.value) void loadPeriod()
+  if (currentProfile.value?.role === 'ESTABLISHMENT' && !loading.value && !periodLoading.value) {
+    void loadPeriod()
+    void loadPmiYears()
+  }
 }
 
 onMounted(() => {
@@ -176,7 +180,7 @@ onUnmounted(() => window.removeEventListener('focus', refreshAvailability))
             </RouterLink>
           </div>
           </template>
-          <button class="text-button" type="button" :disabled="periodLoading" @click="loadPeriod">Actualizar disponibilidad</button>
+          <button class="text-button" type="button" :disabled="periodLoading" @click="refreshAvailability">Actualizar disponibilidad</button>
         </section>
         <section v-if="currentProfile.role === 'ESTABLISHMENT'" class="status-card pmi-entry" aria-labelledby="pmi-title">
           <span class="pmi-eyebrow">PLAN DE MEJORAMIENTO INSTITUCIONAL</span>
@@ -186,7 +190,7 @@ onUnmounted(() => window.removeEventListener('focus', refreshAvailability))
             <p class="form-error">{{ pmiError }}</p>
             <button class="pmi-link" type="button" @click="loadPmiYears">Reintentar</button>
           </div>
-          <p v-else-if="pmiOverviews.length === 0">Aún no tienes una autoevaluación para iniciar la priorización.</p>
+          <p v-else-if="pmiOverviews.length === 0">No hay años habilitados para iniciar un PMI. Consulta la publicación del período con Secretaría.</p>
           <section v-for="overview in pmiOverviews" v-else :key="overview.year" class="pmi-year-group">
             <h3>PMI · Autoevaluación {{ overview.year }}</h3>
             <PmiAreaCards :overview="overview" />

@@ -1,6 +1,6 @@
 # Estado y fuentes del proyecto
 
-Revisión: 23 de octubre de 2026. Esta nota resume lo que se pudo leer del repositorio, su wiki, dos diagramas adjuntos y la Guía 34 enlazada. No reemplaza los artefactos originales.
+Revisión: 24 de octubre de 2026. Esta nota resume lo que se pudo leer del repositorio, su wiki, dos diagramas adjuntos y la Guía 34 enlazada. No reemplaza los artefactos originales.
 
 ## Fuentes
 
@@ -49,7 +49,7 @@ Los controladores de catálogo de `anton` exponen creación y consulta de áreas
 
 Juan confirmó el 6 de octubre de 2026 que Secretaría configura el inicio y fin y que los borradores se crean automáticamente para todas las instituciones registradas. V8 incorpora `PeriodRecord`, `SelfEvaluationPeriod` y la relación anual. La API permite a Secretaría publicar o ajustar fechas; las instituciones solo pueden crear o guardar dentro del período, incluyendo ambos días según America/Bogota. Fuera del período conservan la consulta. La interfaz agrega **Administrar períodos** en Secretaría y muestra las fechas/estado en la institución. Los borradores anteriores se conservan, sin fechas publicadas automáticamente. Detalles en [períodos de autoevaluación](periodos-autoevaluacion.md).
 
-Secretaría también dispone de **Eliminar período**, con confirmación en pantalla y `DELETE /api/self-evaluation-periods/{year}`. Retira las fechas y cierra la escritura institucional; conserva autoevaluaciones y respuestas. Puede volver a habilitar el mismo año sin duplicar borradores. Solicitud de Juan del 6 de octubre de 2026; utiliza la relación nullable de V8.
+Secretaría también dispone de **Eliminar período**, con confirmación en pantalla y `DELETE /api/self-evaluation-periods/{year}`. Por aclaración expresa de Juan del 24 de octubre, elimina también los PMI de todas las áreas e instituciones de ese año, incluidos los anexos 2–5 y su historial de seguimiento. Conserva autoevaluaciones, respuestas y envíos; elimina los PMI y la habilitación en una misma transacción, sin afectar otros años. Mientras no se publique otra vez el período, el panel oculta ese PMI y la API impide recrearlo. Volver a habilitar el año conserva los borradores y permite iniciar PMI nuevos, sin recuperar los eliminados. Editar fechas o llegar a la fecha de cierre mantiene los PMI.
 
 Juan aclaró que las autoevaluaciones institucionales deben aparecer solo cuando Secretaría habilite el diligenciamiento: las cuatro áreas se muestran únicamente para períodos abiertos publicados. Se retiraron el año libre y la creación manual del borrador en la interfaz de institución. Los enlaces directos también comprueban el período antes de cargar respuestas o componentes. La API conserva los registros y sus permisos de consulta; la pantalla ya no expone formularios fuera del período abierto.
 
@@ -75,11 +75,19 @@ La entrada institucional del PMI muestra tarjetas por año y área, avance valor
 
 Juan solicitó continuar con la hoja Anexo 3 del mismo Excel. V10 incorpora objetivos ligados a los componentes priorizados, metas y filas con nombre de indicador, bloque de actividades, costo, fuentes FSE/otra, responsable, inicio/fin e instrumentos/frecuencia de recolección. El formato permite varios indicadores por meta; se amplía la relación singular del diagrama mediante filas de actividad/indicador. Un objetivo por área y hasta cuatro actividades se presentan como orientación, sin imponer restricciones no confirmadas.
 
-La institución guarda borradores parciales por objetivo en `/pmi/:year/areas/:areaId/formulacion`, enlazado desde Anexo 2. `canFormulate` exige completar y enviar la autoevaluación del área, puntuar todos sus candidatos y resolver los máximos. Solo los componentes seleccionados y elegibles permiten crear/editar; los objetivos que pierden esa condición se conservan para consulta y solo se eliminan por acción explícita. Secretaría dispone de consulta por API con selector institucional. Los importes usan decimales exactos y distinguen vacío de cero; los totales se limitan al área, excluyen objetivos históricos y señalan campos pendientes. Se conserva la paleta de Antonio. La ficha detallada de indicadores, resultados y revisión formal siguen pendientes. Fuente, contrato, límites técnicos y pruebas en [PMI: Anexo 3](pmi-anexo3.md).
+La institución guarda borradores parciales por objetivo en `/pmi/:year/areas/:areaId/formulacion`, enlazado desde Anexo 2. `canFormulate` exige completar y enviar la autoevaluación del área, puntuar todos sus candidatos y resolver los máximos. Solo los componentes seleccionados y elegibles permiten crear/editar; los objetivos que pierden esa condición se conservan para consulta y solo se eliminan por acción explícita. Secretaría dispone de consulta por API con selector institucional. Los importes usan decimales exactos y distinguen vacío de cero; los totales se limitan al área, excluyen objetivos históricos y señalan campos pendientes. Se conserva la paleta de Antonio. La ficha detallada se diligencia en Anexo 4 y el avance de ejecución en Anexo 5; la medición numérica de las fórmulas y la revisión formal siguen pendientes. Fuente, contrato, límites técnicos y pruebas en [PMI: Anexo 3](pmi-anexo3.md).
 
 ## Interfaz del Anexo 3 para docentes
 
 La simplificación del Anexo 3 solicitada por Juan el 23 de octubre incorpora dos pasos: tarjetas de componentes con mayor U/T/I y **Generar formularios**, seguido del plan de cada componente con todos sus espacios iniciales preparados. Conserva la regla de uno o dos máximos y permite elegir dos cuando hay más empatados. Reutiliza datos e IDs, conserva históricos y exige guardar las respuestas por plan. La selección del Anexo 3 utiliza la misma API de priorización; no cambia las entidades ni las reglas de permisos. Detalles en [Anexo 3](pmi-anexo3.md).
+
+## Ficha de indicadores: Anexo 4
+
+Juan solicitó el 24 de octubre continuar con el Anexo 4 del Excel: una tabla independiente por cada indicador guardado con nombre en el Anexo 3. V14 amplía el mismo `Indicator` con tipo proceso/resultado, objetivo, unidad, variables, fórmula, fuentes, metodología, periodicidad y responsable de medición. El nombre se consulta del origen, de modo que renombrar la misma fila conserva su ficha. Permite borradores y guardado individual; las fórmulas son texto, sin ejecutar cálculos de seguimiento. Se mantienen la pertenencia institucional, el PMI por área/año y las restricciones de selección vigentes; los históricos siguen para consulta y Secretaría solo puede leer por API con selector institucional. La pantalla `/pmi/:year/areas/:areaId/indicadores` se abre desde Anexo 3 y conserva la paleta SEM. Fuente, contrato y límites en [PMI: Anexo 4](pmi-anexo4.md).
+
+## Seguimiento del PMI: Anexo 5
+
+El 24 de octubre, Juan solicitó continuar con el Anexo 5 del Excel. Se toma como referencia la hoja de 2026 y se conserva una fila por indicador/bloque de actividades del Anexo 3 del área. V15 incorpora `PMIFollowUp`: fecha de control, estado manual NI/ESP/CANC/FIN/EJ, porcentaje 0–100 y observaciones institucionales con referencias de evidencia. Se guardan controles independientes por fecha y una instantánea del contexto al registrar cada fila; cambiar o eliminar el origen no altera esos controles. La institución escribe únicamente sobre filas seleccionadas/elegibles y Secretaría consulta por API con selector. `/pmi/:year/areas/:areaId/seguimiento`, accesible desde Anexos 3 y 4, mantiene la paleta SEM y guardado individual. No automatiza el cálculo de la fórmula del indicador, la revisión de Secretaría ni el envío/cierre del PMI. Contrato y trazabilidad en [PMI: Anexo 5](pmi-anexo5.md).
 
 ## Paleta visual compartida
 
@@ -93,7 +101,7 @@ El 23 de octubre, por solicitud de Juan, se unificaron los estilos que todavía 
 - El diagrama de flujo propone priorizar hasta dos componentes y seleccionar por puntaje de urgencia/tendencia/impacto. Contrastarlo con la metodología de la guía, que parte de oportunidades por las cuatro áreas (p. 77), antes de fijarlo en datos o validaciones.
 - Quién puede crear o editar el catálogo de áreas, procesos y componentes, y cómo se publica/versiona para cada año escolar.
 - Estados y permisos de borrador, envío, observación, corrección y cierre de autoevaluaciones/PMI; reglas de unicidad por institución y periodo.
-- La aclaración aprobada por Juan reemplaza la regla inicial del diagrama para candidatos y selección: mínimo 1/2/3 por área y hasta dos máximos U/T/I. El seguimiento y la ficha detallada de indicadores se desarrollarán en etapas siguientes.
+- La aclaración aprobada por Juan reemplaza la regla inicial del diagrama para candidatos y selección: mínimo 1/2/3 por área y hasta dos máximos U/T/I. Anexo 4 incorpora la ficha detallada y Anexo 5 el seguimiento de ejecución; la medición numérica de las fórmulas y la revisión formal siguen pendientes.
 - Contrato para evidencias: hoy el flujo dibuja enlaces y notas sobre ubicación; definir almacenamiento, acceso, privacidad y conservación antes de implementar cargas de archivos.
 
 ### Respuestas a dudas estipuladas:

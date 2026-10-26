@@ -5,6 +5,16 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/pmi/:year/areas/:areaId/seguimiento',
+      name: 'pmi-follow-up',
+      component: () => import('@/views/PmiFollowUpView.vue'),
+    },
+    {
+      path: '/pmi/:year/areas/:areaId/indicadores',
+      name: 'pmi-indicators',
+      component: () => import('@/views/PmiIndicatorsView.vue'),
+    },
+    {
       path: '/pmi/:year/areas/:areaId/formulacion',
       name: 'pmi-formulation',
       component: () => import('@/views/PmiFormulationView.vue'),
