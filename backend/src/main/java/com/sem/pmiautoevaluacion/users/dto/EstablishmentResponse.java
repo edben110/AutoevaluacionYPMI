@@ -15,7 +15,7 @@ public class EstablishmentResponse {
         // Constructor vacio requerido para serializacion JSON
     }
 
-    public EstablishmentResponse fromEntity(Establishment establishment) {
+    public static EstablishmentResponse fromEntity(Establishment establishment) {
         EstablishmentResponse response = new EstablishmentResponse();
         response.setId(establishment.getId());
         response.setDaneCode(establishment.getDaneCode());
