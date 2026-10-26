@@ -2,6 +2,10 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { signIn, type UserRole } from '@/auth/session'
+import semLogo from '@/assets/images/Logo-SEM.svg'
+import curveVector from '@/assets/images/Curva-vector.svg'
+import graduationCapIcon from '@/assets/icons/graduation-cap.svg'
+import userIcon from '@/assets/icons/user.svg'
 
 const router = useRouter()
 const role = ref<UserRole>('ESTABLISHMENT')
@@ -37,32 +41,13 @@ async function submit(): Promise<void> {
 
 <template>
   <main class="login-page">
-    <section class="intro-panel" aria-labelledby="intro-title">
-      <div class="intro-content">
-        <div class="brand brand-light">
-          <span class="brand-mark" aria-hidden="true">✦</span>
-          <span>Ruta de Mejoramiento</span>
-        </div>
-
-        <div class="intro-copy">
-          <span class="eyebrow">GESTIÓN EDUCATIVA</span>
-          <h1 id="intro-title">Un camino compartido hacia una mejor educación.</h1>
-          <p>
-            Un espacio para la autoevaluación institucional, el plan de mejoramiento y el
-            seguimiento de sus avances.
-          </p>
-        </div>
-
-        <div class="route-card" aria-label="Etapas de la ruta de mejoramiento">
-          <span><b>01</b> Autoevaluación</span>
-          <span class="route-line" aria-hidden="true"></span>
-          <span><b>02</b> Plan de mejoramiento</span>
-          <span class="route-line" aria-hidden="true"></span>
-          <span><b>03</b> Seguimiento</span>
-        </div>
+    <section class="intro-panel" aria-label="Presentación institucional">
+      <div class="photo-placeholder" aria-label="Espacio reservado para fotografía institucional">
+        <span>Fotografía institucional</span>
       </div>
-      <div class="intro-decoration intro-decoration-one" aria-hidden="true"></div>
-      <div class="intro-decoration intro-decoration-two" aria-hidden="true"></div>
+      <div class="sem-logo-container">
+        <img class="sem-logo" :src="semLogo" alt="Secretaría de Educación Municipal" />
+      </div>
     </section>
 
     <section class="form-panel" aria-labelledby="login-title">
@@ -75,21 +60,24 @@ async function submit(): Promise<void> {
           <button
             type="button"
             class="role-option"
-            :class="{ selected: !isSecretary }"
-            :aria-pressed="!isSecretary"
-            @click="chooseRole('ESTABLISHMENT')"
-          >
-            Institución educativa
-          </button>
-          <button
-            type="button"
-            class="role-option"
             :class="{ selected: isSecretary }"
             :aria-pressed="isSecretary"
             @click="chooseRole('SECRETARY')"
           >
-            Secretaría
+            <img :src="userIcon" alt="" aria-hidden="true" />
+            <span>Secretaría</span>
           </button>
+          <button
+            type="button"
+            class="role-option"
+            :class="{ selected: !isSecretary }"
+            :aria-pressed="!isSecretary"
+            @click="chooseRole('ESTABLISHMENT')"
+          >
+            <img :src="graduationCapIcon" alt="" aria-hidden="true" />
+            <span>Institución educativa</span>
+          </button>
+          
         </div>
 
         <form class="login-form" @submit.prevent="submit">
@@ -120,8 +108,7 @@ async function submit(): Promise<void> {
           <p v-if="error" class="form-error" role="alert">{{ error }}</p>
 
           <button class="primary-button" type="submit" :disabled="submitting">
-            {{ submitting ? 'Ingresando…' : 'Ingresar' }}
-            <span aria-hidden="true">→</span>
+            {{ submitting ? 'Ingresando…' : 'Iniciar Sesión' }}
           </button>
         </form>
 
@@ -130,5 +117,6 @@ async function submit(): Promise<void> {
         </p>
       </div>
     </section>
+    <img class="curve-vector" :src="curveVector" alt="" aria-hidden="true" />
   </main>
 </template>
