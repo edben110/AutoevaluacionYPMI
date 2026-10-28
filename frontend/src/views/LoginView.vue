@@ -52,14 +52,14 @@ async function submit(): Promise<void> {
 
     <section class="form-panel" aria-labelledby="login-title">
       <div class="form-wrap">
-        <span class="eyebrow eyebrow-dark">BIENVENIDO</span>
-        <h2 id="login-title">Ingresa a tu espacio</h2>
-        <p class="form-description text-semilight">Selecciona tu tipo de acceso para continuar.</p>
+        <span class="eyebrow eyebrow-dark u-text-highlight">BIENVENIDO</span>
+        <h2 id="login-title" class="u-heading form-title">Ingresa a tu espacio</h2>
+        <p class="form-description text-semilight u-text-muted">Selecciona tu tipo de acceso para continuar.</p>
 
         <div class="role-selector" role="group" aria-label="Tipo de acceso">
           <button
             type="button"
-            class="role-option"
+            class="role-option u-button u-button--ghost"
             :class="{ selected: isSecretary }"
             :aria-pressed="isSecretary"
             @click="chooseRole('SECRETARY')"
@@ -69,7 +69,7 @@ async function submit(): Promise<void> {
           </button>
           <button
             type="button"
-            class="role-option"
+            class="role-option u-button u-button--ghost"
             :class="{ selected: !isSecretary }"
             :aria-pressed="!isSecretary"
             @click="chooseRole('ESTABLISHMENT')"
@@ -77,14 +77,14 @@ async function submit(): Promise<void> {
             <img :src="graduationCapIcon" alt="" aria-hidden="true" />
             <span>Institución educativa</span>
           </button>
-          
         </div>
 
-        <form class="login-form" @submit.prevent="submit">
-          <div class="field">
-            <label for="identifier">{{ isSecretary ? 'Correo institucional' : 'Código DANE' }}</label>
+        <form class="login-form u-stack" @submit.prevent="submit">
+          <div class="field u-form-field">
+            <label class="u-form-label" for="identifier">{{ isSecretary ? 'Correo institucional' : 'Código DANE' }}</label>
             <input
               id="identifier"
+              class="u-form-input"
               v-model="identifier"
               :type="isSecretary ? 'email' : 'text'"
               :autocomplete="isSecretary ? 'username' : 'off'"
@@ -93,10 +93,11 @@ async function submit(): Promise<void> {
             />
           </div>
 
-          <div class="field">
-            <label for="password">Contraseña</label>
+          <div class="field u-form-field">
+            <label class="u-form-label" for="password">Contraseña</label>
             <input
               id="password"
+              class="u-form-input"
               v-model="password"
               type="password"
               autocomplete="current-password"
@@ -107,7 +108,7 @@ async function submit(): Promise<void> {
 
           <p v-if="error" class="form-error" role="alert">{{ error }}</p>
 
-          <button class="primary-button" type="submit" :disabled="submitting">
+          <button class="primary-button u-button u-button-primary" type="submit" :disabled="submitting">
             {{ submitting ? 'Ingresando…' : 'Iniciar Sesión' }}
           </button>
         </form>

@@ -6,6 +6,13 @@ import EvaluationPeriodNotice from '@/components/EvaluationPeriodNotice.vue'
 import { type EvaluationPeriod } from '@/selfEvaluation/period'
 import type { PmiOverview } from '@/pmi/types'
 import PmiAreaCards from '@/components/PmiAreaCards.vue'
+import menuIcon from '@/assets/icons/menu-burger.svg?raw'
+import userIcon from '@/assets/icons/user.svg?raw'
+import homeIcon from '@/assets/icons/home.svg?raw'
+import documentIcon from '@/assets/icons/document.svg?raw'
+import calendarIcon from '@/assets/icons/calendar.svg?raw'
+import settingsIcon from '@/assets/icons/settings.svg?raw'
+import exitIcon from '@/assets/icons/exit.svg?raw'
 
 interface Area { id: string; name: string }
 interface EvaluationSummary { year: number }
@@ -23,6 +30,12 @@ const periodLoading = ref(false)
 const periodError = ref('')
 const pmiOverviews = ref<PmiOverview[]>([])
 const pmiError = ref('')
+const menuOpen = ref(false)
+const profileOpen = ref(false)
+const menuButtonRef = ref<HTMLButtonElement | null>(null)
+const menuPanelRef = ref<HTMLElement | null>(null)
+const profileButtonRef = ref<HTMLButtonElement | null>(null)
+const profilePanelRef = ref<HTMLElement | null>(null)
 
 async function loadPmiYears(): Promise<void> {
   pmiError.value = ''
@@ -92,7 +105,23 @@ async function refreshProfile(): Promise<void> {
   }
 }
 
+function closeDropdowns(): void {
+  menuOpen.value = false
+  profileOpen.value = false
+}
+
+function toggleMenu(): void {
+  menuOpen.value = !menuOpen.value
+  if (menuOpen.value) profileOpen.value = false
+}
+
+function toggleProfileMenu(): void {
+  profileOpen.value = !profileOpen.value
+  if (profileOpen.value) menuOpen.value = false
+}
+
 function logout(): void {
+  closeDropdowns()
   signOut()
   void router.replace({ name: 'login' })
 }
@@ -104,24 +133,110 @@ function refreshAvailability(): void {
   }
 }
 
+function handleWindowClick(event: MouseEvent): void {
+  const target = event.target as Node | null
+  if (!target) return
+
+  const clickedMenuButton = menuButtonRef.value?.contains(target)
+  const clickedMenuPanel = menuPanelRef.value?.contains(target)
+  const clickedProfileButton = profileButtonRef.value?.contains(target)
+  const clickedProfilePanel = profilePanelRef.value?.contains(target)
+
+  if (!clickedMenuButton && !clickedMenuPanel && !clickedProfileButton && !clickedProfilePanel) {
+    closeDropdowns()
+  }
+}
+
 onMounted(() => {
   void refreshProfile()
   window.addEventListener('focus', refreshAvailability)
+  window.addEventListener('click', handleWindowClick)
 })
-onUnmounted(() => window.removeEventListener('focus', refreshAvailability))
+onUnmounted(() => {
+  window.removeEventListener('focus', refreshAvailability)
+  window.removeEventListener('click', handleWindowClick)
+})
 </script>
 
 <template>
   <main class="dashboard-page">
-    <header class="dashboard-header">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">✦</span>
-        <span>Ruta de Mejoramiento</span>
+    <header class="dashboard-topbar">
+      <div class="topbar-left">
+        <button
+          ref="menuButtonRef"
+          class="topbar-button"
+          type="button"
+          aria-label="Abrir menú principal"
+          :aria-expanded="menuOpen ? 'true' : 'false'"
+          @click.stop="toggleMenu"
+        >
+          <span class="icon" aria-hidden="true" v-html="menuIcon"></span>
+        </button>
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <span>Ruta de Mejoramiento</span>
+        </div>
       </div>
-      <button class="text-button" type="button" @click="logout">Cerrar sesión</button>
+
+      <div class="topbar-right">
+        <button
+          ref="profileButtonRef"
+          class="topbar-button profile-button"
+          type="button"
+          aria-label="Abrir menú de perfil"
+          :aria-expanded="profileOpen ? 'true' : 'false'"
+          @click.stop="toggleProfileMenu"
+        >
+          <span class="icon" aria-hidden="true" v-html="userIcon"></span>
+        </button>
+      </div>
     </header>
 
     <div class="dashboard-content">
+      <aside v-if="menuOpen" ref="menuPanelRef" class="floating-panel left-panel" role="menu" aria-label="Menú principal">
+        <div class="panel-header">
+          <span class="panel-title">Navegación</span>
+        </div>
+        <nav class="panel-menu" aria-label="Menu de navegación">
+          <button type="button" class="menu-item">
+            <span class="menu-item-icon">
+              <span class="icon" aria-hidden="true" v-html="homeIcon"></span>
+            </span>
+            <span>Inicio</span>
+          </button>
+          <button type="button" class="menu-item">
+            <span class="menu-item-icon">
+              <span class="icon" aria-hidden="true" v-html="documentIcon"></span>
+            </span>
+            <span>Evaluaciones</span>
+          </button>
+          <button type="button" class="menu-item">
+            <span class="menu-item-icon">
+              <span class="icon" aria-hidden="true" v-html="calendarIcon"></span>
+            </span>
+            <span>Periodos</span>
+          </button>
+        </nav>
+      </aside>
+
+      <aside v-if="profileOpen" ref="profilePanelRef" class="floating-panel right-panel" role="menu" aria-label="Menú de perfil">
+        <div class="panel-header">
+          <span class="panel-title">Mi cuenta</span>
+        </div>
+        <button type="button" class="profile-option">
+          <span class="menu-item-icon">
+            <span class="icon" aria-hidden="true" v-html="settingsIcon"></span>
+          </span>
+          <span>Configuración</span>
+        </button>
+        <button type="button" class="profile-option danger-option" @click="logout">
+          <span class="menu-item-icon">
+            <span class="icon" aria-hidden="true" v-html="exitIcon"></span>
+          </span>
+          <span>Cerrar sesión</span>
+        </button>
+      </aside>
+
       <div v-if="loading" class="status-card" role="status">Cargando tu espacio…</div>
       <div v-else-if="error" class="status-card" role="alert">
         <p>{{ error }}</p>
@@ -226,12 +341,304 @@ onUnmounted(() => window.removeEventListener('focus', refreshAvailability))
 </template>
 
 <style scoped>
-.pmi-entry { border-top: 4px solid var(--sem-blue); }
-.pmi-entry h2 { margin: .5rem 0; color: var(--color-text-highlight); }
-.pmi-entry p { margin: .65rem 0; }
-.pmi-eyebrow { color: var(--color-text-highlight); font-size: .75rem; font-weight: 700; letter-spacing: .08em; }
-.pmi-year-links { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1rem; }
-.pmi-link { display: inline-block; border: 1px solid var(--sem-blue); border-radius: .6rem; background: var(--color-background-top); padding: .7rem 1rem; color: var(--color-text-highlight); font: inherit; font-weight: 700; text-decoration: none; }
-.pmi-link:hover { background: var(--color-background-mute); }
-.pmi-link:focus-visible { outline: 3px solid var(--sem-yellow); outline-offset: 3px; }
+:global(html) {
+  background: var(--sem-white);
+}
+
+.dashboard-page {
+  position: relative;
+  min-height: 100vh;
+  background: var(--sem-white);
+}
+
+.dashboard-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 4.5rem;
+  padding: 0.9rem 1.5rem;
+  background: var(--sem-blue);
+  box-shadow: 0 8px 22px rgba(43, 44, 107, 0.12);
+}
+
+.topbar-left,
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--color-text-white);
+  font-size: .96rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: .65rem;
+  background: rgba(255, 255, 255, .16);
+  color: var(--color-text-white);
+  font-size: 1.1rem;
+}
+
+.topbar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: .75rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-white);
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.topbar-button .icon {
+  color: var(--color-text-white);
+}
+
+.topbar-button:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.topbar-button:active {
+  transform: translateY(1px);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  line-height: 0;
+  color: currentColor;
+}
+
+.icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor !important;
+}
+
+.icon svg path,
+.icon svg circle,
+.icon svg g {
+  fill: currentColor !important;
+}
+
+.profile-button .icon {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.dashboard-content {
+  position: static;
+  display: grid;
+  gap: 1.5rem;
+  width: min(1200px, calc(100% - 2rem));
+  margin: 1.5rem auto 2.5rem;
+}
+
+.floating-panel {
+  position: absolute;
+  top: 4.8rem;
+  z-index: 20;
+  display: grid;
+  gap: 0.75rem;
+  min-width: min(18rem, 78vw);
+  padding: 0.9rem;
+  border: 1px solid rgba(32, 33, 36, 0.08);
+  border-radius: 1rem;
+  background: var(--color-background-top);
+  box-shadow: 0 18px 42px rgba(32, 33, 36, 0.14);
+}
+
+.left-panel {
+  left: 1rem;
+}
+
+.right-panel {
+  right: 1rem;
+}
+
+.panel-header {
+  padding: 0.3rem 0.2rem 0.2rem;
+}
+
+.panel-title {
+  color: var(--sem-blue);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.panel-menu,
+.profile-option {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.menu-item,
+.profile-option {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.7rem 0.8rem;
+  border: 0;
+  border-radius: .7rem;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+}
+
+.menu-item:hover,
+.profile-option:hover {
+  background: var(--sem-white-mute);
+}
+
+.menu-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.profile-option {
+  border: 1px solid transparent;
+}
+
+.danger-option {
+  color: var(--sem-red);
+}
+
+.danger-option img {
+  filter: brightness(0) saturate(100%) invert(17%) sepia(87%) saturate(1807%) hue-rotate(345deg) brightness(90%) contrast(100%);
+}
+
+.status-card,
+.welcome-banner,
+.area-evaluations,
+.profile-card,
+.pmi-entry {
+  background: var(--color-background-top);
+  border: 1px solid rgba(32, 33, 36, 0.07);
+  border-radius: 1.15rem;
+  padding: 1.25rem 1.3rem;
+  box-shadow: 0 10px 30px rgba(43, 44, 107, 0.03);
+}
+
+.welcome-banner {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+  background: linear-gradient(135deg, rgba(43, 44, 107, 0.04), rgba(43, 44, 107, 0.01));
+}
+
+.eyebrow {
+  color: var(--sem-blue);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+.welcome-banner h1 {
+  margin-top: 0.8rem;
+  color: var(--sem-blue);
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: -.06em;
+}
+
+.welcome-banner p {
+  margin-top: 0.5rem;
+  color: var(--color-text-disabled);
+}
+
+.pmi-entry {
+  border-top: 4px solid var(--sem-blue);
+}
+
+.pmi-entry h2 {
+  margin: .5rem 0;
+  color: var(--color-text-highlight);
+}
+
+.pmi-entry p {
+  margin: .65rem 0;
+}
+
+.pmi-eyebrow {
+  color: var(--color-text-highlight);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.pmi-year-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .8rem;
+  margin-top: 1rem;
+}
+
+.pmi-link {
+  display: inline-block;
+  border: 1px solid var(--sem-blue);
+  border-radius: .6rem;
+  background: var(--color-background-top);
+  padding: .7rem 1rem;
+  color: var(--color-text-highlight);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.pmi-link:hover {
+  background: var(--color-background-mute);
+}
+
+.pmi-link:focus-visible {
+  outline: 3px solid var(--sem-yellow);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .dashboard-topbar {
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+
+  .brand span:last-child {
+    max-width: 10rem;
+    line-height: 1.2;
+  }
+
+  .dashboard-content {
+    width: min(100% - 1rem, 1200px);
+    margin-top: 1rem;
+  }
+
+  .floating-panel {
+    top: 0.6rem;
+  }
+}
 </style>
+
