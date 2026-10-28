@@ -5,9 +5,9 @@ import { authorizedFetch, currentProfile, hasSession, loadProfile, responseError
 import EvaluationPeriodNotice from '@/components/EvaluationPeriodNotice.vue'
 import { type EvaluationPeriod } from '@/selfEvaluation/period'
 import type { PmiOverview } from '@/pmi/types'
+import AppTopBar from '@/components/AppTopBar.vue'
 import PmiAreaCards from '@/components/PmiAreaCards.vue'
-import menuIcon from '@/assets/icons/menu-burger.svg?raw'
-import userIcon from '@/assets/icons/user.svg?raw'
+import SvgIcon from '@/components/SvgIcon.vue'
 import homeIcon from '@/assets/icons/home.svg?raw'
 import documentIcon from '@/assets/icons/document.svg?raw'
 import calendarIcon from '@/assets/icons/calendar.svg?raw'
@@ -30,12 +30,6 @@ const periodLoading = ref(false)
 const periodError = ref('')
 const pmiOverviews = ref<PmiOverview[]>([])
 const pmiError = ref('')
-const menuOpen = ref(false)
-const profileOpen = ref(false)
-const menuButtonRef = ref<HTMLButtonElement | null>(null)
-const menuPanelRef = ref<HTMLElement | null>(null)
-const profileButtonRef = ref<HTMLButtonElement | null>(null)
-const profilePanelRef = ref<HTMLElement | null>(null)
 
 async function loadPmiYears(): Promise<void> {
   pmiError.value = ''
@@ -105,23 +99,7 @@ async function refreshProfile(): Promise<void> {
   }
 }
 
-function closeDropdowns(): void {
-  menuOpen.value = false
-  profileOpen.value = false
-}
-
-function toggleMenu(): void {
-  menuOpen.value = !menuOpen.value
-  if (menuOpen.value) profileOpen.value = false
-}
-
-function toggleProfileMenu(): void {
-  profileOpen.value = !profileOpen.value
-  if (profileOpen.value) menuOpen.value = false
-}
-
 function logout(): void {
-  closeDropdowns()
   signOut()
   void router.replace({ name: 'login' })
 }
@@ -133,110 +111,58 @@ function refreshAvailability(): void {
   }
 }
 
-function handleWindowClick(event: MouseEvent): void {
-  const target = event.target as Node | null
-  if (!target) return
-
-  const clickedMenuButton = menuButtonRef.value?.contains(target)
-  const clickedMenuPanel = menuPanelRef.value?.contains(target)
-  const clickedProfileButton = profileButtonRef.value?.contains(target)
-  const clickedProfilePanel = profilePanelRef.value?.contains(target)
-
-  if (!clickedMenuButton && !clickedMenuPanel && !clickedProfileButton && !clickedProfilePanel) {
-    closeDropdowns()
-  }
-}
-
 onMounted(() => {
   void refreshProfile()
   window.addEventListener('focus', refreshAvailability)
-  window.addEventListener('click', handleWindowClick)
 })
 onUnmounted(() => {
   window.removeEventListener('focus', refreshAvailability)
-  window.removeEventListener('click', handleWindowClick)
 })
 </script>
 
 <template>
   <main class="dashboard-page">
-    <header class="dashboard-topbar">
-      <div class="topbar-left">
-        <button
-          ref="menuButtonRef"
-          class="topbar-button"
-          type="button"
-          aria-label="Abrir menú principal"
-          :aria-expanded="menuOpen ? 'true' : 'false'"
-          @click.stop="toggleMenu"
-        >
-          <span class="icon" aria-hidden="true" v-html="menuIcon"></span>
-        </button>
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true">✦</span>
-          <span>Ruta de Mejoramiento</span>
-        </div>
-      </div>
-
-      <div class="topbar-right">
-        <button
-          ref="profileButtonRef"
-          class="topbar-button profile-button"
-          type="button"
-          aria-label="Abrir menú de perfil"
-          :aria-expanded="profileOpen ? 'true' : 'false'"
-          @click.stop="toggleProfileMenu"
-        >
-          <span class="icon" aria-hidden="true" v-html="userIcon"></span>
-        </button>
-      </div>
-    </header>
-
-    <div class="dashboard-content">
-      <aside v-if="menuOpen" ref="menuPanelRef" class="floating-panel left-panel" role="menu" aria-label="Menú principal">
-        <div class="panel-header">
-          <span class="panel-title">Navegación</span>
-        </div>
-        <nav class="panel-menu" aria-label="Menu de navegación">
-          <button type="button" class="menu-item">
-            <span class="menu-item-icon">
-              <span class="icon" aria-hidden="true" v-html="homeIcon"></span>
+    <AppTopBar title="Ruta de Mejoramiento" @logout="logout">
+      <template #menu-items>
+        <nav class="u-menu-list" aria-label="Menu de navegación">
+          <button type="button" class="u-menu-item">
+            <span class="u-menu-item__icon">
+              <SvgIcon :src="homeIcon" color="currentColor" />
             </span>
             <span>Inicio</span>
           </button>
-          <button type="button" class="menu-item">
-            <span class="menu-item-icon">
-              <span class="icon" aria-hidden="true" v-html="documentIcon"></span>
+          <button type="button" class="u-menu-item">
+            <span class="u-menu-item__icon">
+              <SvgIcon :src="documentIcon" color="currentColor" />
             </span>
             <span>Evaluaciones</span>
           </button>
-          <button type="button" class="menu-item">
-            <span class="menu-item-icon">
-              <span class="icon" aria-hidden="true" v-html="calendarIcon"></span>
+          <button type="button" class="u-menu-item">
+            <span class="u-menu-item__icon">
+              <SvgIcon :src="calendarIcon" color="currentColor" />
             </span>
             <span>Periodos</span>
           </button>
         </nav>
-      </aside>
+      </template>
 
-      <aside v-if="profileOpen" ref="profilePanelRef" class="floating-panel right-panel" role="menu" aria-label="Menú de perfil">
-        <div class="panel-header">
-          <span class="panel-title">Mi cuenta</span>
-        </div>
-        <button type="button" class="profile-option">
-          <span class="menu-item-icon">
-            <span class="icon" aria-hidden="true" v-html="settingsIcon"></span>
+      <template #profile-items>
+        <button type="button" class="u-menu-item">
+          <span class="u-menu-item__icon">
+            <SvgIcon :src="settingsIcon" color="currentColor" />
           </span>
           <span>Configuración</span>
         </button>
-        <button type="button" class="profile-option danger-option" @click="logout">
-          <span class="menu-item-icon">
-            <span class="icon" aria-hidden="true" v-html="exitIcon"></span>
+        <button type="button" class="u-menu-item--danger" @click="logout">
+          <span class="u-menu-item__icon">
+            <SvgIcon :src="exitIcon" color="currentColor" />
           </span>
           <span>Cerrar sesión</span>
         </button>
-      </aside>
+      </template>
+    </AppTopBar>
 
+    <div class="dashboard-content">
       <div v-if="loading" class="status-card" role="status">Cargando tu espacio…</div>
       <div v-else-if="error" class="status-card" role="alert">
         <p>{{ error }}</p>
@@ -390,148 +316,12 @@ onUnmounted(() => {
   font-size: 1.1rem;
 }
 
-.topbar-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.7rem;
-  height: 2.7rem;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: .75rem;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-white);
-  transition: background-color 160ms ease, transform 160ms ease;
-}
-
-.topbar-button .icon {
-  color: var(--color-text-white);
-}
-
-.topbar-button:hover {
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.topbar-button:active {
-  transform: translateY(1px);
-}
-
-.icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.15rem;
-  height: 1.15rem;
-  line-height: 0;
-  color: currentColor;
-}
-
-.icon svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  fill: currentColor !important;
-}
-
-.icon svg path,
-.icon svg circle,
-.icon svg g {
-  fill: currentColor !important;
-}
-
-.profile-button .icon {
-  width: 1.2rem;
-  height: 1.2rem;
-}
-
 .dashboard-content {
   position: static;
   display: grid;
   gap: 1.5rem;
   width: min(1200px, calc(100% - 2rem));
   margin: 1.5rem auto 2.5rem;
-}
-
-.floating-panel {
-  position: absolute;
-  top: 4.8rem;
-  z-index: 20;
-  display: grid;
-  gap: 0.75rem;
-  min-width: min(18rem, 78vw);
-  padding: 0.9rem;
-  border: 1px solid rgba(32, 33, 36, 0.08);
-  border-radius: 1rem;
-  background: var(--color-background-top);
-  box-shadow: 0 18px 42px rgba(32, 33, 36, 0.14);
-}
-
-.left-panel {
-  left: 1rem;
-}
-
-.right-panel {
-  right: 1rem;
-}
-
-.panel-header {
-  padding: 0.3rem 0.2rem 0.2rem;
-}
-
-.panel-title {
-  color: var(--sem-blue);
-  font-size: .72rem;
-  font-weight: 800;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-}
-
-.panel-menu,
-.profile-option {
-  display: grid;
-  gap: 0.4rem;
-}
-
-.menu-item,
-.profile-option {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  width: 100%;
-  min-height: 2.9rem;
-  padding: 0.7rem 0.8rem;
-  border: 0;
-  border-radius: .7rem;
-  background: transparent;
-  color: var(--color-text);
-  font: inherit;
-  font-weight: 700;
-  text-align: left;
-}
-
-.menu-item:hover,
-.profile-option:hover {
-  background: var(--sem-white-mute);
-}
-
-.menu-item-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.6rem;
-  height: 1.6rem;
-}
-
-.profile-option {
-  border: 1px solid transparent;
-}
-
-.danger-option {
-  color: var(--sem-red);
-}
-
-.danger-option img {
-  filter: brightness(0) saturate(100%) invert(17%) sepia(87%) saturate(1807%) hue-rotate(345deg) brightness(90%) contrast(100%);
 }
 
 .status-card,
