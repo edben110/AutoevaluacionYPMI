@@ -15,6 +15,7 @@ import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationReposit
 import com.sem.pmiautoevaluacion.selfEvaluation.state.ValuationTotals;
 import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
+import com.sem.pmiautoevaluacion.pmi.service.PMIFollowUpCycleService;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
 import com.sem.pmiautoevaluacion.users.entity.Establishment;
 import com.sem.pmiautoevaluacion.users.repository.EstablishmentRepository;
@@ -31,17 +32,19 @@ public class SelfEvaluationService {
     private final ComponentRepository components;
     private final SelfEvaluationPeriodService periods;
     private final SelfEvaluationAreaSubmissionRepository submissions;
+    private final PMIFollowUpCycleService followUpCycle;
 
     public SelfEvaluationService(SelfEvaluationRepository evaluations,
             ComponentValuationRepository valuations,
             EstablishmentRepository establishments, ComponentRepository components,
-            SelfEvaluationPeriodService periods, SelfEvaluationAreaSubmissionRepository submissions) {
+            SelfEvaluationPeriodService periods, SelfEvaluationAreaSubmissionRepository submissions, PMIFollowUpCycleService followUpCycle) {
         this.evaluations = evaluations;
         this.valuations = valuations;
         this.establishments = establishments;
         this.components = components;
         this.periods = periods;
         this.submissions = submissions;
+        this.followUpCycle = followUpCycle;
     }
 
     @Transactional(readOnly = true)
@@ -63,6 +66,7 @@ public class SelfEvaluationService {
     public SelfEvaluationResponse createOrFind(UUID establishmentId, int year) {
         validateYear(year);
         var period = periods.requireWritable(year);
+        followUpCycle.requireCompleted(establishmentId, year);
         SelfEvaluation evaluation = evaluations.findByEstablishment_IdAndYear(establishmentId, year)
                 .orElseGet(() -> {
                     Establishment establishment = establishments.findById(establishmentId)
@@ -77,6 +81,7 @@ public class SelfEvaluationService {
     public ValuationResponse saveValuation(UUID establishmentId, int year, UUID componentId,
             ValuationRequest request) {
         periods.requireWritable(year);
+        followUpCycle.requireCompleted(establishmentId, year);
         SelfEvaluation evaluation = evaluations.findForPmiUpdate(establishmentId, year)
                 .orElseThrow(() -> new ResourceNotFoundException("Borrador de autoevaluación no encontrado"));
         Component component = components.findByIdAndState(componentId, UseState.ACTIVE)

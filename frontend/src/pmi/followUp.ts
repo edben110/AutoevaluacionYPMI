@@ -39,4 +39,10 @@ export interface PmiFollowUp {
   availableDates: string[]
   canEdit: boolean
   rows: FollowUpRow[]
+  reviewYear: number
+  phase: 'PLANNING' | 'FOLLOW_UP' | 'COMPLETED' | 'CLOSED'
+  completedAt: string | null
+  requiredRows: number
+  completedRows: number
+  canComplete: boolean
 }

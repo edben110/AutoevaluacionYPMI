@@ -7,6 +7,7 @@ Solicitud de Juan del 21 de octubre de 2026: agregar **Enviar autoevaluación de
 | Regla | Actor | Fuente | Validación y resultado |
 | --- | --- | --- | --- |
 | Guardado automático por componente | Institución | Solicitud de Juan; decisión técnica de interfaz | Tras unos 800 ms sin editar, envía la última versión válida al endpoint de valoración existente. Muestra cambios pendientes, guardando, guardado o error; permite guardar ahora/reintentar. |
+| Seguimiento anterior antes de la autoevaluación | Institución | Confirmación de Juan del 26 de octubre | La creación de borrador, escritura y envío del año nuevo exigen finalizar los seguimientos de todos los PMI del año anterior. La consulta de requisitos informa áreas pendientes; sin PMI previo no impone un seguimiento inexistente. |
 | Completar no equivale a enviar | Institución | Aclaración de Juan sobre el botón de envío por área | Todos los componentes activos del área deben tener nivel guardado, pero el PMI permanece bloqueado hasta el envío explícito. |
 | Enviar solo el área elegida | Institución | Solicitud expresa de un PMI por área | Verifica período abierto y valoraciones completas; confirma en pantalla el alcance del envío. Las otras áreas siguen siendo borradores editables. |
 | No enviar datos pendientes | Institución y sistema | Integridad necesaria del guardado automático | Antes del POST de envío, espera las peticiones en curso y guarda las últimas ediciones del área. Si falla un guardado o hay datos inválidos, conserva los cambios y no envía. |
@@ -15,6 +16,8 @@ Solicitud de Juan del 21 de octubre de 2026: agregar **Enviar autoevaluación de
 | Conservar permisos institucionales | Institución y Secretaría | Separación de actores del flujo del equipo | Secretaría puede consultar con `establishmentId`; solo la institución autenticada envía su propia área. |
 
 Los textos y evidencias siguen siendo opcionales en esta versión: «completa» significa que todos los componentes activos, con padres activos, tienen una valoración. No se cambia la aptitud de fortalezas/oportunidades por estado ni la selección por menor estado y máximo U/T/I.
+
+Por aclaración de Juan del 26 de octubre, eliminar y volver a publicar el mismo año reinicia las cuatro áreas: se retiran valoraciones y envíos anteriores y el PMI vuelve a exigir completitud y envío. El reintento idempotente descrito arriba aplica antes de esa nueva publicación. Editar fechas del período existente conserva los envíos. Véanse [períodos](periodos-autoevaluacion.md).
 
 ## Persistencia y API
 
@@ -42,7 +45,7 @@ Para probar: reiniciar el backend con V12, abrir un área dentro del período ha
 
 ## Límites de esta iteración
 
-No incluye bandeja de revisión, observaciones de Secretaría, notificaciones ni reapertura de un área enviada. El catálogo todavía es mutable: agregar componentes activos después del envío puede alterar su completitud; no reabre automáticamente las respuestas entregadas. El versionado del catálogo y cualquier reapertura deben definirse con el equipo.
+La bandeja, las observaciones por componente y el historial se incorporaron el 27 de octubre: véase [revisión e historial](revision-secretaria-historial.md). No incluye notificaciones ni reapertura de un área enviada. El catálogo todavía es mutable: agregar componentes activos después del envío puede alterar su completitud; no reabre automáticamente las respuestas entregadas. El versionado del catálogo y cualquier reapertura deben definirse con el equipo.
 
 Las pruebas `SelfEvaluationAreaSubmissionTests` cubren área completa sin enviar, rechazo de envíos incompletos, persistencia, idempotencia, permisos, bloqueo de respuestas, independencia entre áreas y cambios de período. Las pruebas del PMI se adaptan para partir de áreas enviadas; las alteraciones de origen usadas para comprobar históricos se simulan dentro de las transacciones de prueba, no mediante una reapertura pública.
 

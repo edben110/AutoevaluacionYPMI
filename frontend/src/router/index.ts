@@ -1,9 +1,21 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { hasSession } from '@/auth/session'
+import { hasSession, signOut } from '@/auth/session'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    { path: '/mi-cuenta', name: 'account', component: () => import('@/views/AccountView.vue') },
+    { path: '/salir', name: 'logout', component: { render: () => null }, beforeEnter: () => { signOut(); return { name: 'login' } } },
+    {
+      path: '/entregas',
+      name: 'deliveries',
+      component: () => import('@/views/DeliveriesView.vue'),
+    },
+    {
+      path: '/entregas/:year/areas/:areaId',
+      name: 'delivery-review',
+      component: () => import('@/views/DeliveryReviewView.vue'),
+    },
     {
       path: '/pmi/:year/areas/:areaId/seguimiento',
       name: 'pmi-follow-up',

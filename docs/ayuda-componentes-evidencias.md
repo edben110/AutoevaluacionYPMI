@@ -41,9 +41,9 @@ La correspondencia con la guía exige coincidir en UUID, proceso y nombre. Un co
 
 Se mantiene el nombre JSON **`evidenceUrl`** por compatibilidad con los clientes existentes. A partir de V13 representa una **referencia de evidencia**, no únicamente una URL:
 
-- Admite hasta 10.000 caracteres y saltos de línea; sigue siendo opcional.
+- Admite hasta 20.002 caracteres y saltos de línea; sigue siendo opcional. Este límite técnico permite reunir los dos campos anteriores de 10.000 caracteres con un separador sin truncar su contenido.
 - Conserva enlaces anteriores al convertir `evidence_url` de `VARCHAR(1000)` a `TEXT`.
-- Recorta espacios exteriores y normaliza el vacío a `null`; `evidenceNote` se conserva como campo adicional separado.
+- Recorta espacios exteriores y normaliza el vacío a `null`. Por solicitud de Juan del 26 de octubre, la interfaz presenta un único campo **Evidencias: enlaces o descripción**. Al cargar combina `evidenceUrl` y la nota anterior `evidenceNote`, separados por una línea en blanco. La lectura no escribe ni altera datos. Al guardar una respuesta desde esta interfaz, envía el texto unificado en `evidenceUrl` y limpia `evidenceNote` para que no vuelva a duplicarse al recargar. El campo legado sigue aceptado por la API para compatibilidad con clientes anteriores, con su límite de 10.000 caracteres.
 - No valida protocolos ni interpreta el contenido como HTML o hipervínculo. Una referencia escrita se presenta como texto.
 - Usa el guardado automático y la verificación de pendientes antes de enviar ya existentes.
 
@@ -53,11 +53,15 @@ Ejemplo de solicitud:
 {
   "level": 2,
   "evidenceUrl": "Archivo físico: acta 12 de 2026, folios 30 a 70. Consultar en coordinación.\nSoportes complementarios: https://ejemplo.org/carpeta",
-  "evidenceNote": "La institución indica dónde consultar los documentos."
+  "evidenceNote": null
 }
 ```
 
 En la pantalla, **Ayuda del componente** abre un diálogo con carga, reintento, cierre por teclado y retorno del foco. Está disponible también cuando el área ya fue enviada. La ayuda se muestra dentro de la aplicación; abrir el PDF es opcional. Solo los enlaces de fuente documental se presentan como enlaces, separados del contenido escrito por la institución.
+
+La unificación es una simplificación del formulario solicitada por Juan, sin añadir exigencias documentales ni cambiar los permisos de envío/consulta. Las áreas ya enviadas muestran ambos textos anteriores juntos, sin modificarlos en la base de datos. La columna `evidence_url` ya es `TEXT` desde V13: no se necesita migración ni se borran columnas o notas históricas.
+
+Verificación de la unificación del 26 de octubre: **131 pruebas de backend correctas**, compilación Vue/TypeScript y ESLint correctos. La persistencia acepta los dos textos anteriores completos (20.002 caracteres con separador) en el campo unificado y rechaza una referencia superior al nuevo límite. El recorrido de navegador comprobó un único recuadro por componente, visualización conjunta sin guardar al cargar, guardado con nota legada vacía, recarga sin duplicados, preservación de los textos largos, envío y consulta posterior. También mantuvo las comprobaciones de ayuda y ancho móvil de 390 px. No se modificaron datos institucionales reales durante la verificación.
 
 Reiniciar el backend para aplicar V13 y cargar el recurso antes de probar. Las pruebas `ComponentGuidanceAndEvidenceTests` verifican la cobertura de los 45 componentes, páginas financieras, consultas por rol, fallback del catálogo, referencias físicas/mixtas/largas y rechazo de exceso de longitud sin reemplazar el valor anterior. Las pruebas previas verifican que los enlaces existentes y las reglas de envío se conservan.
 

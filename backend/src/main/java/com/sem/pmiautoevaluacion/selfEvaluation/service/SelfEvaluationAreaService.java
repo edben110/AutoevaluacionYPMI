@@ -13,6 +13,7 @@ import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationPeriodR
 import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationRepository;
 import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
+import com.sem.pmiautoevaluacion.pmi.service.PMIFollowUpCycleService;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -32,10 +33,11 @@ public class SelfEvaluationAreaService {
     private final SelfEvaluationPeriodRepository periods;
     private final SelfEvaluationAreaSubmissionRepository submissions;
     private final Clock clock;
+    private final PMIFollowUpCycleService followUpCycle;
 
     public SelfEvaluationAreaService(SelfEvaluationRepository evaluations, ComponentValuationRepository valuations,
             ComponentRepository components, AreaRepository areas, SelfEvaluationPeriodRepository periods,
-            SelfEvaluationAreaSubmissionRepository submissions, Clock selfEvaluationClock) {
+            SelfEvaluationAreaSubmissionRepository submissions, Clock selfEvaluationClock, PMIFollowUpCycleService followUpCycle) {
         this.evaluations = evaluations;
         this.valuations = valuations;
         this.components = components;
@@ -43,6 +45,7 @@ public class SelfEvaluationAreaService {
         this.periods = periods;
         this.submissions = submissions;
         this.clock = selfEvaluationClock;
+        this.followUpCycle = followUpCycle;
     }
 
     @Transactional(readOnly = true)
@@ -60,6 +63,7 @@ public class SelfEvaluationAreaService {
         validateYear(year);
         // Mantiene el orden de bloqueo de guardar valoraciones: período y después autoevaluación.
         SelfEvaluationPeriod period = periods.findForDiligence(year).orElse(null);
+        followUpCycle.requireCompleted(establishmentId, year);
         SelfEvaluation evaluation = evaluations.findForPmiUpdate(establishmentId, year)
                 .orElseThrow(() -> new ResourceNotFoundException("Autoevaluación de origen no encontrada"));
         Area area = requireArea(areaId);
@@ -93,7 +97,8 @@ public class SelfEvaluationAreaService {
         boolean open = period != null && period.getPeriod().include(LocalDate.now(clock));
         return new SelfEvaluationAreaResponse(evaluation.getYear(), area.getId(), area.getName(),
                 submission == null ? "DRAFT" : "SUBMITTED", submission == null ? null : submission.getSubmittedAt(),
-                activeIds.size(), valued, complete, submission == null && complete && open);
+                activeIds.size(), valued, complete, submission == null && complete && open
+                        && followUpCycle.prerequisites(evaluation.getEstablishment().getId(), evaluation.getYear()).ready());
     }
 
     private Area requireArea(UUID areaId) {

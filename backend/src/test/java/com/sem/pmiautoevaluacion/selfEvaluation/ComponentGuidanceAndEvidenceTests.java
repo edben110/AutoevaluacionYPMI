@@ -89,9 +89,29 @@ class ComponentGuidanceAndEvidenceTests {
     void evidenceLengthLimitRejectsWithoutReplacingExistingReference() throws Exception {
         evaluations.saveValuation(owner.getId(), YEAR, A, new ValuationRequest(2, "Archivo físico original", null, null, null));
         mvc.perform(put(valuationPath()).with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(Map.of("level", 2, "evidenceUrl", "x".repeat(10001)))))
+                .content(mapper.writeValueAsString(Map.of("level", 2, "evidenceUrl", "x".repeat(20003)))))
                 .andExpect(status().isBadRequest());
         assertEquals("Archivo físico original", evaluations.find(owner.getId(), YEAR).valuations().getFirst().evidenceUrl());
+    }
+
+    @Test
+    void unifiedEvidencePreservesBothLegacyFieldsAtTheirMaximumLengthWithoutDuplicatingTheNote() throws Exception {
+        String reference = "a".repeat(10000);
+        String note = "b".repeat(10000);
+        evaluations.saveValuation(owner.getId(), YEAR, A, new ValuationRequest(2, reference, note, null, null));
+        em.flush(); em.clear();
+        var legacy = evaluations.find(owner.getId(), YEAR).valuations().getFirst();
+        assertEquals(reference, legacy.evidenceUrl());
+        assertEquals(note, legacy.evidenceNote());
+
+        String combined = legacy.evidenceUrl() + "\n\n" + legacy.evidenceNote();
+        mvc.perform(put(valuationPath()).with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(Map.of("level", 2, "evidenceUrl", combined))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.evidenceUrl").value(combined));
+        em.flush(); em.clear();
+        var saved = evaluations.find(owner.getId(), YEAR).valuations().getFirst();
+        assertEquals(combined, saved.evidenceUrl());
+        assertNull(saved.evidenceNote());
     }
 
     @Test

@@ -58,6 +58,12 @@ public class SelfEvaluation {
         this.period = period;
     }
     public void removePeriod() { this.period = null; }
+    /** Después de retirar respuestas, envíos y PMI, reutiliza el registro anual como borrador vacío. */
+    public void restartDraft(Instant now) {
+        valuations.clear();
+        status = SelfEvaluationStatus.DRAFT;
+        updatedAt = now;
+    }
     public SelfEvaluationStatus getStatus() { return status; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

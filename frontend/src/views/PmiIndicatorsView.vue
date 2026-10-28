@@ -196,7 +196,7 @@ onUnmounted(() => { sequence++; request?.abort(); window.removeEventListener('be
         <section class="overview" aria-labelledby="follow-up-next-title">
           <h2 id="follow-up-next-title">Seguimiento del plan · Anexo 5</h2>
           <p class="hint">Registra el estado de ejecución, el porcentaje de avance y las observaciones de las actividades por fecha de control.</p>
-          <RouterLink :to="{ name: 'pmi-follow-up', params: { year, areaId } }">Registrar o consultar avances →</RouterLink>
+          <RouterLink :to="{ name: 'pmi-follow-up', params: { year, areaId } }">Ver consolidado y seguimiento →</RouterLink>
         </section>
         <p class="source-note">La fórmula define cómo medir el indicador. El Anexo 5 registra el avance de ejecución de las actividades.</p>
       </template>

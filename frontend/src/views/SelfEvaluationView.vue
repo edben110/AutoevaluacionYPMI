@@ -4,6 +4,9 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate, RouterLink, useRoute, useRoute
 import ValuationTotals from '@/components/ValuationTotals.vue'
 import EvaluationPeriodNotice from '@/components/EvaluationPeriodNotice.vue'
 import ComponentGuidanceDialog from '@/components/ComponentGuidanceDialog.vue'
+import FollowUpRequirement from '@/components/FollowUpRequirement.vue'
+import EvaluationAreaSteps from '@/components/EvaluationAreaSteps.vue'
+import type { FollowUpPrerequisite } from '@/selfEvaluation/prerequisites'
 import { loadEvaluationPeriod, type EvaluationPeriod } from '@/selfEvaluation/period'
 import {
   allowsStrengths,
@@ -35,7 +38,6 @@ interface Evaluation {
 interface ComponentForm extends Component {
   level: ValuationLevel | ''
   evidenceUrl: string
-  evidenceNote: string
   strengths: string
   improvementOpportunities: string
   saved: boolean
@@ -52,10 +54,11 @@ const year = ref(Number.isInteger(requestedYear) && requestedYear > 0 && request
 const period = ref<EvaluationPeriod | null>(null)
 const periodWritable = computed(() => period.value?.writable === true)
 const areaStatus = ref<AreaEvaluationStatus | null>(null)
+const prerequisite = ref<FollowUpPrerequisite | null>(null)
 const submitting = ref(false)
 const submitError = ref('')
 const availabilityError = ref('')
-const writeAllowed = computed(() => periodWritable.value && !loading.value && areaStatus.value?.status === 'DRAFT')
+const writeAllowed = computed(() => periodWritable.value && prerequisite.value?.ready === true && !loading.value && areaStatus.value?.status === 'DRAFT')
 const canEdit = computed(() => writeAllowed.value && !submitting.value)
 const loading = ref(true)
 const error = ref('')
@@ -67,6 +70,8 @@ const helpComponent = ref<ComponentForm | null>(null)
 const timers = new Map<string, ReturnType<typeof setTimeout>>()
 const inFlight = new Map<string, Promise<void>>()
 const queued = new Set<string>()
+// Permite reunir los dos campos anteriores (10.000 cada uno) sin truncarlos.
+const maxEvidenceLength = 20002
 let contextVersion = 0
 
 // Los subtotales se calculan sobre los datos guardados y los componentes del catálogo visible.
@@ -103,7 +108,7 @@ const hasPendingChanges = computed(() => areaForms.value.some(component => dirty
 
 function payload(component: ComponentForm) {
   return {
-    level: component.level, evidenceUrl: component.evidenceUrl.trim(), evidenceNote: component.evidenceNote.trim(),
+    level: component.level, evidenceUrl: component.evidenceUrl.trim(), evidenceNote: null,
     strengths: component.strengths.trim(), improvementOpportunities: component.improvementOpportunities.trim(),
   }
 }
@@ -122,7 +127,7 @@ function validationError(component: ComponentForm): string {
   if (component.level === '') return 'Selecciona un estado para guardar la valoración.'
   if (!allowsStrengths(component.level) && component.strengths.trim()) return 'Existencia no permite fortalezas. Quita ese texto antes de guardar.'
   if (!allowsImprovementOpportunities(component.level) && component.improvementOpportunities.trim()) return 'Mejoramiento continuo no permite oportunidades de mejora. Quita ese texto antes de guardar.'
-  if ([component.evidenceUrl, component.evidenceNote, component.strengths, component.improvementOpportunities].some(value => value.length > 10000)) return 'Revisa la longitud de los textos antes de guardar.'
+  if (component.evidenceUrl.length > maxEvidenceLength || [component.strengths, component.improvementOpportunities].some(value => value.length > 10000)) return 'Revisa la longitud de los textos antes de guardar.'
   return ''
 }
 
@@ -163,8 +168,7 @@ async function loadCatalog(draft: Evaluation | null, version: number, selectedId
     const form: ComponentForm = {
       ...component,
       level: valuation?.level ?? '',
-      evidenceUrl: valuation?.evidenceUrl ?? '',
-      evidenceNote: valuation?.evidenceNote ?? '',
+      evidenceUrl: [valuation?.evidenceUrl?.trim(), valuation?.evidenceNote?.trim()].filter(Boolean).join('\n\n'),
       strengths: valuation?.strengths ?? '',
       improvementOpportunities: valuation?.improvementOpportunities ?? '',
       saved: Boolean(valuation),
@@ -187,6 +191,7 @@ async function loadYear(): Promise<void> {
   submitError.value = ''
   availabilityError.value = ''
   areaStatus.value = null
+  prerequisite.value = null
   error.value = ''
   evaluation.value = null
   period.value = null
@@ -203,6 +208,10 @@ async function loadYear(): Promise<void> {
     if (version !== contextVersion) return
     period.value = loadedPeriod
     if (!loadedPeriod?.writable) return
+    const required = await readJson<FollowUpPrerequisite>(`/api/self-evaluations/${selectedYear}/prerequisites`)
+    if (version !== contextVersion) return
+    prerequisite.value = required
+    if (!required.ready) return
     const response = await authorizedFetch(`/api/self-evaluations/${selectedYear}`)
     if (version !== contextVersion) return
     if (response.status === 404) {
@@ -332,7 +341,11 @@ async function refreshPeriod(): Promise<void> {
   const version = contextVersion
   try {
     const loaded = await loadEvaluationPeriod(year.value)
-    if (version === contextVersion) { period.value = loaded; availabilityError.value = '' }
+    const required = loaded?.writable ? await readJson<FollowUpPrerequisite>(`/api/self-evaluations/${year.value}/prerequisites`) : null
+    if (version === contextVersion) {
+      period.value = loaded; prerequisite.value = required; availabilityError.value = ''
+      if (!required?.ready) cancelTimers()
+    }
   } catch (cause) {
     if (version === contextVersion) availabilityError.value = cause instanceof Error ? `No se pudo verificar el período: ${cause.message}` : 'No se pudo verificar el período. Tus cambios pendientes se conservan; reintenta cuando recuperes la conexión.'
   }
@@ -340,7 +353,7 @@ async function refreshPeriod(): Promise<void> {
 
 async function refreshAvailability(): Promise<void> {
   if (loading.value || submitting.value || currentProfile.value?.role !== 'ESTABLISHMENT') return
-  const wasWritable = period.value?.writable === true
+  const wasWritable = period.value?.writable === true && prerequisite.value?.ready === true
   await refreshPeriod()
   if (!wasWritable && period.value?.writable && !hasPendingChanges.value && components.value.length === 0) await loadYear()
 }
@@ -411,6 +424,7 @@ watch([areaId, () => route.query.year], ([selectedId, selectedYear]) => {
       <p v-if="loading" class="status-card" role="status">Cargando autoevaluación…</p>
 
       <EvaluationPeriodNotice v-if="!loading && periodWritable" :period="period" :year="year" />
+      <FollowUpRequirement v-if="!loading && periodWritable && prerequisite && !prerequisite.ready" :requirement="prerequisite" />
 
       <section v-if="!loading && !error && !periodWritable" class="evaluation-empty">
         <h2>Autoevaluación no habilitada</h2>
@@ -431,7 +445,8 @@ watch([areaId, () => route.query.year], ([selectedId, selectedYear]) => {
         <button class="secondary-button" type="button" @click="loadYear">Actualizar disponibilidad</button>
       </section>
 
-      <template v-else-if="!loading && !error && periodWritable && selectedArea && evaluation">
+      <template v-else-if="!loading && !error && periodWritable && prerequisite?.ready && selectedArea && evaluation">
+        <EvaluationAreaSteps :areas="areas" :area-id="areaId" :year="year" />
         <div class="evaluation-summary">
           <div>
             <strong>{{ areaStatus?.status === 'SUBMITTED' ? 'Enviada' : 'Borrador' }} {{ evaluation.year }}</strong>
@@ -472,15 +487,16 @@ watch([areaId, () => route.query.year], ([selectedId, selectedYear]) => {
               <span>PROCESO {{ index + 1 }}</span>
               <h3>{{ process.name }}</h3>
             </header>
+            <div class="valuation-column-headings" aria-hidden="true"><span>Componente</span><span>Valoración</span><span>Evidencias</span><span>Fortalezas</span><span>Oportunidades de mejora</span></div>
             <article v-for="component in process.components" :key="component.id" class="evaluation-component">
               <div class="component-heading">
                 <div>
                   <h4>{{ component.name }}</h4>
                   <p v-if="component.description">{{ component.description }}</p>
+                  <button :id="`guidance-help-${component.id}`" class="guidance-help-button" type="button" @click="helpComponent = component">Ayuda del componente</button>
                 </div>
                 <span class="save-status" :class="{ 'save-status-error': component.error }" role="status">{{ component.saving ? 'Guardando…' : component.error ? 'Pendiente de guardar' : component.saved ? 'Guardado' : dirty(component) ? 'Cambios pendientes' : 'Sin valorar' }}</span>
               </div>
-              <button :id="`guidance-help-${component.id}`" class="guidance-help-button" type="button" @click="helpComponent = component">Ayuda del componente</button>
 
               <fieldset class="valuation-controls" :disabled="!canEdit">
               <div class="valuation-fields">
@@ -492,13 +508,10 @@ watch([areaId, () => route.query.year], ([selectedId, selectedYear]) => {
                   </select>
                 </label>
                 <label class="note-field">
-                  Evidencia: enlace o descripción (opcional)
-                  <textarea v-model="component.evidenceUrl" class="evidence-description" rows="4" maxlength="10000" placeholder="Escribe un enlace, describe tus evidencias o combina ambos. Para documentos físicos, indica nombre, fecha y ubicación." @input="changed(component)"></textarea>
-                  <span>Puedes describir documentos en papel sin adjuntar escaneos.</span>
-                </label>
-                <label class="note-field">
-                  Nota sobre la evidencia (opcional)
-                  <textarea v-model="component.evidenceNote" rows="3" maxlength="10000" @input="changed(component)"></textarea>
+                  Evidencias: enlaces o descripción (opcional)
+                  <textarea v-model="component.evidenceUrl" class="evidence-description" rows="4" :maxlength="maxEvidenceLength" placeholder="Incluye aquí los enlaces y las observaciones sobre tus evidencias. Para documentos físicos, indica nombre, fecha y ubicación." @input="changed(component)"></textarea>
+                  <span>En este mismo espacio puedes combinar enlaces, describir documentos en papel e indicar dónde consultarlos. No necesitas adjuntar escaneos.</span>
+                  <small class="character-count">{{ component.evidenceUrl.length }} / {{ maxEvidenceLength }} caracteres</small>
                 </label>
                 <label class="note-field">
                   Fortalezas (opcional en el borrador)
@@ -550,4 +563,26 @@ watch([areaId, () => route.query.year], ([selectedId, selectedYear]) => {
 .save-status-error { color: var(--sem-red); }
 .guidance-help-button { margin-top: .8rem; padding: .5rem .75rem; border: 1px solid var(--sem-blue); border-radius: .4rem; background: var(--color-background-top); color: var(--color-text-highlight); font: inherit; font-size: .82rem; font-weight: 700; }
 .guidance-help-button:focus-visible { outline: 3px solid var(--sem-yellow); outline-offset: 3px; }
+.valuation-column-headings { display: none; }
+.character-count { color: var(--sem-black-soft); text-align: right; font-weight: 400; }
+@media (min-width: 1200px) {
+  .evaluation-area { padding: 1.2rem; }
+  .evaluation-component, .valuation-column-headings { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr) minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap: 0; margin-top: 0; border-radius: 0; padding: 0; }
+  .valuation-column-headings { margin-top: .8rem; background: var(--sem-white-mute); border: 1px solid var(--sem-black-mute); color: var(--sem-black); font-weight: 700; }
+  .valuation-column-headings span { padding: .8rem; border-right: 1px solid var(--sem-black-mute); font-weight: 700; font-size: .85rem; }
+  .evaluation-component { border-color: var(--sem-black-mute); border-top: 0; }
+  .component-heading { display: flex; flex-direction: column; gap: .7rem; padding: .8rem; border-right: 1px solid var(--sem-black-mute); }
+  .component-heading h4 { font-size: .9rem; text-decoration: underline; text-underline-offset: 3px; }
+  .component-heading p { font-size: .8rem; }
+  .valuation-controls, .valuation-fields { display: contents; }
+  .valuation-fields > label { display: flex; flex-direction: column; justify-content: start; padding: .8rem; min-width: 0; border-right: 1px solid var(--sem-black-mute); font-size: .78rem; grid-column: auto; }
+  .valuation-fields > label:last-child { border: 0; }
+  .valuation-fields > label > span { font-size: .74rem; font-weight: 400; }
+  .valuation-fields select { font-size: .8rem; padding: .5rem .3rem; }
+  .valuation-fields textarea { min-height: 135px; font-size: .85rem; padding: .5rem; }
+  .valuation-controls > p, .valuation-controls > button { grid-column: 1 / -1; margin: .5rem .8rem; justify-self: start; }
+  .evaluation-component .secondary-button { margin: .5rem .8rem; padding: .4rem .8rem; }
+  .guidance-help-button { padding: .4rem; font-size: .75rem; }
+  .process-header { border-radius: .5rem .5rem 0 0; }
+}
 </style>

@@ -5,6 +5,8 @@ import com.sem.pmiautoevaluacion.selfEvaluation.dto.SelfEvaluationPeriodResponse
 import com.sem.pmiautoevaluacion.selfEvaluation.entity.SelfEvaluationPeriod;
 import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationPeriodRepository;
 import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationRepository;
+import com.sem.pmiautoevaluacion.selfEvaluation.repository.ComponentValuationRepository;
+import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationAreaSubmissionRepository;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
 import com.sem.pmiautoevaluacion.shared.value.PeriodRecord;
@@ -13,6 +15,8 @@ import com.sem.pmiautoevaluacion.users.repository.UserRepository;
 import com.sem.pmiautoevaluacion.users.repository.EstablishmentRepository;
 import com.sem.pmiautoevaluacion.selfEvaluation.entity.SelfEvaluation;
 import com.sem.pmiautoevaluacion.pmi.service.PMIPeriodCleanupService;
+import com.sem.pmiautoevaluacion.review.repository.ComponentReviewCommentRepository;
+import com.sem.pmiautoevaluacion.review.repository.DeliveryPackageReviewRepository;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
@@ -30,16 +34,26 @@ public class SelfEvaluationPeriodService {
     private final EstablishmentRepository establishments;
     private final Clock clock;
     private final PMIPeriodCleanupService pmiCleanup;
+    private final ComponentValuationRepository valuations;
+    private final SelfEvaluationAreaSubmissionRepository submissions;
+    private final ComponentReviewCommentRepository reviewComments;
+    private final DeliveryPackageReviewRepository packageReviews;
 
     public SelfEvaluationPeriodService(SelfEvaluationPeriodRepository periods,
             SelfEvaluationRepository evaluations, UserRepository users,
-            EstablishmentRepository establishments, Clock selfEvaluationClock, PMIPeriodCleanupService pmiCleanup) {
+            EstablishmentRepository establishments, Clock selfEvaluationClock, PMIPeriodCleanupService pmiCleanup,
+            ComponentValuationRepository valuations, SelfEvaluationAreaSubmissionRepository submissions,
+            ComponentReviewCommentRepository reviewComments, DeliveryPackageReviewRepository packageReviews) {
         this.periods = periods;
         this.evaluations = evaluations;
         this.users = users;
         this.establishments = establishments;
         this.clock = selfEvaluationClock;
         this.pmiCleanup = pmiCleanup;
+        this.valuations = valuations;
+        this.submissions = submissions;
+        this.reviewComments = reviewComments;
+        this.packageReviews = packageReviews;
     }
 
     @Transactional(readOnly = true)
@@ -60,15 +74,30 @@ public class SelfEvaluationPeriodService {
         validateYear(year);
         PeriodRecord dates = new PeriodRecord(request.startDate(), request.finishDate());
         Secretary secretary = requireSecretary(secretaryId);
-        SelfEvaluationPeriod period = periods.findForConfiguration(year).orElseGet(() ->
+        var previousPeriod = periods.findForConfiguration(year);
+        boolean publishingNewPeriod = previousPeriod.isEmpty();
+        SelfEvaluationPeriod period = previousPeriod.orElseGet(() ->
                 new SelfEvaluationPeriod(year, dates, secretary, clock.instant()));
         period.reschedule(dates, clock.instant());
         period = periods.save(period);
-        // Vincula borradores anteriores sin alterar sus respuestas ni fechas de diligenciamiento.
+        // Publicar un período nuevo prepara borradores vacíos. Editar fechas conserva las respuestas.
         final SelfEvaluationPeriod configured = period;
-        var existing = evaluations.findByYear(year);
+        var existing = evaluations.findByYearForPmiDeletion(year);
         var institutionIds = new HashSet<UUID>();
         existing.forEach(evaluation -> {
+            if (publishingNewPeriod) {
+                // También limpia registros de versiones anteriores que quedaron sin período.
+                pmiCleanup.deleteForEvaluation(evaluation.getId());
+                packageReviews.findByEvaluation_Id(evaluation.getId()).ifPresent(packageReviews::delete);
+                packageReviews.flush();
+                reviewComments.deleteAll(reviewComments.findBySubmission_Evaluation_Id(evaluation.getId()));
+                reviewComments.flush();
+                submissions.deleteAll(submissions.findByEvaluation_Id(evaluation.getId()));
+                submissions.flush();
+                valuations.deleteAll(valuations.findByEvaluation_Id(evaluation.getId()));
+                valuations.flush();
+                evaluation.restartDraft(clock.instant());
+            }
             evaluation.assignPeriod(configured);
             institutionIds.add(evaluation.getEstablishment().getId());
         });

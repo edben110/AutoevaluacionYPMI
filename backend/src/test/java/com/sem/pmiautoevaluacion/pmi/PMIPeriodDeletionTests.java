@@ -7,6 +7,7 @@ import com.sem.pmiautoevaluacion.pmi.entity.*;
 import com.sem.pmiautoevaluacion.pmi.service.*;
 import com.sem.pmiautoevaluacion.selfEvaluation.dto.*;
 import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationRepository;
+import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationPeriodRepository;
 import com.sem.pmiautoevaluacion.selfEvaluation.service.*;
 import com.sem.pmiautoevaluacion.shared.enums.UseState;
 import com.sem.pmiautoevaluacion.users.entity.*;
@@ -39,6 +40,7 @@ class PMIPeriodDeletionTests {
     @Autowired EstablishmentRepository institutions;
     @Autowired UserRepository users;
     @Autowired SelfEvaluationRepository evaluations;
+    @Autowired SelfEvaluationPeriodRepository periodRepository;
     @Autowired SelfEvaluationPeriodService periods;
     @Autowired SelfEvaluationService selfEvaluations;
     @Autowired SelfEvaluationAreaService areaEvaluations;
@@ -101,11 +103,51 @@ class PMIPeriodDeletionTests {
 
         periods.configure(secretary.getId(), YEAR, new SelfEvaluationPeriodRequest(today, today));
         assertTrue(pmi.overview(owner.getId(), YEAR).periodConfigured());
+        for (Establishment account : List.of(owner, other)) {
+            assertTrue(selfEvaluations.find(account.getId(), YEAR).valuations().isEmpty());
+            for (UUID area : areas) {
+                var draft = areaEvaluations.find(account.getId(), YEAR, area);
+                assertEquals("DRAFT", draft.status());
+                assertEquals(0, draft.valuedComponents());
+                assertNull(draft.submittedAt());
+                assertFalse(pmi.find(account.getId(), YEAR, area).canFormulate());
+            }
+        }
+        mvc.perform(put(base + "/components/" + first.componentId()).with(user(principal(owner)))
+                .contentType(MediaType.APPLICATION_JSON).content("{\"criticalFactors\":\"Aún incompleta\",\"urgency\":5,\"tendency\":5,\"impact\":5}"))
+                .andExpect(status().isBadRequest());
+        assertAggregateExists(preserved, true);
+        catalog.findByState(UseState.ACTIVE).stream().filter(c -> c.getProcess().getArea().getId().equals(first.areaId()))
+                .forEach(c -> selfEvaluations.saveValuation(owner.getId(), YEAR, c.getId(), new ValuationRequest(
+                        c.getId().equals(first.componentId()) ? 1 : 4, null, null, null, null)));
+        areaEvaluations.submit(owner.getId(), YEAR, first.areaId());
         var restarted = pmi.saveComponent(owner.getId(), YEAR, first.areaId(), first.componentId(), score());
         assertNotEquals(first.planId(), restarted.id());
         assertTrue(formulation.find(owner.getId(), YEAR, first.areaId()).objectives().isEmpty());
         assertTrue(followUps.find(owner.getId(), YEAR, first.areaId(), today).availableDates().isEmpty());
         for (Aggregate aggregate : removed) assertAggregateExists(aggregate, false);
+    }
+
+    @Test
+    void publishingANewPeriodClearsLegacyAnswersSubmissionsAndPmiLeftWithoutAPeriod() {
+        var legacy = aggregate(owner, YEAR, areas.getFirst());
+        var otherYear = aggregate(owner, YEAR + 1, areas.getFirst());
+        // Reproduce datos conservados por una versión anterior de la eliminación del período.
+        evaluations.findByYear(YEAR).forEach(evaluation -> evaluation.removePeriod());
+        evaluations.flush();
+        periodRepository.deleteById(YEAR);
+        periodRepository.flush();
+        em.clear();
+        assertAggregateExists(legacy, true);
+
+        periods.configure(secretary.getId(), YEAR, new SelfEvaluationPeriodRequest(today, today));
+        em.flush(); em.clear();
+        assertAggregateExists(legacy, false);
+        assertAggregateExists(otherYear, true);
+        assertTrue(selfEvaluations.find(owner.getId(), YEAR).valuations().isEmpty());
+        assertEquals("DRAFT", areaEvaluations.find(owner.getId(), YEAR, legacy.areaId()).status());
+        assertNull(areaEvaluations.find(owner.getId(), YEAR, legacy.areaId()).submittedAt());
+        assertFalse(pmi.find(owner.getId(), YEAR, legacy.areaId()).canFormulate());
     }
 
     @Test
@@ -148,8 +190,10 @@ class PMIPeriodDeletionTests {
         UUID indicatorId = indicators.find(account.getId(), year, area).indicators().getFirst().id();
         indicators.save(account.getId(), year, area, indicatorId, new IndicatorDefinitionRequest(IndicatorType.PROCESS,
                 "Objetivo del indicador", "Porcentaje", "Variables", "R/P*100", "Actas", "Revisar actas", "Mensual", "Coordinación"));
+        periods.configure(secretary.getId(), year + 1, new SelfEvaluationPeriodRequest(today, today));
         UUID followUpId = followUps.save(account.getId(), year, area, today, rowId, new FollowUpRequest(ExecutionStatus.EJ,
                 new BigDecimal("40"), "Observaciones de la institución")).id();
+        followUps.complete(account.getId(), year, area, today);
         UUID priorityId = jdbc.queryForObject("SELECT id FROM prioritary_component WHERE pmi_id=?", UUID.class, plan.id());
         return new Aggregate(area, componentId, plan.id(), priorityId, objective.id(), goal.id(), rowId, indicatorId, followUpId);
     }

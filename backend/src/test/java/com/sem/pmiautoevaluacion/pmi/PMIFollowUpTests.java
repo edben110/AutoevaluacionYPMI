@@ -72,6 +72,116 @@ class PMIFollowUpTests {
     }
 
     @Test
+    void planningAnnexIsReadOnlyUntilTheFollowingPeriodOpens() throws Exception {
+        String rowId = firstRow(createDraft(List.of(row("Indicador", "Actividades"))));
+        mvc.perform(get(path()).with(user(principal(owner))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.phase").value("PLANNING"))
+                .andExpect(jsonPath("$.canEdit").value(false)).andExpect(jsonPath("$.rows[0].editable").value(false));
+        mvc.perform(put(savePath(DATE, rowId)).with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"executionStatus\":\"EJ\",\"executionPercentage\":40,\"observations\":\"Aún no\"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post(path() + "/" + DATE + "/complete").with(user(principal(owner)))).andExpect(status().isBadRequest());
+        openNextPeriod();
+        mvc.perform(get(path()).param("controlDate", DATE).with(user(principal(owner))))
+                .andExpect(jsonPath("$.phase").value("FOLLOW_UP")).andExpect(jsonPath("$.canEdit").value(true));
+    }
+
+    @Test
+    void nextEvaluationRequiresEveryFieldAndExplicitCompletionThenBecomesWritable() throws Exception {
+        String created = create(List.of(row("Uno", "Actividades"), row("Dos", "Actividades")));
+        List<String> ids = JsonPath.read(created, "$.objectives[0].goals[0].rows[*].id");
+        String nextEvaluation = "/api/self-evaluations/" + (YEAR + 1);
+        mvc.perform(get(nextEvaluation + "/prerequisites").with(user(principal(owner))))
+                .andExpect(jsonPath("$.ready").value(false));
+        mvc.perform(put(nextEvaluation).with(user(principal(owner)))).andExpect(status().isBadRequest());
+        mvc.perform(put(nextEvaluation + "/valuations/" + A).with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"level\":2}")).andExpect(status().isBadRequest());
+        mvc.perform(post(nextEvaluation + "/areas/" + AREA + "/submit").with(user(principal(owner)))).andExpect(status().isBadRequest());
+        save(ids.get(0), DATE, Map.of("executionStatus", "EJ", "executionPercentage", "40", "observations", "Avance real, aún no finalizado"));
+        save(ids.get(1), DATE, Map.of("executionStatus", "NI", "executionPercentage", "0"));
+        mvc.perform(post(path() + "/" + DATE + "/complete").with(user(principal(owner)))).andExpect(status().isBadRequest());
+        save(ids.get(1), DATE, Map.of("executionStatus", "NI", "executionPercentage", "0", "observations", "No inició por falta de recursos"));
+        mvc.perform(get(path()).param("controlDate", DATE).with(user(principal(owner))))
+                .andExpect(jsonPath("$.canComplete").value(true));
+        mvc.perform(get(nextEvaluation + "/prerequisites").with(user(principal(owner)))).andExpect(jsonPath("$.ready").value(false));
+        String completed = mvc.perform(post(path() + "/" + DATE + "/complete").with(user(principal(owner))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.phase").value("COMPLETED"))
+                .andExpect(jsonPath("$.canEdit").value(false)).andReturn().getResponse().getContentAsString();
+        String completedAt = JsonPath.read(completed, "$.completedAt");
+        em.flush(); em.clear();
+        mvc.perform(get(nextEvaluation + "/prerequisites").with(user(principal(owner)))).andExpect(jsonPath("$.ready").value(true));
+        mvc.perform(put(nextEvaluation + "/valuations/" + A).with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"level\":2}")).andExpect(status().isOk());
+        mvc.perform(put(savePath(DATE, ids.get(0))).with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
+        LocalDate today = LocalDate.now(ZoneId.of("America/Bogota"));
+        periods.configure(secretary.getId(), YEAR + 1, new SelfEvaluationPeriodRequest(today.minusDays(3), today.minusDays(1)));
+        mvc.perform(post(path() + "/" + NEXT + "/complete").with(user(principal(owner))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.completedAt").value(completedAt));
+    }
+
+    @Test
+    void everyPreviousAreaMustBeCompletedAndOtherInstitutionsHaveIndependentAccess() throws Exception {
+        String first = firstRow(create(List.of(row("Académico", "Actividad académica"))));
+        LocalDate today = LocalDate.now(ZoneId.of("America/Bogota"));
+        periods.configure(secretary.getId(), YEAR, new SelfEvaluationPeriodRequest(today, today));
+        var areaComponents = catalog.findByState(UseState.ACTIVE).stream().filter(c -> c.getProcess().getArea().getId().equals(OTHER_AREA)).toList();
+        UUID chosen = areaComponents.getFirst().getId();
+        areaComponents.forEach(c -> selfEvaluations.saveValuation(owner.getId(), YEAR, c.getId(), new ValuationRequest(c.getId().equals(chosen) ? 1 : 4, null, null, null, null)));
+        areaEvaluations.submit(owner.getId(), YEAR, OTHER_AREA);
+        String otherBase = base().replace(AREA.toString(), OTHER_AREA.toString());
+        mvc.perform(put(otherBase + "/components/" + chosen).with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"criticalFactors\":\"Factores\",\"urgency\":5,\"tendency\":5,\"impact\":5}")).andExpect(status().isOk());
+        String body = mvc.perform(post(otherBase + "/formulation/objectives").with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON)
+                .content(json(Map.of("componentId", chosen, "description", "Objetivo", "goals", List.of(Map.of("description", "Meta", "rows", List.of(row("Directivo", "Actividad directiva"))))))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String otherRow = firstRow(body);
+        save(first, DATE, Map.of("executionStatus", "EJ", "executionPercentage", "35", "observations", "Avance académico"));
+        mvc.perform(post(path() + "/" + DATE + "/complete").with(user(principal(owner)))).andExpect(status().isOk());
+        String gate = "/api/self-evaluations/" + (YEAR + 1) + "/prerequisites";
+        mvc.perform(get(gate).with(user(principal(owner)))).andExpect(jsonPath("$.ready").value(false)).andExpect(jsonPath("$.plans", hasSize(2)));
+        mvc.perform(get(gate).with(user(principal(other)))).andExpect(jsonPath("$.ready").value(true));
+        mvc.perform(put(otherBase + "/follow-ups/" + DATE + "/rows/" + otherRow).with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"executionStatus\":\"CANC\",\"executionPercentage\":0,\"observations\":\"Actividad cancelada por cambio de contexto\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(post(otherBase + "/follow-ups/" + DATE + "/complete").with(user(principal(owner)))).andExpect(status().isOk());
+        mvc.perform(get(gate).with(user(principal(owner)))).andExpect(jsonPath("$.ready").value(true));
+    }
+
+    @Test
+    void changingACompletedPlanRequiresANewCompleteControlBeforeContinuing() throws Exception {
+        String created = create(List.of(row("Nombre inicial", "Actividades")));
+        String rowId = firstRow(created);
+        save(rowId, DATE, Map.of("executionStatus", "EJ", "executionPercentage", "40", "observations", "Avance inicial"));
+        mvc.perform(post(path() + "/" + DATE + "/complete").with(user(principal(owner)))).andExpect(status().isOk());
+        String objectiveId = JsonPath.read(created, "$.objectives[0].id"), goalId = JsonPath.read(created, "$.objectives[0].goals[0].id");
+        var changed = row("Nombre actualizado", "Actividades actualizadas"); changed.put("id", rowId);
+        mvc.perform(put(formulation() + "/objectives/" + objectiveId).with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON)
+                .content(json(Map.of("componentId", A, "description", "Objetivo", "goals", List.of(Map.of("id", goalId, "description", "Meta", "rows", List.of(changed)))))))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/self-evaluations/" + (YEAR + 1) + "/prerequisites").with(user(principal(owner))))
+                .andExpect(jsonPath("$.ready").value(false));
+        mvc.perform(post(path() + "/" + DATE + "/complete").with(user(principal(owner)))).andExpect(status().isBadRequest());
+        save(rowId, NEXT, Map.of("executionStatus", "EJ", "executionPercentage", "50", "observations", "Control actualizado"));
+        mvc.perform(post(path() + "/" + NEXT + "/complete").with(user(principal(owner)))).andExpect(status().isOk());
+        mvc.perform(get("/api/self-evaluations/" + (YEAR + 1) + "/prerequisites").with(user(principal(owner))))
+                .andExpect(jsonPath("$.ready").value(true));
+    }
+
+    @Test
+    void finalizationAndPrerequisitesEnforceRolesAndOwnership() throws Exception {
+        create(List.of(row("Indicador", "Actividades")));
+        String gate = "/api/self-evaluations/" + (YEAR + 1) + "/prerequisites";
+        mvc.perform(get(gate)).andExpect(status().isUnauthorized());
+        mvc.perform(get(gate).with(user(principal(other))).param("establishmentId", owner.getId().toString())).andExpect(status().isForbidden());
+        mvc.perform(get(gate).with(user(principal(secretary)))).andExpect(status().isBadRequest());
+        mvc.perform(get(gate).with(user(principal(secretary))).param("establishmentId", owner.getId().toString())).andExpect(status().isOk());
+        mvc.perform(post(path() + "/" + DATE + "/complete").with(user(principal(secretary)))).andExpect(status().isForbidden());
+        mvc.perform(post(path() + "/" + DATE + "/complete").with(user(principal(other)))).andExpect(status().isBadRequest());
+        mvc.perform(post(path() + "/" + DATE + "/complete")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void previewUsesEachAnexo3RowWithoutInventingDefaultStatesOrWritingControls() throws Exception {
         create(List.of(row("Indicador uno", "Reunir al equipo\nSocializar acuerdos"), row("Indicador repetido", null),
                 row("Indicador repetido", "Acciones"), row(null, "Actividad sin indicador"), row(null, null)));
@@ -168,14 +278,14 @@ class PMIFollowUpTests {
     }
 
     @Test
-    void inactiveSelectionKeepsPastProgressButRejectsNewWrites() throws Exception {
+    void followUpCoversAllPlannedRowsEvenWhenTheirSelectionChanges() throws Exception {
         String rowId = firstRow(create(List.of(row("Indicador", "Actividades"))));
         save(rowId, DATE, Map.of("executionStatus", "EJ", "executionPercentage", "40"));
         score(A, 1);
         mvc.perform(get(path()).param("controlDate", DATE).with(user(principal(owner))))
-                .andExpect(jsonPath("$.rows[0].editable").value(false)).andExpect(jsonPath("$.rows[0].executionPercentage").value("40.00"));
+                .andExpect(jsonPath("$.rows[0].editable").value(true)).andExpect(jsonPath("$.rows[0].executionPercentage").value("40.00"));
         mvc.perform(put(savePath(NEXT, rowId)).with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON).content("{}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isOk());
         score(A, 5);
         mvc.perform(get(path()).param("controlDate", DATE).with(user(principal(owner)))).andExpect(jsonPath("$.rows[0].editable").value(true));
     }
@@ -241,9 +351,18 @@ class PMIFollowUpTests {
     }
 
     private String create(List<Map<String, Object>> rows) throws Exception {
+        String result = createDraft(rows);
+        openNextPeriod();
+        return result;
+    }
+    private String createDraft(List<Map<String, Object>> rows) throws Exception {
         return mvc.perform(post(formulation() + "/objectives").with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON)
                 .content(json(Map.of("componentId", A.toString(), "description", "Objetivo institucional", "goals", List.of(Map.of("description", "Meta institucional", "rows", rows))))))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+    }
+    private void openNextPeriod() {
+        LocalDate today = LocalDate.now(ZoneId.of("America/Bogota"));
+        periods.configure(secretary.getId(), YEAR + 1, new SelfEvaluationPeriodRequest(today.withDayOfYear(1), today.withMonth(12).withDayOfMonth(31)));
     }
     private String save(String rowId, String date, Map<String, Object> body) throws Exception {
         return mvc.perform(put(savePath(date, rowId)).with(user(principal(owner))).contentType(MediaType.APPLICATION_JSON).content(json(body)))

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { authorizedFetch, hasSession, loadProfile, responseError } from '@/auth/session'
 import { formatPeriodDate, periodLabels, type EvaluationPeriod } from '@/selfEvaluation/period'
@@ -17,6 +17,7 @@ const startDate = ref('')
 const finishDate = ref('')
 const editing = ref(false)
 const authorized = ref(false)
+const configuredYear = computed(() => periods.value.some(period => period.year === year.value))
 
 async function loadPeriods(): Promise<void> {
   loading.value = true
@@ -135,8 +136,9 @@ onMounted(async () => {
       <p v-if="success" class="status-card" role="status">{{ success }}</p>
       <template v-if="authorized">
         <section class="evaluation-empty">
-          <h2>{{ editing ? 'Editar fechas del período' : 'Habilitar período anual' }}</h2>
-          <p>Al guardar, se crean los borradores de las instituciones registradas. Las respuestas existentes se conservan.</p>
+          <h2>{{ configuredYear ? 'Editar fechas del período' : 'Habilitar período anual' }}</h2>
+          <p v-if="configuredYear">Este período ya está publicado. Ajustar sus fechas conserva las respuestas y los PMI de las instituciones.</p>
+          <p v-else>Al habilitar un período nuevo, las cuatro áreas de cada institución empiezan vacías y sin envíos. Si vuelves a publicar un año eliminado, se reinician sus respuestas anteriores y sus PMI.</p>
           <form @submit.prevent="save">
             <fieldset class="period-form" :disabled="saving || loading || deleting || !!pendingDeletion">
               <label>Año de la autoevaluación
@@ -146,7 +148,7 @@ onMounted(async () => {
               <label>Fecha de fin<input v-model="finishDate" type="date" :min="startDate || undefined" required /></label>
               <p>Se incluyen completos el día de inicio y el de fin, con la hora de Bogotá. Fuera de estas fechas, las respuestas quedan disponibles para consulta.</p>
               <div class="period-actions">
-                <button class="primary-button" type="submit">{{ saving ? 'Guardando…' : editing ? 'Guardar fechas' : 'Habilitar período' }}</button>
+                <button class="primary-button" type="submit">{{ saving ? 'Guardando…' : configuredYear ? 'Guardar fechas' : 'Habilitar período' }}</button>
                 <button v-if="editing" class="secondary-button" type="button" @click="newPeriod">Configurar otro año</button>
               </div>
             </fieldset>
@@ -157,7 +159,7 @@ onMounted(async () => {
           <section v-if="pendingDeletion" class="deletion-confirmation" aria-labelledby="delete-period-title">
             <h3 id="delete-period-title">¿Eliminar el período {{ pendingDeletion.year }}?</h3>
             <p>Se retirarán las fechas de habilitación y se eliminarán los PMI de las cuatro áreas de todas las instituciones de ese año, incluidos la priorización, los planes, las fichas de indicadores y los seguimientos de los anexos 2 a 5. Esta eliminación no se puede deshacer.</p>
-            <p>Las autoevaluaciones y sus respuestas se conservarán para consulta. Las instituciones podrán iniciar nuevos PMI cuando Secretaría vuelva a publicar el período.</p>
+            <p>Las autoevaluaciones y sus respuestas se conservarán para consulta hasta volver a publicar ese año. Al publicarlo nuevamente, las instituciones empezarán con autoevaluaciones vacías y deberán completarlas y enviarlas para iniciar sus PMI.</p>
             <div class="period-actions">
               <button class="secondary-button" type="button" :disabled="deleting" @click="pendingDeletion = null">Cancelar</button>
               <button class="secondary-button delete-button" type="button" :disabled="deleting" @click="deletePeriod">{{ deleting ? 'Eliminando…' : 'Confirmar eliminación' }}</button>
@@ -188,10 +190,14 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.period-form { display: grid; gap: 1rem; margin: 0; padding: 0; border: 0; min-width: 0; }
+.period-form { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0 0; padding: 0; border: 0; min-width: 0; }
+.period-form > label:first-child { grid-column: 1 / -1; max-width: 20rem; width: 100%; justify-self: center; }
+.period-form > p, .period-form > .period-actions { grid-column: 1 / -1; }
+.period-form > p { text-align: center; margin: 1rem 0; }
 .period-form label { display: grid; gap: .5rem; font-weight: 600; }
 .period-form input { padding: .7rem; border: 1px solid var(--color-border-disabled); border-radius: .5rem; width: min(100%, 24rem); color: var(--color-text); background: var(--color-background-top); }
 .period-actions { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+.period-form .period-actions { justify-content: center; }
 .period-actions button { padding: .8rem 1.2rem; }
 .period-table-wrap { overflow-x: auto; }
 .period-table { width: 100%; border-collapse: collapse; }
@@ -201,4 +207,5 @@ onMounted(async () => {
 .delete-button { color: var(--sem-red); }
 .deletion-confirmation { margin: 1rem 0; padding: 1rem; border: 1px solid var(--sem-red); border-radius: .5rem; background: var(--color-background-mute); }
 .deletion-confirmation h3 { margin: 0; }
+@media (max-width: 650px) { .period-form { grid-template-columns: 1fr; } }
 </style>

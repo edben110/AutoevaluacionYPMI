@@ -424,7 +424,7 @@ onUnmounted(() => { loadSequence++; window.removeEventListener('beforeunload', b
           <p>Guarda el plan con los nombres de sus indicadores. En el Anexo 4 encontrarás una tabla por cada indicador para definir cómo lo medirán.</p>
           <p v-if="hasObjectiveChanges" class="unsaved-label">Guarda los cambios pendientes para que los nuevos indicadores aparezcan en el Anexo 4.</p>
           <RouterLink :to="{ name: 'pmi-indicators', params: { year, areaId } }">Definir las fichas de los indicadores →</RouterLink>
-          <p><RouterLink :to="{ name: 'pmi-follow-up', params: { year, areaId } }">Registrar o consultar avances · Anexo 5 →</RouterLink></p>
+          <p><RouterLink :to="{ name: 'pmi-follow-up', params: { year, areaId } }">Ver consolidado y seguimiento · Anexo 5 →</RouterLink></p>
         </section>
         <details v-if="canCreate" class="formulation-card extra-objectives">
           <summary>¿Necesitas otro objetivo para un componente?</summary>

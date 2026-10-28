@@ -138,8 +138,8 @@ class SelfEvaluationAreaSubmissionTests {
         periods.configure(secretary.getId(), YEAR, new SelfEvaluationPeriodRequest(today, today));
         mvc.perform(put("/api/self-evaluations/" + YEAR + "/valuations/" + A).with(user(principal(owner)))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"level\":4}"))
-                .andExpect(status().isBadRequest());
-        assertEquals(1, submissionCount());
+                .andExpect(status().isOk());
+        assertEquals(0, submissionCount());
     }
 
     @Test

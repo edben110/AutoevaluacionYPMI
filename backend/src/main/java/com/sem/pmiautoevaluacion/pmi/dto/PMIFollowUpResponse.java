@@ -5,4 +5,5 @@ import java.util.*;
 
 public record PMIFollowUpResponse(UUID pmiId, int year, UUID areaId, String areaName,
         String establishmentName, LocalDate controlDate, List<LocalDate> availableDates,
-        boolean canEdit, List<FollowUpRowResponse> rows) {}
+        boolean canEdit, List<FollowUpRowResponse> rows, int reviewYear, String phase,
+        java.time.Instant completedAt, int requiredRows, int completedRows, boolean canComplete) {}

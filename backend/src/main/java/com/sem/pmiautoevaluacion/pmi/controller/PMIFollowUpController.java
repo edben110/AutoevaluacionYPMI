@@ -47,4 +47,12 @@ public class PMIFollowUpController {
         if (requestedId != null && !requestedId.equals(ownId)) throw new AccessDeniedException("Una institución solo puede consultar su propio seguimiento");
         return ownId;
     }
+
+    @PostMapping("/{controlDate}/complete")
+    @PreAuthorize("hasRole('ESTABLISHMENT')")
+    public PMIFollowUpResponse complete(@AuthenticationPrincipal CustomUserDetails principal,
+            @PathVariable int year, @PathVariable UUID areaId,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate controlDate) {
+        return service.complete(principal.getUser().getId(), year, areaId, controlDate);
+    }
 }

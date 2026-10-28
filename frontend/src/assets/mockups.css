@@ -1,0 +1,41 @@
+/* SEM Mockups, entregados por Antonio y Juan el 28 de octubre de 2026. */
+.app-shell { --topbar-height: 58px; --sidebar-width: 240px; position: relative; min-height: 100dvh; background: var(--sem-white-mute); }
+.sem-topbar { position: sticky; top: 0; z-index: 40; height: var(--topbar-height); display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 18px; background: var(--sem-blue); color: var(--sem-white-top); }
+.sem-topbar > strong { text-align: center; font-size: 1rem; letter-spacing: .025em; line-height: 1.25; }
+.shell-icon-button { display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 44px; border: 0; padding: 0; border-radius: 5px; background: transparent; color: var(--sem-white-top); }
+.shell-icon-button:hover { background: rgb(255 255 255 / 12%); }
+.shell-icon-button:focus-visible, .sem-sidebar a:focus-visible, .sem-account-panel a:focus-visible, .sem-account-panel button:focus-visible { outline: 3px solid var(--sem-yellow); outline-offset: 2px; }
+.skip-link { position: fixed; top: -100px; left: 1rem; z-index: 80; padding: .7rem; background: var(--sem-white-top); color: var(--sem-blue); }
+.skip-link:focus { top: .5rem; }
+.sem-sidebar { position: fixed; top: var(--topbar-height); left: 0; z-index: 35; bottom: 0; width: var(--sidebar-width); display: flex; flex-direction: column; background: var(--sem-white-top); border-radius: 0 0 22px 0; padding: 1.5rem 1rem 1rem; overflow-y: auto; border-right: 1px solid var(--sem-black-mute); }
+.sem-sidebar nav { display: grid; }
+.sem-sidebar nav a { display: flex; gap: .9rem; align-items: center; padding: 1.1rem .65rem; border-bottom: 1px solid var(--sem-black-mute); color: var(--sem-black); font-weight: 700; text-decoration: none; line-height: 1.4; }
+.sem-sidebar nav a svg { flex-shrink: 0; }
+.sem-sidebar nav a:hover, .sem-sidebar nav a.active { background: var(--sem-white-mute); color: var(--sem-blue); border-radius: 7px; }
+.sidebar-brand { width: 100%; margin-top: auto; padding-top: 2rem; }
+.app-shell-content { position: relative; z-index: 1; min-width: 0; padding-bottom: 1px; }
+.with-navigation .app-shell-content { margin-left: var(--sidebar-width); }
+.app-shell-content:focus { outline: 0; }
+.sem-account-panel { position: fixed; z-index: 45; top: 72px; right: 20px; width: min(340px, calc(100% - 32px)); background: var(--sem-white-top); border: 2px solid var(--sem-black); border-radius: 12px; padding: 1rem 1.2rem; box-shadow: 0 6px 24px rgb(32 33 36 / 12%); }
+.account-name { padding-bottom: .7rem; color: var(--sem-black-soft); overflow-wrap: anywhere; }
+.sem-account-panel a, .sem-account-panel button { display: flex; align-items: center; gap: 1rem; width: 100%; text-align: left; padding: 1rem .4rem; color: var(--sem-black); font: inherit; font-weight: 700; text-decoration: none; border: 0; background: transparent; }
+.sem-account-panel button { color: var(--sem-red); border-top: 1px solid var(--sem-black-mute); }
+.home-wave { position: absolute; z-index: 0; bottom: 0; right: 0; width: min(68%, 1050px); height: 170px; }
+.navigation-scrim { position: fixed; z-index: 30; inset: var(--topbar-height) 0 0; background: rgb(32 33 36 / 35%); border: 0; }
+.app-shell .app-shell-content main { display: flow-root; min-height: calc(100dvh - var(--topbar-height)); background: transparent; }
+.app-shell .app-shell-content main > header { padding: .9rem clamp(1rem, 3vw, 2.5rem); background: transparent; border-bottom: 0; font-size: .88rem; }
+.app-shell .app-shell-content :is(.dashboard-content, .evaluation-content, .page-content, .pmi-content, .formulation-content, .pmi-overview-content) { width: calc(100% - 3.5rem); max-width: 1560px; margin: 1.8rem auto 4rem; min-width: 0; }
+.app-shell .app-shell-content :is(.status-card, .profile-card, .evaluation-empty, .evaluation-area, .pmi-card, .formulation-card, .indicator-card, .package-card) { border: 1.5px solid var(--sem-black-mute); border-radius: 12px; box-shadow: none; }
+.app-shell .app-shell-content h1 { font-size: clamp(1.5rem, 2.3vw, 2rem); color: var(--sem-black); }
+.app-shell .app-shell-content :is(.primary-button, .secondary-button, .submission-action, .pmi-button, .formulation-button) { border-radius: 8px; font-weight: 700; }
+.app-shell .app-shell-content :is(input, select, textarea) { font-family: inherit; font-weight: 400; }
+.app-shell .app-shell-content :is(textarea, select) { background: var(--sem-white-mute); }
+.app-shell .app-shell-content :is(.table-scroll, .period-table-wrap, .valuation-table-wrap) { min-width: 0; max-width: 100%; }
+@media (max-width: 1000px) { .app-shell { --sidebar-width: 250px; } .with-navigation .app-shell-content { margin-left: 0; } }
+@media (max-width: 600px) {
+  .sem-topbar { padding: 0 .5rem; gap: .4rem; }
+  .sem-topbar > strong { font-size: .78rem; }
+  .app-shell .app-shell-content :is(.dashboard-content, .evaluation-content, .page-content, .pmi-content, .formulation-content, .pmi-overview-content) { width: calc(100% - 2rem); margin-top: 1.2rem; }
+  .app-shell .app-shell-content main > header { flex-wrap: wrap; padding: .8rem 1rem; }
+  .home-wave { height: 90px; width: 85%; }
+}

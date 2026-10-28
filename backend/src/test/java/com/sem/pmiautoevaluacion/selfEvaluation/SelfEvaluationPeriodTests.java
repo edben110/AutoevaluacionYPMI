@@ -209,7 +209,7 @@ class SelfEvaluationPeriodTests {
     }
 
     @Test
-    void secretaryDeletesWindowPreservingAnswersAndCanReopenSameYear() throws Exception {
+    void secretaryDeletesWindowPreservingAnswersUntilNewPublicationStartsEmpty() throws Exception {
         periods.configure(secretary.getId(), YEAR, new SelfEvaluationPeriodRequest(TODAY, TODAY));
         service.saveValuation(institution.getId(), YEAR, COMPONENT,
                 new ValuationRequest(2, "https://ejemplo.org/evidencia", "Evidencia", "Fortaleza", "Mejora"));
@@ -236,7 +236,10 @@ class SelfEvaluationPeriodTests {
         periods.configure(secretary.getId(), YEAR, new SelfEvaluationPeriodRequest(TODAY, TODAY.plusDays(2)));
         entityManager.flush();
         entityManager.clear();
-        assertEquals(original, service.find(institution.getId(), YEAR));
+        var restarted = service.find(institution.getId(), YEAR);
+        assertEquals(original.id(), restarted.id());
+        assertEquals("DRAFT", restarted.status());
+        assertTrue(restarted.valuations().isEmpty());
         assertEquals(originalCount, evaluations.findByYear(YEAR).size());
         assertTrue(evaluations.findByYear(YEAR).stream().allMatch(evaluation -> evaluation.getPeriod().getYear() == YEAR));
     }

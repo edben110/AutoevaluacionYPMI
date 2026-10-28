@@ -27,14 +27,29 @@ const historyDate = ref('')
 const loading = ref(true)
 const authorized = ref(false)
 const verified = ref(false)
+const finalizing = ref(false)
 const error = ref('')
-const saving = computed(() => rows.some(row => row.saving))
+const saving = computed(() => finalizing.value || rows.some(row => row.saving))
 const hasChanges = computed(() => rows.some(changed))
 const datePending = computed(() => source.value !== null && selectedDate.value !== source.value.controlDate)
-const savedCount = computed(() => rows.filter(row => row.source.id !== null).length)
 const statusCounts = computed(() => Object.entries(executionLabels).map(([code, label]) => ({ code, label,
   count: rows.filter(row => row.source.id !== null && row.source.executionStatus === code).length,
 })))
+const completedForReview = computed(() => rows.filter(form => !form.source.sourceRemoved && !form.source.sourceChanged
+  && form.source.id !== null && form.source.executionStatus !== null && form.source.executionPercentage !== null
+  && Boolean(form.source.observations?.trim())).length)
+const groups = computed(() => {
+  const groups: { key: string; context: FollowUpRow['source']; goals: { key: string; description: string | null; rows: RowForm[] }[] }[] = []
+  for (const form of rows) {
+    const item = form.source.source
+    let group = groups.find(group => group.key === item.objectiveId)
+    if (!group) { group = { key: item.objectiveId, context: item, goals: [] }; groups.push(group) }
+    let goal = group.goals.find(goal => goal.key === item.goalId)
+    if (!goal) { goal = { key: item.goalId, description: item.goalDescription, rows: [] }; group.goals.push(goal) }
+    goal.rows.push(form)
+  }
+  return groups
+})
 let sequence = 0
 let request: AbortController | null = null
 
@@ -105,7 +120,7 @@ async function changeDate(): Promise<void> {
 }
 function pickHistory(): void { if (historyDate.value) selectedDate.value = historyDate.value }
 async function save(form: RowForm): Promise<void> {
-  if (loading.value || !verified.value || datePending.value || form.saving || !form.source.editable || !source.value) return
+  if (loading.value || !verified.value || datePending.value || form.saving || finalizing.value || !source.value?.canEdit || !form.source.editable) return
   form.error = ''; form.success = ''
   const percentage = form.percentage.trim().replace(',', '.')
   if (percentage && (!/^\d{1,3}(?:\.\d{1,2})?$/.test(percentage) || Number(percentage) > 100)) {
@@ -133,6 +148,23 @@ async function save(form: RowForm): Promise<void> {
     if (!hasSession.value) await router.replace({ name: 'login' })
   } finally { if (current === sequence) form.saving = false }
 }
+async function finalize(): Promise<void> {
+  if (loading.value || saving.value || !source.value?.canEdit || datePending.value) return
+  if (hasChanges.value) { error.value = 'Guarda los cambios pendientes de cada fila antes de finalizar el seguimiento.'; return }
+  if (!window.confirm(`¿Finalizar el seguimiento de esta área del PMI ${year.value}? Deben estar guardados el estado, porcentaje y observaciones de todas sus filas. Después quedará para consulta.`)) return
+  const current = sequence
+  finalizing.value = true; error.value = ''
+  try {
+    const response = await authorizedFetch(`${apiBase.value}/${source.value.controlDate}/complete`, { method: 'POST' })
+    if (!response.ok) throw await responseError(response)
+    const data = await response.json() as PmiFollowUp
+    if (current !== sequence) return
+    source.value = data; rows.splice(0, rows.length, ...data.rows.map(formFor))
+  } catch (cause) {
+    if (current === sequence) error.value = cause instanceof Error ? cause.message : 'No se pudo finalizar el seguimiento.'
+    if (!hasSession.value) await router.replace({ name: 'login' })
+  } finally { if (current === sequence) finalizing.value = false }
+}
 function discard(form: RowForm): void {
   if (!form.saving && window.confirm('¿Descartar los cambios sin guardar de esta fila de seguimiento?')) rows.splice(rows.indexOf(form), 1, formFor(form.source))
 }
@@ -147,65 +179,74 @@ onUnmounted(() => { sequence++; request?.abort(); window.removeEventListener('be
 
 <template>
   <main class="follow-up-page">
-    <header class="page-header"><RouterLink :to="{ name: 'pmi-indicators', params: { year: route.params.year, areaId } }">← Indicadores · Anexo 4</RouterLink><RouterLink :to="{ name: 'pmi-formulation', params: { year: route.params.year, areaId } }">Plan · Anexo 3</RouterLink><RouterLink :to="{ name: 'dashboard' }">Mi espacio</RouterLink></header>
+    <header class="page-header"><RouterLink :to="{ name: 'pmi-indicators', params: { year: route.params.year, areaId } }">← Anexo 4</RouterLink><RouterLink :to="{ name: 'pmi-formulation', params: { year: route.params.year, areaId } }">Plan · Anexo 3</RouterLink><RouterLink :to="{ name: 'dashboard' }">Mi espacio</RouterLink></header>
     <div class="page-content">
       <span class="eyebrow">PLAN DE MEJORAMIENTO INSTITUCIONAL · ANEXO 5</span>
-      <h1>Revisemos los avances del plan</h1>
+      <h1>Seguimiento del PMI {{ year }}</h1>
       <h2 v-if="source">{{ source.areaName }}</h2>
-      <p class="intro">Elige la fecha de control y registra cómo avanzan las actividades de tu plan. Cada fecha conserva sus respuestas para consultar el seguimiento.</p>
-      <p v-if="source" class="metadata"><strong>{{ source.establishmentName }}</strong> · Autoevaluación {{ source.year }}</p>
-      <form class="date-card" @submit.prevent="changeDate">
-        <label for="follow-up-date">Fecha de control<input id="follow-up-date" v-model="selectedDate" type="date" required min="0001-01-01" max="9999-12-31" :disabled="loading || saving" /></label>
-        <label v-if="source?.availableDates.length" for="follow-up-history">Consultar una fecha guardada<select id="follow-up-history" v-model="historyDate" :disabled="loading || saving" @change="pickHistory"><option value="">Elige una fecha</option><option v-for="date in source.availableDates" :key="date" :value="date">{{ formatPeriodDate(date) }}</option></select></label>
-        <button type="submit" :disabled="loading || saving">{{ loading ? 'Cargando…' : 'Abrir fecha de control' }}</button>
-        <p>Para un nuevo control, elige otra fecha y abre su formulario. Se guardará cuando registres el avance de una fila.</p>
-      </form>
-      <p v-if="loading" class="notice" role="status">Cargando el seguimiento…</p>
-      <div v-if="error" class="notice error" role="alert"><p>{{ error }}</p><button type="button" :disabled="loading || saving" @click="changeDate">Reintentar</button></div>
+      <p class="intro">Aquí se reúne lo planeado en los anexos anteriores, organizado por proceso, componente, objetivo y meta.</p>
+      <p v-if="source" class="metadata"><strong>{{ source.establishmentName }}</strong> · PMI {{ source.year }} · Seguimiento previo a la autoevaluación {{ source.reviewYear }}</p>
+      <p v-if="loading" class="notice" role="status">Cargando el Anexo 5…</p>
+      <div v-if="error" class="notice error" role="alert"><p>{{ error }}</p><button type="button" :disabled="loading || saving" @click="changeDate">Volver a consultar</button></div>
       <template v-if="authorized && source">
-        <p v-if="datePending" class="notice warning">Todavía se muestra el control del {{ formatPeriodDate(source.controlDate) }}. Selecciona una fecha y pulsa Abrir fecha de control para cambiar el formulario.</p>
-        <section class="summary-card" aria-labelledby="summary-title">
-          <h2 id="summary-title">Control del {{ formatPeriodDate(source.controlDate) }}</h2>
-          <p>{{ savedCount }} de {{ rows.length }} filas tienen un avance guardado en esta fecha.</p>
-          <div class="status-summary"><span v-for="status in statusCounts" :key="status.code"><strong>{{ status.count }}</strong> {{ status.label }}</span></div>
-          <p class="hint">Los conteos corresponden a los datos guardados. El porcentaje de ejecución se registra por fila.</p>
-        </section>
-        <p v-if="!source.canEdit" class="notice warning">Solo consulta: revisa el envío de la autoevaluación y la selección de componentes del Anexo 2 para continuar registrando avances.</p>
-        <section v-if="rows.length === 0 && !loading" class="empty-state"><h2>Aún no hay actividades o indicadores para consultar</h2><p>Guarda los indicadores y actividades de este PMI en el Anexo 3. Aquí aparecerán sus filas de seguimiento.</p><RouterLink :to="{ name: 'pmi-formulation', params: { year, areaId } }">Ir al plan · Anexo 3 →</RouterLink></section>
-        <div v-if="rows.length" class="overview-table-wrapper">
-          <table class="overview-table"><caption>Resumen del control guardado</caption><thead><tr><th scope="col">Indicador / actividades</th><th scope="col">Estado</th><th scope="col">Ejecución</th></tr></thead><tbody><tr v-for="(form, index) in rows" :key="form.source.rowId"><th scope="row"><a :href="`#follow-up-${form.source.rowId}`">{{ index + 1 }}. {{ form.source.source.indicatorName || 'Actividades de la meta' }}</a></th><td>{{ form.source.executionStatus ? executionLabels[form.source.executionStatus] : 'Sin registrar' }}</td><td>{{ form.source.executionPercentage === null ? 'Pendiente' : `${form.source.executionPercentage} %` }}</td></tr></tbody></table>
-        </div>
-        <section v-for="(form, index) in rows" :id="`follow-up-${form.source.rowId}`" :key="form.source.rowId" class="follow-up-card" :aria-labelledby="`row-title-${form.source.rowId}`">
-          <header class="row-header"><span>SEGUIMIENTO {{ index + 1 }} · {{ formatPeriodDate(source.controlDate) }}</span><h2 :id="`row-title-${form.source.rowId}`">{{ form.source.source.indicatorName || 'Actividades de la meta' }}</h2><p>{{ form.source.source.processName }} · {{ form.source.source.componentName }}</p></header>
-          <div class="row-content">
-            <dl class="source-context"><div><dt>Objetivo</dt><dd>{{ form.source.source.objectiveDescription || 'Pendiente en el Anexo 3' }}</dd></div><div><dt>Meta</dt><dd>{{ form.source.source.goalDescription || 'Pendiente en el Anexo 3' }}</dd></div><div class="full-width"><dt>Actividades previstas</dt><dd>{{ form.source.source.activities || 'Sin actividades descritas en el Anexo 3' }}</dd></div></dl>
-            <table class="dates-table"><caption>Plazos del plan</caption><thead><tr><th scope="col">Inicio</th><th scope="col">Final</th></tr></thead><tbody><tr><td>{{ form.source.source.startDate ? formatPeriodDate(form.source.source.startDate) : 'Pendiente' }}</td><td>{{ form.source.source.finishDate ? formatPeriodDate(form.source.source.finishDate) : 'Pendiente' }}</td></tr></tbody></table>
-            <p v-if="form.source.sourceChanged" class="notice warning">El plan cambió después de registrar este control. Esta fila conserva lo que estaba planeado al guardarla; una fecha nueva usará el plan actualizado.</p>
-            <p v-if="!form.source.editable" class="notice warning">{{ form.source.sourceRemoved ? 'La fila se retiró del Anexo 3. Este seguimiento se conserva para consulta.' : 'Solo consulta: el componente ya no está seleccionado o la fila del Anexo 3 necesita un indicador o actividades.' }}</p>
-            <p class="save-state" role="status">{{ changed(form) ? 'Cambios sin guardar' : form.source.id ? 'Avance guardado en esta fecha' : 'Sin avance guardado en esta fecha' }}</p>
-            <form @submit.prevent="save(form)">
-              <fieldset :disabled="loading || !verified || datePending || !form.source.editable || form.saving">
-                <legend class="sr-only">Registrar avance de {{ form.source.source.indicatorName || 'actividades de la meta' }}</legend>
-                <div class="execution-fields">
-                  <label :for="`execution-status-${form.source.rowId}`">Estado de ejecución<select :id="`execution-status-${form.source.rowId}`" v-model="form.status" @change="form.success = ''"><option value="">Sin registrar</option><option v-for="(label, code) in executionLabels" :key="code" :value="code">{{ label }} ({{ code }})</option></select></label>
-                  <label :for="`execution-percentage-${form.source.rowId}`">Porcentaje de ejecución (%)<input :id="`execution-percentage-${form.source.rowId}`" v-model="form.percentage" type="text" inputmode="decimal" maxlength="6" :aria-describedby="`percentage-hint-${form.source.rowId}`" placeholder="Ejemplo: 40" @input="form.success = ''" /><small :id="`percentage-hint-${form.source.rowId}`">De 0 a 100. Escribe 40 para indicar 40 %. Puedes dejarlo pendiente.</small></label>
+        <p v-if="source.phase === 'PLANNING'" class="notice phase-notice" role="status">Este anexo está disponible para consulta durante la formulación del PMI {{ year }}. Su diligenciamiento se habilitará cuando Secretaría abra el período de autoevaluación {{ source.reviewYear }}.</p>
+        <p v-else-if="source.phase === 'CLOSED'" class="notice warning" role="status">El período {{ source.reviewYear }} está cerrado. Secretaría debe habilitar sus fechas para continuar con el seguimiento.</p>
+        <section v-else-if="source.phase === 'COMPLETED'" class="summary-card completed-follow-up" role="status"><h2>Seguimiento del área finalizado</h2><p>Este Anexo 5 quedó para consulta. Finaliza las demás áreas pendientes para habilitar la autoevaluación {{ source.reviewYear }}.</p><RouterLink :to="{ name: 'dashboard' }">Volver a mi espacio →</RouterLink></section>
+        <p v-else class="notice" role="status">Antes de la autoevaluación {{ source.reviewYear }}, diligencia el estado, porcentaje y observaciones de cada fila y finaliza el seguimiento de esta área.</p>
+
+        <form v-if="source.phase === 'FOLLOW_UP'" class="date-card" @submit.prevent="changeDate">
+          <label for="follow-up-date">Fecha de control<input id="follow-up-date" v-model="selectedDate" type="date" required min="0001-01-01" max="9999-12-31" :disabled="loading || saving" /></label>
+          <label v-if="source.availableDates.length" for="follow-up-history">Controles guardados<select id="follow-up-history" v-model="historyDate" :disabled="loading || saving" @change="pickHistory"><option value="">Elige una fecha</option><option v-for="date in source.availableDates" :key="date" :value="date">{{ formatPeriodDate(date) }}</option></select></label>
+          <button type="submit" :disabled="loading || saving">{{ loading ? 'Cargando…' : 'Abrir fecha de control' }}</button>
+          <p>Usa una fecha dentro del período abierto de {{ source.reviewYear }}. Todas las filas deben quedar completas en el mismo control para finalizar el área.</p>
+        </form>
+        <p v-if="datePending" class="notice warning">Aún se muestra el control del {{ formatPeriodDate(source.controlDate) }}. Abre la fecha seleccionada antes de guardar.</p>
+        <section v-if="source.phase !== 'PLANNING'" class="summary-card" aria-label="Avance guardado del seguimiento"><h2>Control del {{ formatPeriodDate(source.controlDate) }}</h2><p>{{ completedForReview }} de {{ source.requiredRows }} filas completas con estado, porcentaje y observaciones.</p><div class="status-summary"><span v-for="status in statusCounts" :key="status.code"><strong>{{ status.count }}</strong> {{ status.label }}</span></div></section>
+        <section v-if="rows.length === 0 && !loading" class="empty-state"><h2>Aún no hay indicadores o actividades formulados</h2><p>Completa y guarda el plan en el Anexo 3 para que aparezca aquí su consolidado.</p><RouterLink :to="{ name: 'pmi-formulation', params: { year, areaId } }">Ir al Anexo 3 →</RouterLink></section>
+
+        <section v-for="group in groups" :key="group.key" class="objective-group">
+          <header class="row-header"><span>PROCESO</span><h2>{{ group.context.processName }}</h2><p><strong>Componente:</strong> {{ group.context.componentName }}</p></header>
+          <div class="row-content"><h3>Objetivo</h3><p class="planned-text">{{ group.context.objectiveDescription || 'Pendiente en el Anexo 3' }}</p>
+            <section v-for="goal in group.goals" :key="goal.key" class="goal-group"><h4>Meta</h4><p class="planned-text">{{ goal.description || 'Pendiente en el Anexo 3' }}</p>
+              <article v-for="form in goal.rows" :id="`follow-up-${form.source.rowId}`" :key="form.source.rowId" class="follow-up-card indicator-follow-up" :aria-labelledby="`row-title-${form.source.rowId}`">
+                <div class="row-content">
+                  <h5>Indicador</h5><p :id="`row-title-${form.source.rowId}`" class="indicator-title">{{ form.source.source.indicatorName || 'Sin nombre en el Anexo 3' }}</p>
+                  <h5>Actividades previstas</h5><p class="planned-text">{{ form.source.source.activities || 'Sin actividades descritas en el Anexo 3' }}</p>
+                  <table class="dates-table"><caption>Plazos del plan</caption><thead><tr><th scope="col">Inicio</th><th scope="col">Final</th></tr></thead><tbody><tr><td>{{ form.source.source.startDate ? formatPeriodDate(form.source.source.startDate) : 'Pendiente' }}</td><td>{{ form.source.source.finishDate ? formatPeriodDate(form.source.source.finishDate) : 'Pendiente' }}</td></tr></tbody></table>
+                  <p v-if="form.source.sourceChanged" class="notice warning">El plan cambió después de registrar este control. Para finalizar el seguimiento, abre una fecha nueva y registra sus filas con el plan actualizado.</p>
+                  <p v-if="form.source.sourceRemoved" class="notice warning">Esta fila se retiró del plan y su control anterior se conserva para consulta.</p>
+                  <template v-if="source.canEdit && form.source.editable">
+                    <p class="save-state" role="status">{{ changed(form) ? 'Cambios sin guardar' : form.source.id ? 'Avance guardado' : 'Avance pendiente' }}</p>
+                    <form @submit.prevent="save(form)"><fieldset :disabled="loading || !verified || datePending || form.saving || finalizing">
+                      <legend class="sr-only">Registrar avance de esta fila</legend>
+                      <div class="execution-fields"><label :for="`execution-status-${form.source.rowId}`">Estado de ejecución<select :id="`execution-status-${form.source.rowId}`" v-model="form.status" @change="form.success = ''"><option value="">Sin registrar</option><option v-for="(label, code) in executionLabels" :key="code" :value="code">{{ label }} ({{ code }})</option></select></label><label :for="`execution-percentage-${form.source.rowId}`">Porcentaje de ejecución (%)<input :id="`execution-percentage-${form.source.rowId}`" v-model="form.percentage" type="text" inputmode="decimal" maxlength="6" placeholder="Ejemplo: 40" @input="form.success = ''" /><small>De 0 a 100. Escribe 40 para indicar 40 %.</small></label></div>
+                      <label :for="`observations-${form.source.rowId}`">Observaciones de la institución y evidencias<textarea :id="`observations-${form.source.rowId}`" v-model="form.observations" rows="4" maxlength="10000" placeholder="Explica los avances o dificultades e indica las evidencias que los respaldan." @input="form.success = ''" /></label><small>Los tres campos deben estar completos para finalizar. Puedes guardar borradores parciales.</small>
+                      <div class="row-actions"><button type="submit">{{ form.saving ? 'Guardando…' : 'Guardar avance de esta fila' }}</button><button v-if="changed(form)" type="button" class="outline" @click="discard(form)">Descartar cambios</button></div>
+                    </fieldset></form>
+                  </template>
+                  <dl v-else-if="form.source.id" class="execution-summary"><div><dt>Estado</dt><dd>{{ form.source.executionStatus ? executionLabels[form.source.executionStatus] : 'Pendiente' }}</dd></div><div><dt>Porcentaje</dt><dd>{{ form.source.executionPercentage === null ? 'Pendiente' : `${form.source.executionPercentage} %` }}</dd></div><div><dt>Observaciones</dt><dd>{{ form.source.observations || 'Pendientes' }}</dd></div></dl>
+                  <p v-if="form.error" class="notice error" role="alert">{{ form.error }}</p><p v-if="form.success" class="notice" role="status">{{ form.success }}</p>
                 </div>
-                <label :for="`observations-${form.source.rowId}`">Observaciones de la institución y evidencias<textarea :id="`observations-${form.source.rowId}`" v-model="form.observations" rows="4" maxlength="10000" :aria-describedby="`observations-hint-${form.source.rowId}`" placeholder="Describe avances, dificultades y la evidencia que los respalda." @input="form.success = ''" /></label>
-                <small :id="`observations-hint-${form.source.rowId}`">Puedes incluir enlaces o describir dónde están los documentos físicos que respaldan el avance.</small>
-                <div class="row-actions"><button type="submit">{{ form.saving ? 'Guardando…' : 'Guardar avance de esta fila' }}</button><button v-if="changed(form)" type="button" class="outline" @click="discard(form)">Descartar cambios</button></div>
-              </fieldset>
-            </form>
-            <p v-if="form.error" class="notice error" role="alert">{{ form.error }} Vuelve a intentar con Guardar avance de esta fila.</p>
-            <p v-if="form.success" class="notice" role="status">{{ form.success }}</p>
+              </article>
+            </section>
           </div>
         </section>
-        <p class="hint footer-hint">El estado y el porcentaje los registra la institución. El avance de ejecución corresponde a estas actividades; la definición del indicador se consulta en el Anexo 4.</p>
+        <section v-if="source.phase === 'FOLLOW_UP'" class="summary-card completion-card"><h2>Finalizar seguimiento del área</h2><p>Guarda estado, porcentaje y observaciones de las {{ source.requiredRows }} filas en esta fecha. Completar el seguimiento no exige que todas las actividades hayan finalizado o estén al 100 %: registra su situación real.</p><p v-if="hasChanges" class="notice warning">Hay cambios sin guardar. Guárdalos antes de finalizar.</p><button id="complete-follow-up" type="button" :disabled="loading || saving || !source.canEdit || datePending || hasChanges || source.requiredRows === 0 || completedForReview !== source.requiredRows" @click="finalize">{{ finalizing ? 'Finalizando…' : 'Finalizar seguimiento del área' }}</button></section>
       </template>
     </div>
   </main>
 </template>
 
 <style scoped>
+.objective-group { margin-top: 1.6rem; border: 1px solid var(--color-background-mute); border-radius: .7rem; overflow: hidden; background: var(--color-background-top); }
+.goal-group { margin-top: 1.3rem; border-top: 2px solid var(--color-background-mute); padding-top: 1rem; }
+.indicator-follow-up { margin-top: 1.1rem; border-left: 4px solid var(--sem-blue); }
+.planned-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: .4rem 0 1rem; }
+h3, h4, h5, .indicator-title { color: var(--sem-blue); font-weight: 700; }
+h3 { font-size: 1.15rem; } h4 { font-size: 1.05rem; } h5 { font-size: .85rem; margin: .6rem 0; }
+.indicator-title { font-size: 1.05rem; overflow-wrap: anywhere; margin-bottom: 1rem; }
+.execution-summary { margin-top: 1rem; display: grid; gap: .6rem; }
+.completion-card button { margin-top: 1rem; }
 .follow-up-page { min-height: 100vh; background: var(--color-background); }
 .page-header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1.2rem clamp(1rem, 5vw, 5rem); background: var(--color-background-top); border-bottom: 1px solid var(--color-background-mute); }
 a { color: var(--color-text-highlight); font-weight: 700; }

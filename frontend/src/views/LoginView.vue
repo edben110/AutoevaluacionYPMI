@@ -2,6 +2,9 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { signIn, type UserRole } from '@/auth/session'
+import SemIcon from '@/components/SemIcon.vue'
+import SemWave from '@/components/SemWave.vue'
+import InstitutionalBrand from '@/components/InstitutionalBrand.vue'
 
 const router = useRouter()
 const role = ref<UserRole>('ESTABLISHMENT')
@@ -36,99 +39,67 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <main class="login-page">
-    <section class="intro-panel" aria-labelledby="intro-title">
-      <div class="intro-content">
-        <div class="brand brand-light">
-          <span class="brand-mark" aria-hidden="true">✦</span>
-          <span>Ruta de Mejoramiento</span>
-        </div>
-
-        <div class="intro-copy">
-          <span class="eyebrow">GESTIÓN EDUCATIVA</span>
-          <h1 id="intro-title">Un camino compartido hacia una mejor educación.</h1>
-          <p>
-            Un espacio para la autoevaluación institucional, el plan de mejoramiento y el
-            seguimiento de sus avances.
-          </p>
-        </div>
-
-        <div class="route-card" aria-label="Etapas de la ruta de mejoramiento">
-          <span><b>01</b> Autoevaluación</span>
-          <span class="route-line" aria-hidden="true"></span>
-          <span><b>02</b> Plan de mejoramiento</span>
-          <span class="route-line" aria-hidden="true"></span>
-          <span><b>03</b> Seguimiento</span>
-        </div>
+  <main class="login-page sem-login">
+    <section class="login-identity" aria-labelledby="intro-title">
+      <div class="login-intro">
+        <span class="login-kicker">SECRETARÍA DE EDUCACIÓN MUNICIPAL</span>
+        <h1 id="intro-title">Autoevaluación y Plan de Mejoramiento Institucional</h1>
+        <p>Un espacio para reconocer nuestros avances y construir una mejor educación.</p>
       </div>
-      <div class="intro-decoration intro-decoration-one" aria-hidden="true"></div>
-      <div class="intro-decoration intro-decoration-two" aria-hidden="true"></div>
+      <div class="login-brand"><InstitutionalBrand /></div>
     </section>
-
     <section class="form-panel" aria-labelledby="login-title">
       <div class="form-wrap">
-        <span class="eyebrow eyebrow-dark">BIENVENIDO</span>
-        <h2 id="login-title">Ingresa a tu espacio</h2>
-        <p class="form-description text-semilight">Selecciona tu tipo de acceso para continuar.</p>
-
+        <h2 id="login-title">Inicio de sesión</h2>
+        <p class="role-label">Soy:</p>
         <div class="role-selector" role="group" aria-label="Tipo de acceso">
-          <button
-            type="button"
-            class="role-option"
-            :class="{ selected: !isSecretary }"
-            :aria-pressed="!isSecretary"
-            @click="chooseRole('ESTABLISHMENT')"
-          >
-            Institución educativa
-          </button>
-          <button
-            type="button"
-            class="role-option"
-            :class="{ selected: isSecretary }"
-            :aria-pressed="isSecretary"
-            @click="chooseRole('SECRETARY')"
-          >
-            Secretaría
-          </button>
+          <button type="button" class="role-option" :class="{ selected: isSecretary }" :aria-pressed="isSecretary" :disabled="submitting" @click="chooseRole('SECRETARY')"><SemIcon name="user" :size="28" />Secretaría</button>
+          <button type="button" class="role-option" :class="{ selected: !isSecretary }" :aria-pressed="!isSecretary" :disabled="submitting" @click="chooseRole('ESTABLISHMENT')"><SemIcon name="school" :size="32" />Institución</button>
         </div>
-
         <form class="login-form" @submit.prevent="submit">
           <div class="field">
-            <label for="identifier">{{ isSecretary ? 'Correo institucional' : 'Código DANE' }}</label>
-            <input
-              id="identifier"
-              v-model="identifier"
-              :type="isSecretary ? 'email' : 'text'"
-              :autocomplete="isSecretary ? 'username' : 'off'"
-              :placeholder="isSecretary ? 'nombre@secretaria.gov.co' : 'Escribe el código DANE'"
-              required
-            />
+            <label for="identifier">{{ isSecretary ? 'Correo institucional:' : 'Código DANE:' }}</label>
+            <input id="identifier" v-model="identifier" :type="isSecretary ? 'email' : 'text'" autocomplete="username" :placeholder="isSecretary ? 'ejemplo@sempasto.gov.co' : 'Código DANE de la institución'" :disabled="submitting" required />
           </div>
-
-          <div class="field">
-            <label for="password">Contraseña</label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              autocomplete="current-password"
-              placeholder="Escribe tu contraseña"
-              required
-            />
-          </div>
-
+          <div class="field"><label for="password">Contraseña:</label><input id="password" v-model="password" type="password" autocomplete="current-password" placeholder="Escribe tu contraseña" :disabled="submitting" required /></div>
           <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-
-          <button class="primary-button" type="submit" :disabled="submitting">
-            {{ submitting ? 'Ingresando…' : 'Ingresar' }}
-            <span aria-hidden="true">→</span>
-          </button>
+          <button class="primary-button" type="submit" :disabled="submitting">{{ submitting ? 'Ingresando…' : 'Iniciar sesión' }}</button>
         </form>
-
-        <p class="access-note">
-          El acceso es asignado por la Secretaría de Educación Municipal.
-        </p>
+        <p class="access-note">Si necesitas recuperar tu acceso, contacta al responsable de las cuentas de la Secretaría de Educación.</p>
       </div>
     </section>
+    <SemWave class="login-wave" />
   </main>
 </template>
+
+<style scoped>
+.sem-login { position: relative; display: grid; grid-template-columns: 60% 40%; min-height: 100dvh; overflow: clip; background: var(--sem-white-mute); }
+.login-identity { position: relative; display: flex; align-items: center; min-height: 100dvh; padding: clamp(2rem, 6vw, 7rem); padding-bottom: 11rem; }
+.login-kicker { color: var(--sem-black-soft); font-size: .8rem; letter-spacing: .12em; font-weight: 700; }
+.login-intro h1 { max-width: 760px; font-size: clamp(2rem, 3.7vw, 4.1rem); color: var(--sem-blue); line-height: 1.2; margin: 1rem 0; }
+.login-intro p { max-width: 530px; color: var(--sem-black-soft); font-size: 1.1rem; }
+.login-brand { position: absolute; left: 0; bottom: 3rem; width: min(350px, 65%); padding: .8rem 1rem; background: var(--sem-white-top); border-radius: 0 26px 26px 0; }
+.sem-login .form-panel { position: relative; z-index: 1; border-radius: 22px 0 0 0; background: var(--sem-white); padding: 3rem clamp(1.5rem, 4vw, 5rem) 8rem; }
+.sem-login .form-wrap { width: 100%; max-width: 450px; }
+.sem-login .form-wrap h2 { color: var(--sem-black); text-align: center; font-size: clamp(1.7rem, 2.5vw, 2.5rem); letter-spacing: normal; margin: 0 0 2rem; }
+.role-label { text-align: center; color: var(--sem-black); font-size: 1.2rem; font-weight: 700; margin-bottom: .8rem; }
+.sem-login .role-selector { border: 2px solid var(--sem-black-mute); background: var(--sem-white-top); border-radius: 14px; padding: 0; gap: 0; }
+.sem-login .role-option { display: flex; align-items: center; justify-content: center; gap: .7rem; border: 3px solid transparent; border-radius: 11px; color: var(--sem-black-soft); font-size: 1rem; min-height: 64px; padding: .7rem .4rem; }
+.sem-login .role-option.selected { color: var(--sem-blue); border-color: var(--sem-blue); background: var(--sem-white-top); }
+.sem-login .login-form { margin-top: 2rem; gap: 1.4rem; }
+.sem-login .field { gap: .4rem; }
+.sem-login .field label { color: var(--sem-black); font-size: 1.05rem; }
+.sem-login .field input { border: 2px solid var(--sem-black-mute); border-radius: 12px; height: 3.5rem; background: var(--sem-white-top); }
+.sem-login .field input:focus { border-color: var(--sem-blue); outline: 2px solid var(--sem-yellow); outline-offset: 2px; }
+.sem-login .primary-button { justify-self: center; padding: .8rem 2rem; min-width: 210px; height: auto; min-height: 54px; font-size: 1.1rem; margin-top: .8rem; border-radius: 12px; }
+.sem-login .access-note { text-align: left; font-size: .82rem; line-height: 1.6; }
+.login-wave { position: absolute; right: 0; bottom: 0; width: 54%; height: 170px; z-index: 2; }
+@media (max-width: 900px) {
+  .sem-login { grid-template-columns: 1fr; }
+  .login-identity { min-height: 0; padding: 2rem 1.5rem; }
+  .login-intro h1 { font-size: 1.65rem; max-width: 600px; }
+  .login-intro p, .login-brand { display: none; }
+  .sem-login .form-panel { min-height: 0; padding: 2.5rem 1.5rem 8rem; border-radius: 20px 20px 0 0; }
+  .login-wave { height: 80px; width: 85%; }
+}
+</style>
