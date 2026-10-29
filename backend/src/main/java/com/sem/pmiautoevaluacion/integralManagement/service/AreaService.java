@@ -1,0 +1,134 @@
+package com.sem.pmiautoevaluacion.integralManagement.service;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
+import com.sem.pmiautoevaluacion.integralManagement.entity.Area;
+import com.sem.pmiautoevaluacion.integralManagement.repository.AreaRepository;
+import com.sem.pmiautoevaluacion.shared.enums.UseState;
+import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
+import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
+
+import jakarta.transaction.Transactional;
+
+@Service 
+public class AreaService {
+    private final AreaRepository areaRepository;
+
+    public AreaService(AreaRepository areaRepository){
+        this.areaRepository = areaRepository;
+    }
+
+    // Creacion
+
+    public Area create(
+        String name,
+        String description
+    ){
+        if(areaRepository.existsByName(name)){
+            throw new BadRequestException(
+                "Ya existe un area con este nombre"
+            );
+        }
+
+        Area area = new Area(name,description);
+        return areaRepository.save(area);
+    }
+
+    // Actualizacion
+
+    @Transactional 
+    public Area update(
+        UUID id,
+        String name,
+        String description
+    ) {
+        Area area = findById(id);
+
+        if(!area.getName().equalsIgnoreCase(name)
+            && areaRepository.existsByName(name)) {
+                throw new BadRequestException(
+                    "Ya existe un area con ese nombre"
+                );
+        }
+
+        area.setName(name);
+        area.setDescription(description);
+        return area;
+    }
+
+    // Desactivar un area -> Resulta en desactivacion en cascada
+    @Transactional 
+    public Area deactivate(UUID id) {
+        Area area = findById(id);
+
+        if(area.getState() == UseState.INACTIVE) {
+            throw new BadRequestException(
+                "El area ya se encuentra inactiva"
+            );
+        }
+
+        area.deactivate();  
+        return area;
+    }
+
+    // Activar un area
+    @Transactional 
+    public Area activate(UUID id) {
+        Area area = findById(id);
+
+        if(area.getState() == UseState.ACTIVE) {
+            throw new BadRequestException(
+                "El area ya se encuentra activa"
+            );
+        }
+
+        area.activate();
+
+        return area;
+    }
+
+    // Encontrar por Id
+    public Area findById(UUID id){
+        return areaRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "No se encontro el area con el Id proporcionado"
+            ));
+    }
+
+    // Encontrar por Id, filtrando por estado Activo
+    public Area findActiveById(UUID id) {
+        return areaRepository.findByIdAndState(id, UseState.ACTIVE)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "No se encontro un area activa con el Id proporcionado"
+            ));
+    }
+
+    // Encontrar por nombre
+    public Area findByName(String name){
+        return areaRepository.findByName(name)
+            .orElseThrow(()-> new ResourceNotFoundException(
+                "No se encontro el area con el nombre especificado"
+            ));
+    }
+
+    // Encontrar por nombre, filtrando por estado Activo
+    public Area findActiveByName(String name){
+        return areaRepository.findByNameAndState(name, UseState.ACTIVE)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "No se encontro un area activa con el nombre proporcionado"
+            ));
+    }
+
+    // Encontrar todos
+    public List<Area> findAll() {
+        return areaRepository.findAll();
+    }
+
+    // Encontrar todos con estado Activo
+    public List<Area> findAllActive() {
+        return areaRepository.findByState(UseState.ACTIVE);
+    }
+}
