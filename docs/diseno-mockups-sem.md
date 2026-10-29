@@ -9,21 +9,21 @@ El diseño usa la paleta ya definida en `base.css`: azul `#2B2C6B`, rojo `#E1081
 | Mockup | Interfaz adaptada | Conservación del comportamiento |
 | --- | --- | --- |
 | Inicio de sesión de Secretaría/institución | `/login`: dos paneles, selector de rol con iconos, formulario, identidad institucional y ondas | Usa los endpoints existentes de cada rol, con correo o DANE según corresponda; conserva validación y mensajes reales. |
-| Home institución/Secretaría y Home SAMPLE | `/dashboard`: barra azul, menú lateral, tarjetas de autoevaluación/PMI y definición de fechas para Secretaría, menú de cuenta | Las tarjetas conducen a rutas reales; Secretaría consulta los paquetes. No se presenta una administración de usuarios que todavía no existe. |
+| Home institución/Secretaría y Home SAMPLE | `/dashboard`: barra azul, menú lateral, tarjetas de autoevaluación/PMI y definición de fechas para Secretaría, menú de cuenta | Las tarjetas conducen a rutas reales; Secretaría consulta los paquetes. La integración de Antonio añade **Usuarios** para registrar cuentas. |
 | Crear, continuar y no habilitado | `/dashboard?section=autoevaluacion`: cuatro áreas y aviso de período abierto o no habilitado | Los borradores se preparan desde Secretaría; se mantiene el requisito de seguimiento anterior y la selección del período publicado. |
 | Formulario y tabla de creación | `/autoevaluacion/:areaId?year=...`: navegación entre cuatro áreas, procesos con encabezado azul y columnas de componente/valoración/evidencias/fortalezas/oportunidades en escritorio | Cada área mantiene su entrega independiente. Ayuda, autosave y formularios se conservan, con una sola referencia de evidencia y límites reales. En pantalla pequeña se disponen en tarjetas para poder leer y diligenciar. |
 | Verificación de envío | Se conserva la sección **Entrega de esta área** y sus conteos/porcentajes | Guardar y enviar espera los cambios pendientes y comprueba completitud. No se cambia a un envío único anual ni se marcan otras áreas como enviadas. |
 | Explorar autoevaluación y Find Autoevaluación | `/entregas`: búsqueda por nombre/área o DANE, filtros de año y revisión, paquetes institucionales con documentos por área | Se conserva la agrupación por institución/año solicitada posteriormente, la pertenencia institucional y la marca persistente de revisión. |
 | Revisión y tabla de revisión | `/entregas/:year/areas/:areaId`: áreas recibidas del paquete, tabla de respuestas y observaciones por componente en escritorio | Respuestas de solo lectura; comentarios solo de Secretaría y solo en autoevaluación. La institución consulta las observaciones propias. El PMI sigue siendo de solo consulta. |
 | Definición de fechas | `/secretaria/periodos-autoevaluacion`: año, inicio y fin organizados en un panel, confirmación y lista de períodos | Mantiene las operaciones existentes de publicación/edición/eliminación, sus confirmaciones y fechas de Bogotá. No se añade un plazo de PMI que no se ha definido. |
-| Actualización de datos | `/mi-cuenta`: presentación de datos reales de la sesión | Consulta exclusivamente; la edición de datos/contraseñas y su cierre de sesión posterior necesitan un contrato de backend todavía pendiente. |
+| Actualización de datos | `/mi-cuenta`: presentación y edición de los datos reales de la sesión | La integración de Antonio conecta `PATCH /api/me`, con contraseña opcional y cierre de sesión después de un guardado exitoso. |
 | PMI y seguimiento | Anexos 2–5, a través del marco común | La lámina no trae un diseño específico de los anexos: se conserva su organización y se aplica el marco visual compartido. |
 
 ## Componentes compartidos y recursos
 
-`AppShell` concentra barra, navegación lateral, perfil y salida; `SemIcon` proporciona iconos SVG; `SemWave` dibuja las ondas con las variables institucionales. `EvaluationAreaSteps` representa la navegación por área y `ReviewAreaLinks` permite moverse entre las áreas enviadas del paquete. `mockups.css` organiza el marco común sin cambiar la paleta de Antonio.
+`AppShell` concentra navegación lateral, perfil y salida y monta una sola instancia de `AppTopBar`, incorporada desde Antonio. `SemIcon` reutiliza su biblioteca mediante `SvgIcon`; `SemWave` presenta `Curva-vector.svg`. `EvaluationAreaSteps` representa la navegación por área y `ReviewAreaLinks` permite moverse entre las áreas enviadas del paquete. `mockups.css` organiza el marco común sin cambiar la paleta de Antonio.
 
-El escudo se muestra desde una copia **sin modificar** de la lámina original `SAMPLE.png`, incorporada como `src/assets/sem-manual.png`. `InstitutionalBrand` delimita su región mediante el visor SVG, sin reconstruir ni deformar el escudo. La zona que el mockup deja como `PLACEHOLDER` en acceso contiene ahora el nombre del sistema y texto institucional, sin inventar una fotografía. El documento HTML declara idioma español y título del sistema.
+La primera adaptación mostró el escudo desde una copia sin modificar de `SAMPLE.png`. Tras integrar Antonio se utiliza directamente `Logo-SEM.svg` en `InstitutionalBrand`; el PNG anterior queda como referencia, sin cargarse en la interfaz. La zona que el mockup deja como `PLACEHOLDER` en acceso contiene el nombre del sistema y texto institucional, sin inventar una fotografía. El documento HTML declara idioma español y título del sistema.
 
 ## Reglas preservadas y diferencias de los bocetos
 
@@ -36,7 +36,7 @@ El escudo se muestra desde una copia **sin modificar** de la lámina original `S
 | Historial, comentarios y marca de revisión | Solicitudes de Juan del 27 de octubre | Paquetes, permisos, consulta de años anteriores y seguimiento previo siguen vigentes. |
 | Salir respeta los cambios pendientes | Conservación del comportamiento de los formularios | La acción navega primero por `/salir`; solo tras superar las protecciones de navegación se cierra la sesión. Cancelar mantiene los datos y la sesión. |
 
-No se incorporan controles de guardado simulados para edición de cuentas, recuperación de contraseña o administración de usuarios. La consulta de cuenta informa cómo solicitar ayuda. Esas funciones requieren una implementación aparte; la adaptación visual no altera la autenticación de Antonio.
+No se incorporan controles de guardado simulados. La integración de Antonio habilita registro de usuarios para Secretaría y edición de la cuenta propia con sus API reales. La recuperación de contraseña por correo continúa pendiente; el acceso informa cómo solicitar ayuda. Véase [integración de Antonio](integracion-anton-2026-10-28.md).
 
 ## Validación
 
@@ -46,4 +46,4 @@ No se incorporan controles de guardado simulados para edición de cuentas, recup
 - Recorridos existentes de ayuda/evidencias, autosave, envío, requisito de seguimiento, Anexo 5, comentarios por componente, Anexos 2–5 de consulta, paquetes y marca de revisión.
 - Escritorio de 1440 px y móvil de 390 px sin desbordamiento horizontal. En móvil, el menú es desplegable, el contenido de fondo queda inactivo mientras está abierto y Escape lo cierra.
 
-No se cambiaron servicios, esquema o permisos de backend en esta adaptación. Los recorridos visuales no escriben instituciones ni entregas reales en PostgreSQL. Las capturas y utilidades locales están en `.codex`, fuera del control de versiones.
+La adaptación visual inicial no cambió servicios, esquema o permisos de backend. La integración posterior de Antonio incorpora sus servicios de usuarios y los ajustes documentados. Los recorridos visuales no escriben instituciones ni entregas reales en PostgreSQL. Las capturas y utilidades locales están en `.codex`, fuera del control de versiones.

@@ -1,37 +1,62 @@
 package com.sem.pmiautoevaluacion.users.service;
 
 import java.util.UUID;
+import java.time.Clock;
+import java.time.LocalDate;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.sem.pmiautoevaluacion.selfEvaluation.entity.SelfEvaluation;
+import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationRepository;
+import com.sem.pmiautoevaluacion.selfEvaluation.repository.SelfEvaluationPeriodRepository;
 
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.shared.exception.ResourceNotFoundException;
 import com.sem.pmiautoevaluacion.users.entity.EmailRecord;
 import com.sem.pmiautoevaluacion.users.entity.Establishment;
 import com.sem.pmiautoevaluacion.users.repository.EstablishmentRepository;
+import com.sem.pmiautoevaluacion.users.repository.UserRepository;
 
+@Service
 public class EstablishmentServiceImpl implements EstablishmentService {
     private final EstablishmentRepository establishmentRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SelfEvaluationRepository evaluations;
+    private final SelfEvaluationPeriodRepository periods;
+    private final Clock clock;
 
     public EstablishmentServiceImpl(
         EstablishmentRepository establishmentRepository,
-        PasswordEncoder passwordEncoder
+        UserRepository userRepository,
+        PasswordEncoder passwordEncoder,
+        SelfEvaluationRepository evaluations,
+        SelfEvaluationPeriodRepository periods,
+        Clock selfEvaluationClock
     ) {
         this.establishmentRepository = establishmentRepository;
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.evaluations = evaluations;
+        this.periods = periods;
+        this.clock = selfEvaluationClock;
     }
 
-    @Override 
+    @Override
+    @Transactional
     public Establishment create(
-        String rector,
-        String daneCode,
+        String name,
         String password,
         String email,
-        String name
+        String daneCode,
+        String rector
     ) {
         if(establishmentRepository.existsByDaneCode(daneCode)){
             throw new BadRequestException("Ya existe una institucion con este codigo DANE");
+        }
+        if(userRepository.existsByEmail_Value(email)){
+            throw new BadRequestException("Ya existe un usuario con este correo");
         }
 
         String encodedPassword = passwordEncoder.encode(password);
@@ -43,7 +68,16 @@ public class EstablishmentServiceImpl implements EstablishmentService {
             rector
         );
 
-        return establishmentRepository.save(establishment);
+        Establishment saved = establishmentRepository.save(establishment);
+        // Una institución registrada durante un período abierto debe poder ingresar a sus cuatro áreas.
+        LocalDate today = LocalDate.now(clock);
+        periods.findAllByOrderByYearDesc().stream().filter(period -> period.getPeriod().include(today))
+            .forEach(period -> {
+                SelfEvaluation draft = new SelfEvaluation(saved, period.getYear());
+                draft.assignPeriod(period);
+                evaluations.save(draft);
+            });
+        return saved;
     }
 
     @Override

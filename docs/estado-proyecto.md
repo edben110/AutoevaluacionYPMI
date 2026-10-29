@@ -141,3 +141,9 @@ Se incorporan `46e5aab`, `de419f9`, `5382e4e` y `ff6d49b` en `JuanM`. Las relaci
 Se conservan las aclaraciones de Antonio sobre revisión para la siguiente entrega y evidencias por enlaces externos, junto con sus estilos de acceso y variables de color SEM. Los comentarios TODO de autenticación describen pendientes; no implementan registro ni recuperación de contraseña.
 
 La correspondencia entre el código actual y las clases del diagrama, incluidos los elementos pendientes, está en [alineación con el diagrama de clases](alineacion-diagrama-clases.md).
+
+## Integración del 28 de octubre de 2026
+
+Por autorización de Juan se integran en `JuanM` los commits `3059c84`, `f75f3d0`, `4800de5` y `bf70ef9` de `anton`. Se incorporan registro de instituciones y Secretaría por SEM, actualización de la cuenta autenticada, estilos reutilizables, `AppTopBar`, `SvgIcon`, logo, ondas e iconos. Se resuelven los conflictos de acceso y panel conservando los flujos de cuatro áreas, seguimiento obligatorio, paquetes y comentarios de JuanM y reutilizando los recursos de Antonio.
+
+La interfaz añade **Secretaría → Usuarios** y **Datos de la cuenta → Editar datos** con sus API reales. Editar y guardar cierra la sesión actual; los errores y la cancelación conservan el formulario. Las instituciones creadas durante períodos abiertos reciben borradores vacíos en la misma transacción, sin modificar datos de otras instituciones. Se ajustan límites de registro al esquema existente y la actualización recarga al usuario antes de aplicar el PATCH. No se agregan migraciones. Se verifican 160 pruebas de backend, compilación/ESLint y recorridos de navegador. Detalles en [integración de Antonio](integracion-anton-2026-10-28.md).

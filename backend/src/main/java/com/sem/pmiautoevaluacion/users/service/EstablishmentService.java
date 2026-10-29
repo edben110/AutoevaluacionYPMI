@@ -6,11 +6,11 @@ import com.sem.pmiautoevaluacion.users.entity.Establishment;
 
 public interface EstablishmentService {
     Establishment create(
-        String rector,
-        String daneCode,
-        String password,
         String name,
-        String email
+        String password,
+        String email,
+        String daneCode,
+        String rector
     );
 
     Establishment findById(UUID id);

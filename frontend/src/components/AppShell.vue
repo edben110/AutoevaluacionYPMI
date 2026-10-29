@@ -5,19 +5,20 @@ import { currentProfile, hasSession, loadProfile } from '@/auth/session'
 import SemIcon from '@/components/SemIcon.vue'
 import SemWave from '@/components/SemWave.vue'
 import InstitutionalBrand from '@/components/InstitutionalBrand.vue'
+import AppTopBar from '@/components/AppTopBar.vue'
 
 const route = useRoute()
 const router = useRouter()
 const compact = ref(window.matchMedia('(max-width: 1000px)').matches)
 const navigationOpen = ref(!compact.value)
 const accountOpen = ref(false)
-const navButton = ref<HTMLButtonElement | null>(null)
-const accountButton = ref<HTMLButtonElement | null>(null)
+const topbar = ref<InstanceType<typeof AppTopBar> | null>(null)
 const accountPanel = ref<HTMLElement | null>(null)
 const secretary = computed(() => currentProfile.value?.role === 'SECRETARY')
 const title = computed(() => {
   if (route.name === 'dashboard') return route.query.section === 'autoevaluacion' ? 'AUTOEVALUACIÓN' : route.query.section === 'pmi' ? 'PLAN DE MEJORAMIENTO INSTITUCIONAL' : 'INICIO'
   if (route.name === 'secretary-periods') return 'DEFINICIÓN DE FECHAS'
+  if (route.name === 'user-registration') return 'REGISTRO DE USUARIOS'
   if (route.name === 'account') return 'DATOS DE LA CUENTA'
   if (route.name === 'deliveries') return secretary.value ? 'PAQUETES INSTITUCIONALES' : 'AUTOEVALUACIONES ANTERIORES'
   if (route.name === 'delivery-review') return 'REVISIÓN DE AUTOEVALUACIÓN Y PMI'
@@ -29,6 +30,7 @@ const links = computed(() => [
   ...(secretary.value ? [
     { label: 'Definir fechas', icon: 'document-add', to: { name: 'secretary-periods' }, active: route.name === 'secretary-periods' },
     { label: 'Autoevaluación y PMI', icon: 'calendar', to: { name: 'deliveries' }, active: ['deliveries', 'delivery-review'].includes(String(route.name)) },
+    { label: 'Usuarios', icon: 'user', to: { name: 'user-registration' }, active: route.name === 'user-registration' },
   ] : [
     { label: 'Autoevaluación', icon: 'calendar', to: { name: 'dashboard', query: { section: 'autoevaluacion' } }, active: route.name === 'self-evaluation' || route.query.section === 'autoevaluacion' },
     { label: 'PMI', icon: 'document', to: { name: 'dashboard', query: { section: 'pmi' } }, active: String(route.name).startsWith('pmi') || route.query.section === 'pmi' },
@@ -36,13 +38,13 @@ const links = computed(() => [
   ]),
 ])
 function closeOverlays(): void {
-  if (accountOpen.value) { accountOpen.value = false; accountButton.value?.focus() }
-  else if (compact.value && navigationOpen.value) { navigationOpen.value = false; navButton.value?.focus() }
+  if (accountOpen.value) { accountOpen.value = false; topbar.value?.focusAccount() }
+  else if (compact.value && navigationOpen.value) { navigationOpen.value = false; topbar.value?.focusNavigation() }
 }
 function keyboard(event: KeyboardEvent): void { if (event.key === 'Escape') closeOverlays() }
 function outside(event: PointerEvent): void {
   const target = event.target as Node
-  if (accountOpen.value && !accountPanel.value?.contains(target) && !accountButton.value?.contains(target)) accountOpen.value = false
+  if (accountOpen.value && !accountPanel.value?.contains(target) && !topbar.value?.containsAccountButton(target)) accountOpen.value = false
 }
 function resize(): void {
   const next = window.matchMedia('(max-width: 1000px)').matches
@@ -63,11 +65,7 @@ onUnmounted(() => { window.removeEventListener('keydown', keyboard); window.remo
 <template>
   <div class="app-shell" :class="{ 'with-navigation': navigationOpen && !compact }">
     <a class="skip-link" href="#workspace">Saltar al contenido</a>
-    <header class="sem-topbar">
-      <button ref="navButton" class="shell-icon-button" type="button" :aria-expanded="navigationOpen" aria-controls="main-navigation" :aria-label="navigationOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'" @click="navigationOpen = !navigationOpen; accountOpen = false"><SemIcon :name="navigationOpen && compact ? 'close' : 'menu'" :size="30" /></button>
-      <strong>{{ title }}</strong>
-      <button ref="accountButton" class="shell-icon-button" type="button" :aria-expanded="accountOpen" aria-controls="account-panel" aria-label="Abrir opciones de mi cuenta" @click="accountOpen = !accountOpen; if (compact) navigationOpen = false"><SemIcon name="user" :size="30" /></button>
-    </header>
+    <AppTopBar ref="topbar" :title="title" :navigation-open="navigationOpen" :account-open="accountOpen" :compact="compact" @toggle-navigation="navigationOpen = !navigationOpen; accountOpen = false" @toggle-account="accountOpen = !accountOpen; if (compact) navigationOpen = false" />
     <button v-if="navigationOpen && compact" type="button" class="navigation-scrim" aria-label="Cerrar menú de navegación" @click="closeOverlays" />
     <aside v-show="navigationOpen" id="main-navigation" class="sem-sidebar" :inert="!navigationOpen">
       <nav aria-label="Navegación principal"><RouterLink v-for="link in links" :key="link.label" :to="link.to" :class="{ active: link.active }" :aria-current="link.active ? 'page' : undefined"><SemIcon :name="link.icon" :size="33" /><span>{{ link.label }}</span></RouterLink></nav>

@@ -4,6 +4,7 @@ import { hasSession, signOut } from '@/auth/session'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    { path: '/secretaria/usuarios/nuevo', name: 'user-registration', component: () => import('@/views/UserRegistrationView.vue') },
     { path: '/mi-cuenta', name: 'account', component: () => import('@/views/AccountView.vue') },
     { path: '/salir', name: 'logout', component: { render: () => null }, beforeEnter: () => { signOut(); return { name: 'login' } } },
     {

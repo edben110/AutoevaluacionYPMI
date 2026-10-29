@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { signIn, type UserRole } from '@/auth/session'
 import SemIcon from '@/components/SemIcon.vue'
 import SemWave from '@/components/SemWave.vue'
 import InstitutionalBrand from '@/components/InstitutionalBrand.vue'
 
 const router = useRouter()
-const role = ref<UserRole>('ESTABLISHMENT')
+const route = useRoute()
+const role = ref<UserRole>(route.query.role === 'SECRETARY' ? 'SECRETARY' : 'ESTABLISHMENT')
 const identifier = ref('')
 const password = ref('')
 const submitting = ref(false)
@@ -51,6 +52,7 @@ async function submit(): Promise<void> {
     <section class="form-panel" aria-labelledby="login-title">
       <div class="form-wrap">
         <h2 id="login-title">Inicio de sesión</h2>
+        <p v-if="route.query.updated === '1'" class="account-updated" role="status">Tus datos se actualizaron. Inicia sesión con la información actualizada.</p>
         <p class="role-label">Soy:</p>
         <div class="role-selector" role="group" aria-label="Tipo de acceso">
           <button type="button" class="role-option" :class="{ selected: isSecretary }" :aria-pressed="isSecretary" :disabled="submitting" @click="chooseRole('SECRETARY')"><SemIcon name="user" :size="28" />Secretaría</button>
@@ -83,6 +85,7 @@ async function submit(): Promise<void> {
 .sem-login .form-wrap { width: 100%; max-width: 450px; }
 .sem-login .form-wrap h2 { color: var(--sem-black); text-align: center; font-size: clamp(1.7rem, 2.5vw, 2.5rem); letter-spacing: normal; margin: 0 0 2rem; }
 .role-label { text-align: center; color: var(--sem-black); font-size: 1.2rem; font-weight: 700; margin-bottom: .8rem; }
+.account-updated { margin-bottom: 1rem; padding: .8rem; border-left: 3px solid var(--sem-yellow); background: var(--sem-white-top); color: var(--sem-blue); font-size: .85rem; }
 .sem-login .role-selector { border: 2px solid var(--sem-black-mute); background: var(--sem-white-top); border-radius: 14px; padding: 0; gap: 0; }
 .sem-login .role-option { display: flex; align-items: center; justify-content: center; gap: .7rem; border: 3px solid transparent; border-radius: 11px; color: var(--sem-black-soft); font-size: 1rem; min-height: 64px; padding: .7rem .4rem; }
 .sem-login .role-option.selected { color: var(--sem-blue); border-color: var(--sem-blue); background: var(--sem-white-top); }

@@ -143,11 +143,12 @@ onUnmounted(() => window.removeEventListener('focus', refreshAvailability))
       <template v-else-if="currentProfile">
         <template v-if="!section">
           <div class="home-heading"><p>{{ currentProfile.role === 'SECRETARY' ? 'Secretaría de Educación Municipal' : currentProfile.name }}</p><h1>Bienvenido a tu espacio</h1></div>
-          <nav class="home-actions" aria-label="Opciones principales">
+          <nav class="home-actions" :class="{ 'secretary-actions': currentProfile.role === 'SECRETARY' }" aria-label="Opciones principales">
             <template v-if="currentProfile.role === 'SECRETARY'">
               <RouterLink class="home-action home-action-wide" :to="{ name: 'secretary-periods' }"><SemIcon name="document-add" :size="90" /><span>Definir fechas de<br />autoevaluación</span></RouterLink>
               <RouterLink class="home-action" :to="{ name: 'deliveries' }"><SemIcon name="calendar" :size="104" /><span>Autoevaluación</span><small>Revisar entregas de las instituciones</small></RouterLink>
               <RouterLink class="home-action" :to="{ name: 'deliveries', query: { section: 'pmi' } }"><SemIcon name="document" :size="104" /><span>PMI</span><small>Consultar planes y seguimiento</small></RouterLink>
+              <RouterLink class="home-action users-action" :to="{ name: 'user-registration' }"><SemIcon name="user" :size="104" /><span>Usuarios</span><small>Registrar instituciones y personal</small></RouterLink>
             </template>
             <template v-else>
               <RouterLink class="home-action" :to="{ name: 'dashboard', query: { section: 'autoevaluacion' } }"><SemIcon name="calendar" :size="104" /><span>Autoevaluación</span></RouterLink>
@@ -202,6 +203,7 @@ onUnmounted(() => window.removeEventListener('focus', refreshAvailability))
 .home-action span { font-size: 1.35rem; font-weight: 700; line-height: 1.4; }
 .home-action small { color: var(--sem-black-soft); font-size: .85rem; }
 .home-action-wide { grid-column: 1 / -1; flex-direction: row; gap: 1.8rem; min-height: 165px; }
+.secretary-actions { grid-template-columns: repeat(3, minmax(0, 220px)); max-width: 800px; }
 .home-intro { max-width: 790px; margin: 3.5rem auto 0; color: var(--sem-black-soft); font-weight: 700; text-align: center; }
 .history-link { display: inline-block; margin-top: 1rem; color: var(--sem-blue); font-weight: 700; }
 .area-evaluations { margin-top: 0; }
@@ -214,4 +216,5 @@ onUnmounted(() => window.removeEventListener('focus', refreshAvailability))
 .pmi-entry > p { margin: .8rem 0; }
 .pmi-year-group h2 { color: var(--sem-blue); font-size: 1.3rem; }
 @media (max-width: 600px) { .home-actions { gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); } .home-action { min-height: 175px; padding: 1rem .7rem; } .home-action svg { width: 72px; height: 72px; } .home-action span { font-size: 1.05rem; } .home-action-wide { flex-direction: column; gap: .8rem; } }
+@media (max-width: 600px) { .users-action { grid-column: 1 / -1; min-height: 145px; } }
 </style>

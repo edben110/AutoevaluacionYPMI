@@ -11,5 +11,14 @@ public interface UserService {
 
     boolean existsByEmail(String email);
 
+    User update(
+        User user,
+        String name,
+        String email,
+        String password,
+        String daneCode,
+        String rector
+    );
+
     void deleteById(UUID id);
 }
