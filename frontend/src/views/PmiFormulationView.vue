@@ -43,7 +43,7 @@ const highestComponents = computed(() => priority.value?.components.filter(compo
   && component.total !== null && priority.value?.highestComponentIds.includes(component.componentId)) ?? [])
 const requiredChoices = computed(() => Math.min(2, highestComponents.value.length))
 const selectionReady = computed(() => priority.value?.selfEvaluationComplete === true && priority.value.selfEvaluationSubmitted
-  && priority.value.prioritizationComplete && highestComponents.value.length > 0)
+  && priority.value.prioritizationComplete && priority.value.status !== 'SUBMITTED' && highestComponents.value.length > 0)
 const choiceChanged = computed(() => selectionReady.value && priority.value !== null && !sameIds(componentChoices.value, priority.value.selectedComponentIds))
 const hasObjectiveChanges = computed(() => objectives.some(changed))
 const canCreate = computed(() => formulation.value?.canFormulate === true && !selectionRefreshRequired.value && !choiceChanged.value && components.value.length > 0)
@@ -355,7 +355,8 @@ onUnmounted(() => { loadSequence++; window.removeEventListener('beforeunload', b
         <section id="formulation-step-components" class="formulation-card component-step" aria-labelledby="component-step-title">
           <span class="step-label">PASO 1</span>
           <h2 id="component-step-title">Elige los componentes que vas a trabajar</h2>
-          <template v-if="selectionReady">
+          <p v-if="formulation.pmiSubmittedAt" class="message" role="status">PMI enviado a Secretaría. Los anexos 2, 3 y 4 quedan para consulta.</p>
+          <template v-else-if="selectionReady">
             <p v-if="requiredChoices === 1">Hay un único componente con el mayor puntaje. Su formulario se preparará al continuar.</p>
             <p v-else>Elige dos componentes entre los que tienen el mayor puntaje de urgencia, tendencia e impacto.</p>
             <fieldset class="component-choice-grid" :disabled="busy">
@@ -384,7 +385,7 @@ onUnmounted(() => { loadSequence++; window.removeEventListener('beforeunload', b
         </section>
         <section v-for="(objective, objectiveIndex) in objectives" :key="objective.key" class="formulation-card objective-card" :data-component-id="objective.componentId" :aria-labelledby="`objective-title-${objective.key}`">
           <header class="objective-header"><div><span class="formulation-eyebrow">{{ context(objective)?.areaName }}</span><h2 :id="`objective-title-${objective.key}`">Objetivo {{ objectiveIndex + 1 }} · {{ context(objective)?.componentName }}</h2><p>Proceso: {{ context(objective)?.processName }}</p></div><span class="draft-label">{{ objective.id ? 'Guardado' : 'Nuevo borrador' }}</span></header>
-          <p v-if="!editable(objective)" class="message warning">Solo consulta: genera los formularios para confirmar la selección actual. Los planes de componentes que ya no están seleccionados se conservan y puedes consultarlos o eliminarlos.</p>
+          <p v-if="!editable(objective)" class="message warning">{{ formulation.pmiSubmittedAt ? 'PMI enviado a Secretaría. Este plan está disponible para consulta.' : 'Solo consulta: genera los formularios para confirmar la selección actual. Los planes de componentes que ya no están seleccionados se conservan y puedes consultarlos o eliminarlos.' }}</p>
           <p v-if="changed(objective)" class="unsaved-label">Cambios sin guardar</p>
           <form @submit.prevent="saveObjective(objective)">
             <fieldset class="objective-fields" :disabled="busy || !editable(objective)">
@@ -417,7 +418,7 @@ onUnmounted(() => { loadSequence++; window.removeEventListener('beforeunload', b
             </fieldset>
           </form>
           <p v-if="objective.error" class="message error-message" role="alert">{{ objective.error }}</p><p v-if="objective.success" class="message" role="status">{{ objective.success }}</p>
-          <button class="small-button delete-button objective-delete" type="button" :disabled="busy" @click="deleteObjective(objective)">{{ deletingKey === objective.key ? 'Eliminando…' : objective.id ? 'Eliminar objetivo' : 'Descartar objetivo sin guardar' }}</button>
+          <button class="small-button delete-button objective-delete" type="button" :disabled="busy || Boolean(formulation.pmiSubmittedAt)" @click="deleteObjective(objective)">{{ deletingKey === objective.key ? 'Eliminando…' : objective.id ? 'Eliminar objetivo' : 'Descartar objetivo sin guardar' }}</button>
         </section>
         <section class="formulation-card" aria-labelledby="indicators-next-title">
           <h2 id="indicators-next-title">Continuar con los indicadores · Anexo 4</h2>

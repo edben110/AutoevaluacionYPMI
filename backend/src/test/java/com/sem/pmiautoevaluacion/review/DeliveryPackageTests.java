@@ -67,7 +67,7 @@ class DeliveryPackageTests {
         var own = packages.list(owner.getId());
         assertEquals(1, own.size()); assertEquals(2, own.getFirst().areas().size());
         assertEquals(4, own.getFirst().expectedAreas()); assertFalse(own.getFirst().reviewed());
-        assertEquals(1, own.getFirst().areas().stream().filter(d -> d.pmiId() != null).count());
+        assertEquals(0, own.getFirst().areas().stream().filter(d -> d.pmiId() != null).count());
         mvc.perform(get("/api/reviews/packages").with(user(principal(secretary))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.establishmentId == '" + owner.getId() + "')]", hasSize(1)))
@@ -108,17 +108,17 @@ class DeliveryPackageTests {
         assertTrue(packages.mark(secretary.getId(), owner.getId(), YEAR, current().version()).reviewed());
     }
 
-    @Test void startingAndEditingPmiInvalidateReviewedPackageButSemCommentsDoNot() {
+    @Test void draftPmiChangesAndSemCommentsDoNotInvalidateTheReceivedPackage() {
         submit(owner, YEAR, AREA);
         packages.mark(secretary.getId(), owner.getId(), YEAR, current().version());
         comments.add(secretary.getId(), owner.getId(), YEAR, AREA, COMPONENT, new ReviewCommentRequest("Observación para la próxima entrega"));
         assertTrue(current().reviewed());
         pmi.saveComponent(owner.getId(), YEAR, AREA, COMPONENT, new PriorityComponentRequest("Factor inicial", valueOf(5), valueOf(5), valueOf(5)));
-        assertFalse(current().reviewed()); assertTrue(current().changedSinceReview());
+        assertTrue(current().reviewed()); assertFalse(current().changedSinceReview());
         em.flush(); em.clear();
         packages.mark(secretary.getId(), owner.getId(), YEAR, current().version());
         pmi.saveComponent(owner.getId(), YEAR, AREA, COMPONENT, new PriorityComponentRequest("Factor actualizado", valueOf(4), valueOf(5), valueOf(5)));
-        assertFalse(current().reviewed());
+        assertTrue(current().reviewed());
     }
 
     @Test void canReturnToPendingAndThatChangeAlsoPersists() throws Exception {

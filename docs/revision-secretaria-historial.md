@@ -2,6 +2,8 @@
 
 Decisión de Juan del 27 de octubre de 2026: Secretaría recibe la autoevaluación enviada y consulta el PMI de cada institución y área. Los comentarios se registran **solo por componente de la autoevaluación**; el PMI tiene consulta sin comentarios de Secretaría. La institución conserva acceso a la entrega anterior y a esas observaciones al abrir el siguiente período, junto con el seguimiento pendiente de su PMI.
 
+**Corrección de Juan del 28 de octubre:** la consulta de PMI en esta documentación queda limitada al PMI **finalizado y enviado explícitamente** por su institución. Los borradores ya no aparecen ni son consultables por Secretaría, incluso con enlace/API directos. Guardar un borrador no cambia la revisión del paquete; enviarlo sí. Los anexos 2–4 enviados quedan de consulta y el Anexo 5 conserva su ciclo de seguimiento. La sección siguiente refleja el alcance inicial; esta corrección prevalece sobre las referencias a avances incompletos. Véase [envío por área](envio-pmi-por-area.md).
+
 Fuentes de contexto: flujo de la wiki (seleccionar institución, revisar componentes/evidencias y observar), aclaración del equipo en `estado-proyecto.md` (observaciones para la siguiente entrega, sin modificar respuestas ya enviadas) y Guía 34 de 2026, etapas de autoevaluación (pp. 49–74) y seguimiento (pp. 97–114). La granularidad de comentarios y los permisos siguientes son decisiones del proyecto; no se atribuyen como restricciones municipales de la guía.
 
 | Regla | Actor y fuente | Datos | Validación / aceptación |

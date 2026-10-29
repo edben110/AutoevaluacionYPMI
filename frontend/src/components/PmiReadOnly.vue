@@ -51,8 +51,8 @@ onMounted(() => void load())
 <template>
   <section class="pmi-read" aria-label="PMI de solo lectura">
     <h2>PMI {{ delivery.year }} · {{ delivery.areaName }}</h2>
-    <p>Consulta del contenido guardado por la institución, incluidos los apartados que aún estén incompletos.</p>
-    <p v-if="!delivery.pmiId" class="status-card">Esta área aún no tiene un PMI iniciado.</p>
+    <p>Consulta del PMI finalizado y enviado por la institución.</p>
+    <p v-if="!delivery.pmiId" class="status-card">La institución aún no ha enviado un PMI de esta área. Su borrador se mantiene privado hasta que finalice la entrega.</p>
     <template v-else>
       <nav class="annexes" aria-label="Anexos del PMI">
         <button v-for="item in [{ n: 2, label: 'Priorización' }, { n: 3, label: 'Plan de mejora' }, { n: 4, label: 'Indicadores' }, { n: 5, label: 'Consolidado y seguimiento' }]" :key="item.n" type="button" :aria-pressed="annex === item.n" :disabled="loading" @click="load(item.n)">Anexo {{ item.n }} · {{ item.label }}</button>
@@ -76,7 +76,7 @@ onMounted(() => void load())
           <article v-for="objective in formulation.objectives" :key="objective.id" class="block">
             <h4>{{ objective.processName }} · {{ objective.componentName }}</h4>
             <p><strong>Objetivo:</strong> {{ objective.description || 'Sin diligenciar' }}</p>
-            <p v-if="!objective.editable">Registro histórico conservado del plan.</p>
+            <p v-if="!objective.editable">Objetivo disponible para consulta.</p>
             <section v-for="(goal, index) in objective.goals" :key="goal.id ?? index" class="goal">
               <p><strong>Meta {{ index + 1 }}:</strong> {{ goal.description || 'Sin diligenciar' }}</p>
               <article v-for="(row, rowIndex) in goal.rows" :key="row.id ?? rowIndex" class="row">

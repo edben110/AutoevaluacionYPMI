@@ -95,11 +95,17 @@ El 24 de octubre, Juan solicitó continuar con el Anexo 5 del Excel. Se toma com
 
 La corrección del Anexo 5 confirmada por Juan el 26 de octubre establece consulta durante la formulación y diligenciamiento del PMI del año anterior cuando se abra el período siguiente. La autoevaluación nueva queda bloqueada en pantalla y API hasta finalizar todos los seguimientos previos de la institución. Para finalizar son obligatorios estado, porcentaje y observaciones de cada fila; V16 incorpora su registro persistente. El consolidado muestra proceso, componente, objetivo y meta con cada indicador una sola vez. No exige 100 % de ejecución; exige informar el resultado real. Las finalizaciones se revalidan si cambia el plan. Detalles en [Anexo 5](pmi-anexo5.md).
 
+El 28 de octubre, por solicitud de Juan, el consolidado institucional del Anexo 5 adopta una tabla similar al Excel: contexto agrupado, plazos, cinco columnas de estado, porcentaje y observaciones/evidencias. Durante formulación estos últimos espacios se muestran vacíos y bloqueados; solo se habilitan para el seguimiento autorizado del período siguiente. Se conserva la consulta después del cierre o finalización, el guardado por fila, la paleta SEM y el desplazamiento horizontal dentro de la tabla en celular.
+
 ## Paleta visual compartida
 
 El 23 de octubre, por solicitud de Juan, se unificaron los estilos que todavía conservaban verdes de prueba con la paleta SEM definida por Antonio en `frontend/src/assets/base.css`. El panel, las áreas de autoevaluación, los encabezados de procesos, las tablas y los períodos de Secretaría utilizan azul y neutros de esas variables; rojo y amarillo conservan sus funciones de error/aviso y foco. Se verificaron compilación Vue/TypeScript y ESLint y se revisaron acceso, panel, autoevaluación y Secretaría en navegador con datos aislados.
 
 El 28 de octubre se adaptan las pantallas a los 18 PNG de **SEM Mockups** suministrados por Juan: acceso por rol, barra azul y menú lateral, inicio con tarjetas, datos de cuenta en consulta, autoevaluación y revisión en columnas de escritorio, historial/paquetes con búsqueda por nombre o DANE y definición de fechas. Se mantienen los colores, tipografía, evidencia única, envío/PMI por área, comentarios y seguimiento obligatorio. Las diferencias entre los bocetos y las funciones disponibles, los componentes compartidos y la validación están en [diseño de los mockups SEM](diseno-mockups-sem.md).
+
+## Envío explícito del PMI
+
+**Envío de PMI confirmado el 28 de octubre:** Juan solicitó sustituir la consulta automática de avances por **Finalizar y enviar PMI del área**. V19 agrega la fecha de envío; los registros previos siguen como borradores privados. Se validan anexos 2–4 y se bloquea su edición tras enviar. Secretaría consulta solo PMI enviados en bandeja y API; editar borradores no invalida revisiones del paquete. El seguimiento del Anexo 5 se conserva para el período siguiente sin exigirlo en esta entrega. Contrato y validaciones en [envío del PMI por área](envio-pmi-por-area.md).
 
 ## Decisiones por confirmar con el equipo
 

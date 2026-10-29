@@ -251,6 +251,7 @@ onUnmounted(() => window.removeEventListener('beforeunload', beforeUnload))
           <RouterLink :to="{ name: 'self-evaluation', params: { areaId }, query: { year } }">Volver a la autoevaluación del área →</RouterLink>
         </section>
 
+        <p v-if="matrix.status === 'SUBMITTED'" class="pmi-warning" role="status">PMI enviado a Secretaría. Los anexos 2, 3 y 4 están disponibles para consulta.</p>
         <section class="pmi-guide" aria-labelledby="scoring-guide">
           <h2 id="scoring-guide">Cómo diligenciar la matriz</h2>
           <p>Solo se priorizan los componentes del menor estado presente en esta área: Existencia, o Pertinencia si no hay Existencia, o Apropiación si no hay estados inferiores. Si todos están en Mejoramiento continuo, no hay candidatos.</p>
@@ -287,15 +288,15 @@ onUnmounted(() => window.removeEventListener('beforeunload', beforeUnload))
                   </th>
                   <td class="pmi-factors">
                     <label class="pmi-sr-only" :for="`factors-${row.component.componentId}`">Factores críticos de {{ row.component.componentName }}</label>
-                    <textarea :id="`factors-${row.component.componentId}`" v-model="row.form.criticalFactors" rows="5" maxlength="10000" :disabled="busy || !matrix.selfEvaluationComplete || !matrix.selfEvaluationSubmitted || !row.component.eligible" placeholder="Describe las dificultades que explican esta oportunidad de mejora." />
+                    <textarea :id="`factors-${row.component.componentId}`" v-model="row.form.criticalFactors" rows="5" maxlength="10000" :disabled="busy || matrix.status === 'SUBMITTED' || !matrix.selfEvaluationComplete || !matrix.selfEvaluationSubmitted || !row.component.eligible" placeholder="Describe las dificultades que explican esta oportunidad de mejora." />
                   </td>
                   <td v-for="score in (['urgency', 'tendency', 'impact'] as const)" :key="score" class="pmi-score-cell">
                     <label class="pmi-sr-only" :for="`${score}-${row.component.componentId}`">{{ score === 'urgency' ? 'Urgencia' : score === 'tendency' ? 'Tendencia' : 'Impacto' }} de {{ row.component.componentName }}</label>
-                    <input :id="`${score}-${row.component.componentId}`" v-model.number="row.form[score]" type="number" min="1" max="5" step="1" inputmode="numeric" :disabled="busy || !matrix.selfEvaluationComplete || !matrix.selfEvaluationSubmitted || !row.component.eligible" />
+                    <input :id="`${score}-${row.component.componentId}`" v-model.number="row.form[score]" type="number" min="1" max="5" step="1" inputmode="numeric" :disabled="busy || matrix.status === 'SUBMITTED' || !matrix.selfEvaluationComplete || !matrix.selfEvaluationSubmitted || !row.component.eligible" />
                   </td>
                   <td class="pmi-total"><strong>{{ row.component.total ?? '—' }}</strong><span v-if="row.component.total !== null">de 15</span></td>
                   <td class="pmi-save-cell">
-                    <button v-if="row.component.eligible" class="pmi-button pmi-button-outline" type="button" :disabled="busy || !matrix.selfEvaluationComplete || !matrix.selfEvaluationSubmitted" :aria-label="`Guardar ${row.component.componentName}`" @click="saveComponent(row.component)">{{ savingComponent === row.component.componentId ? 'Guardando…' : 'Guardar fila' }}</button>
+                    <button v-if="row.component.eligible" class="pmi-button pmi-button-outline" type="button" :disabled="busy || matrix.status === 'SUBMITTED' || !matrix.selfEvaluationComplete || !matrix.selfEvaluationSubmitted" :aria-label="`Guardar ${row.component.componentName}`" @click="saveComponent(row.component)">{{ savingComponent === row.component.componentId ? 'Guardando…' : 'Guardar fila' }}</button>
                     <span v-else>Solo consulta</span>
                     <p v-if="row.form.error" class="pmi-error" role="alert">{{ row.form.error }}</p>
                     <p v-if="row.form.success" class="pmi-success" role="status">{{ row.form.success }}</p>
@@ -317,7 +318,7 @@ onUnmounted(() => window.removeEventListener('beforeunload', beforeUnload))
           <p v-else-if="highest.length <= 2">{{ highest.length === 1 ? 'El componente con el mayor total se selecciona automáticamente.' : 'Los dos componentes empatados con el mayor total se seleccionan automáticamente.' }}</p>
           <form v-else @submit.prevent="saveSelection">
             <p class="pmi-warning">Hay {{ highest.length }} componentes empatados con el mayor puntaje. Elige exactamente dos.</p>
-            <fieldset :disabled="busy || !matrix.selfEvaluationComplete || !matrix.selfEvaluationSubmitted" class="pmi-selection-fields">
+            <fieldset :disabled="busy || matrix.status === 'SUBMITTED' || !matrix.selfEvaluationComplete || !matrix.selfEvaluationSubmitted" class="pmi-selection-fields">
               <label v-for="component in highest" :key="component.componentId" class="pmi-choice">
                 <input v-model="selectedChoiceIds" type="checkbox" :value="component.componentId" :disabled="selectedChoiceIds.length >= 2 && !selectedChoiceIds.includes(component.componentId)" />
                 <span>{{ component.componentName }} · {{ component.total }} puntos</span>

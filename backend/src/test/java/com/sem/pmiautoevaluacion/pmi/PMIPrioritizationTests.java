@@ -218,7 +218,7 @@ class PMIPrioritizationTests {
     void secretaryReadsSelectedInstitutionButCannotAlterItsPrioritization() throws Exception {
         score(A, 5, 4, 5);
         mvc.perform(get(path()).with(user(principal(secretary))).param("establishmentId", owner.getId().toString()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.components[*].total", hasItem(14)));
+                .andExpect(status().isNotFound());
         mvc.perform(get(path()).with(user(principal(secretary)))).andExpect(status().isBadRequest());
         mvc.perform(put(path() + "/components/" + A).with(user(principal(secretary)))
                 .contentType(MediaType.APPLICATION_JSON).content(scoreBody(1, 1, 1))).andExpect(status().isForbidden());

@@ -7,6 +7,8 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PMIRepository extends JpaRepository<PMI, UUID> {
+    Optional<PMI> findBySelfEvaluation_Establishment_IdAndSelfEvaluation_YearAndArea_Id(UUID institutionId, int year, UUID areaId);
+    List<PMI> findBySelfEvaluation_Establishment_IdAndSelfEvaluation_YearAndSubmittedAtIsNotNull(UUID institutionId, int year);
     List<PMI> findBySelfEvaluation_IdIn(java.util.Collection<UUID> evaluationIds);
     Optional<PMI> findBySelfEvaluation_IdAndArea_Id(UUID selfEvaluationId, UUID areaId);
     List<PMI> findAllBySelfEvaluation_Id(UUID selfEvaluationId);

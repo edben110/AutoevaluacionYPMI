@@ -174,17 +174,17 @@ class DeliveryReviewTests {
                 .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(0)));
     }
 
-    @Test void pmiAppearsInInboxAndSecretaryCanReadAllAnnexesButCannotWrite() throws Exception {
+    @Test void draftPmiIsPrivateAndSecretaryCannotReadOrWriteItsAnnexes() throws Exception {
         fillAndSubmit(owner);
         String path = "/api/pmi/" + YEAR + "/areas/" + AREA;
         mvc.perform(put(path + "/components/" + COMPONENT).with(user(principal(owner)))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"criticalFactors\":\"Apoyo pedagógico\",\"urgency\":5,\"tendency\":5,\"impact\":5}"))
                 .andExpect(status().isOk());
         mvc.perform(get("/api/reviews/deliveries").with(user(principal(owner))))
-                .andExpect(status().isOk()).andExpect(jsonPath("$[0].pmiId").isNotEmpty());
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].pmiId").value(nullValue()));
         for (String suffix : new String[]{"", "/formulation", "/indicators", "/follow-ups"}) {
             mvc.perform(get(path + suffix).with(user(principal(secretary))).param("establishmentId", owner.getId().toString()))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isNotFound());
         }
         mvc.perform(put(path + "/components/" + COMPONENT).with(user(principal(secretary)))
                 .param("establishmentId", owner.getId().toString()).contentType(MediaType.APPLICATION_JSON)

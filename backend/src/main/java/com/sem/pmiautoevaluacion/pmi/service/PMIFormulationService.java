@@ -78,7 +78,8 @@ public class PMIFormulationService {
         lockEvaluation(establishmentId, year);
         FormulationContext context = context(establishmentId, year, areaId);
         Objective objective = findOwned(context, objectiveId);
-        // Una eliminación explícita sigue disponible para gestionar objetivos históricos inactivos.
+        PMIAccessService.requireDraft(context.plan());
+        // Una eliminación explícita sigue disponible para gestionar objetivos históricos inactivos en borradores.
         context.plan().touch(clock.instant());
         objectives.delete(objective);
         objectives.flush();
@@ -210,7 +211,7 @@ public class PMIFormulationService {
         return new PMIFormulationResponse(source.id(), source.year(), source.establishmentName(),
                 source.projectionYears(), source.filledOn(), source.selectionNeedsReview(), selectedComponents,
                 items, totals(context), source.areaId(), source.areaName(), source.selfEvaluationComplete(),
-                source.prioritizationComplete(), source.canFormulate(), source.selfEvaluationSubmitted(), source.submittedAt());
+                source.prioritizationComplete(), source.canFormulate(), source.selfEvaluationSubmitted(), source.submittedAt(), context.plan() == null ? null : context.plan().getSubmittedAt());
     }
 
     private FormulationRowResponse rowResponse(Activity row) {

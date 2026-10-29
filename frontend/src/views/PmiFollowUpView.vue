@@ -4,6 +4,7 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate, RouterLink, useRoute, useRoute
 import { authorizedFetch, hasSession, loadProfile, responseError } from '@/auth/session'
 import { formatPeriodDate } from '@/selfEvaluation/period'
 import { executionLabels, type ExecutionStatus, type FollowUpRow, type PmiFollowUp } from '@/pmi/followUp'
+import PmiSubmissionPanel from '@/components/PmiSubmissionPanel.vue'
 
 interface RowForm {
   source: FollowUpRow
@@ -68,6 +69,10 @@ function formFor(row: FollowUpRow): RowForm {
   return form
 }
 function changed(form: RowForm): boolean { return snapshot(form) !== form.snapshot }
+function rowDisabled(form: RowForm): boolean {
+  return source.value?.phase !== 'FOLLOW_UP' || !source.value.canEdit || !form.source.editable
+    || loading.value || !verified.value || datePending.value || form.saving || finalizing.value
+}
 function confirmDiscard(): boolean {
   if (!hasSession.value) return true
   if (saving.value) { window.alert('Espera a que termine el guardado del seguimiento antes de cambiar de fecha o salir.'); return false }
@@ -182,13 +187,14 @@ onUnmounted(() => { sequence++; request?.abort(); window.removeEventListener('be
     <header class="page-header"><RouterLink :to="{ name: 'pmi-indicators', params: { year: route.params.year, areaId } }">← Anexo 4</RouterLink><RouterLink :to="{ name: 'pmi-formulation', params: { year: route.params.year, areaId } }">Plan · Anexo 3</RouterLink><RouterLink :to="{ name: 'dashboard' }">Mi espacio</RouterLink></header>
     <div class="page-content">
       <span class="eyebrow">PLAN DE MEJORAMIENTO INSTITUCIONAL · ANEXO 5</span>
-      <h1>Seguimiento del PMI {{ year }}</h1>
+      <h1>Revisión del cumplimiento del PMI {{ year }}</h1>
       <h2 v-if="source">{{ source.areaName }}</h2>
       <p class="intro">Aquí se reúne lo planeado en los anexos anteriores, organizado por proceso, componente, objetivo y meta.</p>
       <p v-if="source" class="metadata"><strong>{{ source.establishmentName }}</strong> · PMI {{ source.year }} · Seguimiento previo a la autoevaluación {{ source.reviewYear }}</p>
       <p v-if="loading" class="notice" role="status">Cargando el Anexo 5…</p>
       <div v-if="error" class="notice error" role="alert"><p>{{ error }}</p><button type="button" :disabled="loading || saving" @click="changeDate">Volver a consultar</button></div>
       <template v-if="authorized && source">
+        <PmiSubmissionPanel :year="year" :area-id="areaId" @submitted="load()" />
         <p v-if="source.phase === 'PLANNING'" class="notice phase-notice" role="status">Este anexo está disponible para consulta durante la formulación del PMI {{ year }}. Su diligenciamiento se habilitará cuando Secretaría abra el período de autoevaluación {{ source.reviewYear }}.</p>
         <p v-else-if="source.phase === 'CLOSED'" class="notice warning" role="status">El período {{ source.reviewYear }} está cerrado. Secretaría debe habilitar sus fechas para continuar con el seguimiento.</p>
         <section v-else-if="source.phase === 'COMPLETED'" class="summary-card completed-follow-up" role="status"><h2>Seguimiento del área finalizado</h2><p>Este Anexo 5 quedó para consulta. Finaliza las demás áreas pendientes para habilitar la autoevaluación {{ source.reviewYear }}.</p><RouterLink :to="{ name: 'dashboard' }">Volver a mi espacio →</RouterLink></section>
@@ -204,33 +210,76 @@ onUnmounted(() => { sequence++; request?.abort(); window.removeEventListener('be
         <section v-if="source.phase !== 'PLANNING'" class="summary-card" aria-label="Avance guardado del seguimiento"><h2>Control del {{ formatPeriodDate(source.controlDate) }}</h2><p>{{ completedForReview }} de {{ source.requiredRows }} filas completas con estado, porcentaje y observaciones.</p><div class="status-summary"><span v-for="status in statusCounts" :key="status.code"><strong>{{ status.count }}</strong> {{ status.label }}</span></div></section>
         <section v-if="rows.length === 0 && !loading" class="empty-state"><h2>Aún no hay indicadores o actividades formulados</h2><p>Completa y guarda el plan en el Anexo 3 para que aparezca aquí su consolidado.</p><RouterLink :to="{ name: 'pmi-formulation', params: { year, areaId } }">Ir al Anexo 3 →</RouterLink></section>
 
-        <section v-for="group in groups" :key="group.key" class="objective-group">
-          <header class="row-header"><span>PROCESO</span><h2>{{ group.context.processName }}</h2><p><strong>Componente:</strong> {{ group.context.componentName }}</p></header>
-          <div class="row-content"><h3>Objetivo</h3><p class="planned-text">{{ group.context.objectiveDescription || 'Pendiente en el Anexo 3' }}</p>
-            <section v-for="goal in group.goals" :key="goal.key" class="goal-group"><h4>Meta</h4><p class="planned-text">{{ goal.description || 'Pendiente en el Anexo 3' }}</p>
-              <article v-for="form in goal.rows" :id="`follow-up-${form.source.rowId}`" :key="form.source.rowId" class="follow-up-card indicator-follow-up" :aria-labelledby="`row-title-${form.source.rowId}`">
-                <div class="row-content">
-                  <h5>Indicador</h5><p :id="`row-title-${form.source.rowId}`" class="indicator-title">{{ form.source.source.indicatorName || 'Sin nombre en el Anexo 3' }}</p>
-                  <h5>Actividades previstas</h5><p class="planned-text">{{ form.source.source.activities || 'Sin actividades descritas en el Anexo 3' }}</p>
-                  <table class="dates-table"><caption>Plazos del plan</caption><thead><tr><th scope="col">Inicio</th><th scope="col">Final</th></tr></thead><tbody><tr><td>{{ form.source.source.startDate ? formatPeriodDate(form.source.source.startDate) : 'Pendiente' }}</td><td>{{ form.source.source.finishDate ? formatPeriodDate(form.source.source.finishDate) : 'Pendiente' }}</td></tr></tbody></table>
-                  <p v-if="form.source.sourceChanged" class="notice warning">El plan cambió después de registrar este control. Para finalizar el seguimiento, abre una fecha nueva y registra sus filas con el plan actualizado.</p>
-                  <p v-if="form.source.sourceRemoved" class="notice warning">Esta fila se retiró del plan y su control anterior se conserva para consulta.</p>
-                  <template v-if="source.canEdit && form.source.editable">
-                    <p class="save-state" role="status">{{ changed(form) ? 'Cambios sin guardar' : form.source.id ? 'Avance guardado' : 'Avance pendiente' }}</p>
-                    <form @submit.prevent="save(form)"><fieldset :disabled="loading || !verified || datePending || form.saving || finalizing">
-                      <legend class="sr-only">Registrar avance de esta fila</legend>
-                      <div class="execution-fields"><label :for="`execution-status-${form.source.rowId}`">Estado de ejecución<select :id="`execution-status-${form.source.rowId}`" v-model="form.status" @change="form.success = ''"><option value="">Sin registrar</option><option v-for="(label, code) in executionLabels" :key="code" :value="code">{{ label }} ({{ code }})</option></select></label><label :for="`execution-percentage-${form.source.rowId}`">Porcentaje de ejecución (%)<input :id="`execution-percentage-${form.source.rowId}`" v-model="form.percentage" type="text" inputmode="decimal" maxlength="6" placeholder="Ejemplo: 40" @input="form.success = ''" /><small>De 0 a 100. Escribe 40 para indicar 40 %.</small></label></div>
-                      <label :for="`observations-${form.source.rowId}`">Observaciones de la institución y evidencias<textarea :id="`observations-${form.source.rowId}`" v-model="form.observations" rows="4" maxlength="10000" placeholder="Explica los avances o dificultades e indica las evidencias que los respaldan." @input="form.success = ''" /></label><small>Los tres campos deben estar completos para finalizar. Puedes guardar borradores parciales.</small>
-                      <div class="row-actions"><button type="submit">{{ form.saving ? 'Guardando…' : 'Guardar avance de esta fila' }}</button><button v-if="changed(form)" type="button" class="outline" @click="discard(form)">Descartar cambios</button></div>
-                    </fieldset></form>
-                  </template>
-                  <dl v-else-if="form.source.id" class="execution-summary"><div><dt>Estado</dt><dd>{{ form.source.executionStatus ? executionLabels[form.source.executionStatus] : 'Pendiente' }}</dd></div><div><dt>Porcentaje</dt><dd>{{ form.source.executionPercentage === null ? 'Pendiente' : `${form.source.executionPercentage} %` }}</dd></div><div><dt>Observaciones</dt><dd>{{ form.source.observations || 'Pendientes' }}</dd></div></dl>
-                  <p v-if="form.error" class="notice error" role="alert">{{ form.error }}</p><p v-if="form.success" class="notice" role="status">{{ form.success }}</p>
-                </div>
-              </article>
-            </section>
+        <template v-if="rows.length">
+          <p class="conventions"><strong>Convenciones:</strong> <span v-for="(label, code) in executionLabels" :key="code"><strong>{{ code }}:</strong> {{ label }}.</span> <strong>% EJ:</strong> Porcentaje de ejecución.</p>
+          <p v-if="source.phase === 'PLANNING'" class="locked-hint">Las columnas de ejecución y observaciones están bloqueadas hasta el período {{ source.reviewYear }}. No se ha asignado un estado ni un porcentaje automáticamente.</p>
+          <p v-else-if="source.phase === 'FOLLOW_UP' && source.canEdit" class="hint">Marca un solo estado por fila e informa el porcentaje de 0 a 100 y las observaciones. Puedes guardar borradores; los tres datos son obligatorios para finalizar.</p>
+          <p id="annex5-table-help" class="table-hint">Desplázate horizontalmente dentro de la tabla para consultar todas las columnas. La información del plan se toma del Anexo 3.</p>
+          <div class="annex-table-wrapper" role="region" aria-label="Tabla del Anexo 5" aria-describedby="annex5-table-help" tabindex="0">
+            <table class="annex-table">
+              <caption>Revisión del cumplimiento del Plan de Mejoramiento Institucional · {{ source.areaName }}</caption>
+              <colgroup>
+                <col class="process-column" /><col class="component-column" /><col class="objective-column" /><col class="goal-column" />
+                <col class="indicator-column" /><col class="activities-column" /><col span="2" class="date-column" />
+                <col span="5" class="status-column" /><col class="percentage-column" /><col class="observations-column" />
+                <col v-if="source.phase === 'FOLLOW_UP' && source.canEdit" class="actions-column" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th rowspan="2" scope="col">Proceso</th><th rowspan="2" scope="col">Componente</th><th rowspan="2" scope="col">Objetivo</th><th rowspan="2" scope="col">Meta</th><th rowspan="2" scope="col">Indicador</th><th rowspan="2" scope="col">Actividades</th>
+                  <th colspan="2" scope="colgroup">Plazo</th><th colspan="6" scope="colgroup">Estado de ejecución</th><th rowspan="2" scope="col">Observaciones y evidencias</th>
+                  <th v-if="source.phase === 'FOLLOW_UP' && source.canEdit" rowspan="2" scope="col">Guardar avance</th>
+                </tr>
+                <tr><th scope="col">Inicio</th><th scope="col">Final</th><th v-for="(label, code) in executionLabels" :key="code" scope="col" :title="label"><abbr :title="label">{{ code }}</abbr></th><th scope="col">% EJ</th></tr>
+              </thead>
+              <tbody v-for="group in groups" :key="group.key" class="objective-group">
+                <template v-for="(goal, goalIndex) in group.goals" :key="goal.key">
+                  <tr v-for="(form, rowIndex) in goal.rows" :id="`follow-up-${form.source.rowId}`" :key="form.source.rowId" class="indicator-follow-up" :class="{ 'goal-start': rowIndex === 0 }">
+                    <template v-if="goalIndex === 0 && rowIndex === 0">
+                      <td :rowspan="group.goals.reduce((count, item) => count + item.rows.length, 0)" class="process-cell">{{ group.context.processName }}</td>
+                      <td :rowspan="group.goals.reduce((count, item) => count + item.rows.length, 0)" class="component-cell">{{ group.context.componentName }}</td>
+                      <td :rowspan="group.goals.reduce((count, item) => count + item.rows.length, 0)" class="planned-text">{{ group.context.objectiveDescription || 'Pendiente en el Anexo 3' }}</td>
+                    </template>
+                    <td v-if="rowIndex === 0" :rowspan="goal.rows.length" class="planned-text">{{ goal.description || 'Pendiente en el Anexo 3' }}</td>
+                    <th scope="row" class="indicator-cell">
+                      <p :id="`row-title-${form.source.rowId}`">{{ form.source.source.indicatorName || 'Sin nombre en el Anexo 3' }}</p>
+                      <p v-if="form.source.sourceChanged" class="notice warning">El plan cambió después de registrar este control. Abre una fecha nueva para registrar el plan actualizado.</p>
+                      <p v-if="form.source.sourceRemoved" class="notice warning">Esta fila se retiró del plan. Se conserva su control para consulta.</p>
+                    </th>
+                    <td class="planned-text">{{ form.source.source.activities || 'Sin actividades descritas en el Anexo 3' }}</td>
+                    <td>{{ form.source.source.startDate ? formatPeriodDate(form.source.source.startDate) : 'Pendiente' }}</td>
+                    <td>{{ form.source.source.finishDate ? formatPeriodDate(form.source.source.finishDate) : 'Pendiente' }}</td>
+                    <td v-for="(label, code) in executionLabels" :key="code" class="status-cell" :class="{ 'locked-cell': rowDisabled(form) }">
+                      <label class="status-option" :for="`execution-status-${form.source.rowId}-${code}`">
+                        <span class="sr-only">{{ label }} · {{ form.source.source.indicatorName || 'Fila sin nombre' }}</span>
+                        <input :id="`execution-status-${form.source.rowId}-${code}`" v-model="form.status" :name="`execution-status-${form.source.rowId}`" type="radio" :value="code" :disabled="rowDisabled(form)" :form="`follow-up-form-${form.source.rowId}`" @change="form.success = ''" />
+                      </label>
+                    </td>
+                    <td :class="{ 'locked-cell': rowDisabled(form) }">
+                      <label class="sr-only" :for="`execution-percentage-${form.source.rowId}`">Porcentaje de ejecución de {{ form.source.source.indicatorName || 'esta fila' }} (0 a 100)</label>
+                      <input :id="`execution-percentage-${form.source.rowId}`" v-model="form.percentage" type="text" inputmode="decimal" maxlength="6" :placeholder="source.phase === 'PLANNING' ? 'Pendiente' : '0–100'" :disabled="rowDisabled(form)" :form="`follow-up-form-${form.source.rowId}`" @input="form.success = ''" />
+                    </td>
+                    <td :class="{ 'locked-cell': rowDisabled(form) }">
+                      <label class="sr-only" :for="`observations-${form.source.rowId}`">Observaciones y evidencias de {{ form.source.source.indicatorName || 'esta fila' }}</label>
+                      <textarea :id="`observations-${form.source.rowId}`" v-model="form.observations" rows="5" maxlength="10000" :placeholder="source.phase === 'PLANNING' ? `Se diligencia en el seguimiento del período ${source.reviewYear}.` : 'Explica los avances o dificultades e indica sus evidencias.'" :disabled="rowDisabled(form)" :form="`follow-up-form-${form.source.rowId}`" @input="form.success = ''" />
+                    </td>
+                    <td v-if="source.phase === 'FOLLOW_UP' && source.canEdit" class="row-actions">
+                      <template v-if="form.source.editable">
+                        <p class="save-state" role="status">{{ changed(form) ? 'Cambios sin guardar' : form.source.id ? 'Avance guardado' : 'Avance pendiente' }}</p>
+                        <form :id="`follow-up-form-${form.source.rowId}`" @submit.prevent="save(form)">
+                          <button type="submit" :disabled="rowDisabled(form)">{{ form.saving ? 'Guardando…' : 'Guardar avance de esta fila' }}</button>
+                          <button v-if="changed(form)" type="button" class="outline" :disabled="rowDisabled(form)" @click="discard(form)">Descartar cambios</button>
+                        </form>
+                      </template>
+                      <p v-else class="hint">Solo consulta</p>
+                      <p v-if="form.error" class="notice error" role="alert">{{ form.error }}</p><p v-if="form.success" class="notice" role="status">{{ form.success }}</p>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
           </div>
-        </section>
+        </template>
         <section v-if="source.phase === 'FOLLOW_UP'" class="summary-card completion-card"><h2>Finalizar seguimiento del área</h2><p>Guarda estado, porcentaje y observaciones de las {{ source.requiredRows }} filas en esta fecha. Completar el seguimiento no exige que todas las actividades hayan finalizado o estén al 100 %: registra su situación real.</p><p v-if="hasChanges" class="notice warning">Hay cambios sin guardar. Guárdalos antes de finalizar.</p><button id="complete-follow-up" type="button" :disabled="loading || saving || !source.canEdit || datePending || hasChanges || source.requiredRows === 0 || completedForReview !== source.requiredRows" @click="finalize">{{ finalizing ? 'Finalizando…' : 'Finalizar seguimiento del área' }}</button></section>
       </template>
     </div>
@@ -238,19 +287,12 @@ onUnmounted(() => { sequence++; request?.abort(); window.removeEventListener('be
 </template>
 
 <style scoped>
-.objective-group { margin-top: 1.6rem; border: 1px solid var(--color-background-mute); border-radius: .7rem; overflow: hidden; background: var(--color-background-top); }
-.goal-group { margin-top: 1.3rem; border-top: 2px solid var(--color-background-mute); padding-top: 1rem; }
-.indicator-follow-up { margin-top: 1.1rem; border-left: 4px solid var(--sem-blue); }
-.planned-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: .4rem 0 1rem; }
-h3, h4, h5, .indicator-title { color: var(--sem-blue); font-weight: 700; }
-h3 { font-size: 1.15rem; } h4 { font-size: 1.05rem; } h5 { font-size: .85rem; margin: .6rem 0; }
-.indicator-title { font-size: 1.05rem; overflow-wrap: anywhere; margin-bottom: 1rem; }
-.execution-summary { margin-top: 1rem; display: grid; gap: .6rem; }
+.planned-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .completion-card button { margin-top: 1rem; }
-.follow-up-page { min-height: 100vh; background: var(--color-background); }
+.follow-up-page { min-width: 0; min-height: 100vh; background: var(--color-background); }
 .page-header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1.2rem clamp(1rem, 5vw, 5rem); background: var(--color-background-top); border-bottom: 1px solid var(--color-background-mute); }
 a { color: var(--color-text-highlight); font-weight: 700; }
-.page-content { width: min(100% - 3rem, 1080px); margin: 3rem auto 5rem; }
+.page-content { width: min(100% - 3rem, 1600px); min-width: 0; margin: 3rem auto 5rem; }
 .eyebrow { font-size: .74rem; font-weight: 700; letter-spacing: .08em; color: var(--color-text-highlight); }
 h1 { color: var(--color-text-highlight); margin: .6rem 0; font-size: clamp(1.9rem, 4vw, 2.7rem); line-height: 1.2; }
 h2 { color: var(--color-text-highlight); font-size: 1.2rem; }
@@ -262,39 +304,45 @@ h2 { color: var(--color-text-highlight); font-size: 1.2rem; }
 .status-summary { display: flex; gap: .65rem; flex-wrap: wrap; margin: 1rem 0; }
 .status-summary span { background: var(--color-background-mute); color: var(--sem-blue); padding: .4rem .7rem; border-radius: .35rem; font-size: .85rem; }
 .status-summary strong { font-weight: 700; }
-.overview-table-wrapper { margin-top: 1.7rem; }
-.overview-table, .dates-table { width: 100%; table-layout: fixed; border-collapse: collapse; background: var(--color-background-top); }
-caption { text-align: left; color: var(--color-text-highlight); font-weight: 700; margin-bottom: .5rem; }
+.conventions { display: flex; flex-wrap: wrap; gap: .35rem .7rem; margin: 1.5rem 0 .7rem; font-size: .85rem; }
+.locked-hint { padding: .7rem 1rem; border-left: 4px solid var(--sem-yellow); background: var(--color-background-mute); font-size: .9rem; }
+.table-hint { margin: 1rem 0 .5rem; color: var(--color-text-disabled); font-size: .85rem; }
+.annex-table-wrapper { position: relative; max-width: 100%; overflow-x: auto; border: 1px solid var(--color-border-disabled); border-radius: .5rem; }
+.annex-table { width: 100%; table-layout: fixed; border-collapse: collapse; background: var(--color-background-top); font-size: .88rem; line-height: 1.5; }
+.annex-table caption { text-align: left; color: var(--color-text-highlight); font-weight: 700; padding: .9rem; background: var(--color-background-mute); }
+.process-column { width: 160px; } .component-column { width: 185px; }
+.objective-column, .goal-column { width: 240px; } .indicator-column { width: 210px; }
+.activities-column { width: 280px; } .date-column { width: 105px; }
+.status-column { width: 48px; } .percentage-column { width: 115px; }
+.observations-column { width: 300px; } .actions-column { width: 190px; }
 th, td { border: 1px solid var(--color-border-disabled); padding: .7rem; text-align: left; overflow-wrap: anywhere; vertical-align: top; }
 thead { background: var(--sem-blue); color: var(--sem-white-top); }
-.overview-table th:first-child { width: 52%; }
-.overview-table tbody th { font-weight: 700; }
-.follow-up-card { margin-top: 2rem; border-radius: .75rem; border: 1px solid var(--color-background-mute); overflow: hidden; scroll-margin-top: 1rem; background: var(--color-background-top); }
-.row-header { padding: 1.2rem clamp(1rem, 3vw, 2rem); color: var(--sem-white-top); background: var(--sem-blue); overflow-wrap: anywhere; }
-.row-header span { font-size: .75rem; letter-spacing: .06em; }
-.row-header h2 { color: var(--sem-white-top); margin: .4rem 0; font-weight: 700; }
-.row-header p { font-size: .85rem; }
-.row-content { padding: clamp(1rem, 3vw, 2rem); }
-.source-context { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; margin-bottom: 1.2rem; }
-.full-width { grid-column: 1 / -1; }
-dt { color: var(--color-text-highlight); font-weight: 700; font-size: .85rem; }
-dd { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .9rem; }
-.save-state { margin: 1rem 0; font-size: .85rem; font-weight: 700; color: var(--color-text-highlight); }
-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
-.execution-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+thead th { text-align: center; vertical-align: middle; font-weight: 700; }
+thead tr:last-child th { padding: .6rem .25rem; white-space: nowrap; }
+abbr { text-decoration: none; }
+.objective-group { border-top: 4px solid var(--sem-blue); }
+.goal-start { border-top: 2px solid var(--color-border-disabled); }
+.process-cell { color: var(--sem-white-top); background: var(--sem-blue); font-weight: 700; }
+.component-cell { color: var(--sem-blue); background: var(--color-background-mute); font-weight: 700; }
+.indicator-cell { color: var(--sem-blue); font-weight: 700; white-space: pre-wrap; }
+.status-cell { padding: .25rem; text-align: center; }
+.status-option { min-height: 44px; place-items: center; cursor: pointer; }
+.status-option input { width: 1.1rem; height: 1.1rem; padding: 0; accent-color: var(--sem-blue); }
+.locked-cell { background: var(--color-background-mute); }
+.save-state { margin-bottom: .7rem; font-size: .8rem; font-weight: 700; color: var(--color-text-highlight); }
 label { display: grid; gap: .45rem; color: var(--color-text-highlight); font-size: .9rem; font-weight: 700; }
 input, select, textarea { width: 100%; min-width: 0; padding: .65rem; border: 1px solid var(--color-border-disabled); border-radius: .35rem; background: var(--color-background-top); color: var(--color-text); font: inherit; }
 textarea { resize: vertical; }
 small, .hint { color: var(--color-text-disabled); font-size: .8rem; font-weight: 400; }
 small { display: block; margin-top: .35rem; }
-.footer-hint { margin-top: 1.5rem; }
-.row-actions { display: flex; gap: .8rem; flex-wrap: wrap; margin-top: 1rem; }
+.row-actions button { width: 100%; margin-bottom: .6rem; }
 button { padding: .7rem 1rem; border: 1px solid var(--sem-blue); border-radius: .4rem; color: var(--sem-white-top); background: var(--sem-blue); font: inherit; font-weight: 700; cursor: pointer; }
 button.outline { color: var(--sem-blue); background: var(--color-background-top); }
-button:disabled, fieldset:disabled button { opacity: .6; cursor: default; }
-fieldset:disabled input, fieldset:disabled select, fieldset:disabled textarea { background: var(--color-background-mute); }
+button:disabled { opacity: .6; cursor: default; }
+input:disabled, textarea:disabled { background: var(--color-background-mute); color: var(--color-text); opacity: 1; cursor: not-allowed; }
+input:disabled::placeholder, textarea:disabled::placeholder { color: var(--color-text-disabled); }
 button:hover:enabled { filter: brightness(.92); }
-:is(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--sem-yellow); outline-offset: 3px; }
+:is(a, button, input, select, textarea, .annex-table-wrapper):focus-visible { outline: 3px solid var(--sem-yellow); outline-offset: 3px; }
 .notice { margin: 1rem 0; padding: .9rem; border-left: 4px solid var(--sem-blue); background: var(--color-background-mute); overflow-wrap: anywhere; }
 .notice.error { border-color: var(--sem-red); color: var(--color-text-red); }
 .notice.warning { border-color: var(--sem-yellow); }
@@ -303,9 +351,5 @@ button:hover:enabled { filter: brightness(.92); }
 @media (max-width: 600px) {
   .page-content { width: calc(100% - 1.5rem); margin-top: 1.8rem; }
   .date-card > label, .date-card > button { width: 100%; }
-  .source-context, .execution-fields { grid-template-columns: minmax(0, 1fr); }
-  .row-actions button { width: 100%; }
-  th, td { padding: .5rem; font-size: .82rem; }
-  .overview-table th:first-child { width: 44%; }
 }
 </style>

@@ -35,7 +35,7 @@ public class PMIIndicatorService {
                 .map(row -> response(row, source)).toList();
         int unnamed = (int) rows.stream().filter(row -> !hasName(row.getIndicator())).count();
         return new PMIIndicatorsResponse(source.pmiId(), year, areaId, source.areaName(),
-                source.establishmentName(), source.canFormulate(), unnamed, indicators);
+                source.establishmentName(), source.canFormulate(), unnamed, indicators, source.pmiSubmittedAt());
     }
 
     @Transactional

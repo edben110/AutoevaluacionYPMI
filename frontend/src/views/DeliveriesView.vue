@@ -86,7 +86,7 @@ onMounted(() => void load())
               <div class="package-identity"><SemIcon name="document" :size="52" /><div><span class="section-number">PAQUETE {{ item.year }}</span><h2>{{ item.establishmentName }}</h2><p>DANE {{ item.daneCode }}</p></div></div>
               <strong class="review-badge" :class="{ reviewed: item.reviewed }">{{ item.reviewed ? 'Revisado' : 'Pendiente de revisión' }}</strong>
             </header>
-            <p>{{ item.areas.length }} de {{ item.expectedAreas }} autoevaluaciones recibidas · {{ item.areas.filter(area => area.pmiId).length }} PMI iniciados</p>
+            <p>{{ item.areas.length }} de {{ item.expectedAreas }} autoevaluaciones recibidas · {{ item.areas.filter(area => area.pmiId).length }} PMI enviados</p>
             <p v-if="item.changedSinceReview" class="change-notice">Hay nuevas entregas o cambios en el PMI desde la última revisión. Revisa de nuevo el paquete.</p>
             <p v-if="item.reviewedAt && item.reviewedBy" class="review-meta">{{ item.reviewed ? 'Revisado' : 'Última revisión' }} por {{ item.reviewedBy }} · {{ formatReviewDate(item.reviewedAt) }}</p>
             <details class="package-content">
@@ -95,7 +95,7 @@ onMounted(() => void load())
                 <li v-for="area in item.areas" :key="area.areaId">
                   <h3>{{ area.areaName }}</h3>
                   <p>Autoevaluación recibida el {{ formatReviewDate(area.submittedAt) }}</p>
-                  <p>{{ area.pmiId ? 'PMI iniciado' + (area.pmiUpdatedAt ? ' · Último cambio: ' + formatReviewDate(area.pmiUpdatedAt) : '') : 'PMI aún no iniciado' }}</p>
+                  <p>{{ area.pmiId ? 'PMI enviado' + (area.pmiUpdatedAt ? ' · Último cambio: ' + formatReviewDate(area.pmiUpdatedAt) : '') : 'PMI aún no enviado' }}</p>
                   <RouterLink class="area-card-action" :to="{ name: 'delivery-review', params: { year: item.year, areaId: area.areaId }, query: { ...(secretary ? { establishmentId: item.establishmentId } : {}), ...(route.query.section === 'pmi' ? { section: 'pmi' } : {}) } }">{{ secretary ? 'Revisar autoevaluación y PMI' : 'Ver autoevaluación, comentarios y PMI' }} →</RouterLink>
                 </li>
               </ul>

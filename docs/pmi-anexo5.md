@@ -4,6 +4,8 @@ Implementación del 24 de octubre de 2026 en `JuanM`. Fuente: hoja **Anexo 5 -20
 
 ## Corrección del ciclo confirmada por Juan el 26 de octubre
 
+**Envío explícito del 28 de octubre:** el Anexo 5 incorpora el panel **Finalizar y enviar PMI del área**. Valida los anexos 2–4, mantiene el borrador privado hasta el envío y no exige diligenciar aún el seguimiento. Después del envío, el plan queda de consulta y el seguimiento se habilita en el período siguiente. Detalles en [envío del PMI por área](envio-pmi-por-area.md).
+
 Esta aclaración reemplaza la habilitación inicial del seguimiento durante la propia formulación del PMI:
 
 | Momento | Anexo 5 | Autoevaluación siguiente |
@@ -21,6 +23,14 @@ V16 agrega `PMIFollowUpCompletion`: PMI, año de revisión, fecha del control, f
 Si se modifica el contenido del plan o su conjunto de filas después de finalizar, la huella deja de corresponder: vuelve a ser necesario un control completo del plan actualizado. Los controles históricos conservan su contexto. Esto evita que una finalización antigua habilite la autoevaluación de un plan que luego cambió o perdió filas. El borrado completo del PMI al eliminar su período también elimina su finalización.
 
 El consolidado se agrupa por proceso → componente → objetivo → meta. Cada indicador aparece una sola vez con sus actividades y plazos, sin repetirlo en una tabla de resumen. El estado global del seguimiento y los conteos se muestran por separado.
+
+### Presentación como tabla del Excel
+
+Juan confirmó el 28 de octubre que desea una presentación similar a la tabla del Excel, manteniendo bloqueados los espacios que todavía no corresponden. La pantalla institucional reúne proceso, componente, objetivo, meta, indicador, actividades, plazo (inicio/final), estado de ejecución (NI/ESP/CANC/FIN/EJ), porcentaje y observaciones/evidencias. Combina las celdas del contexto de cada objetivo y meta para evitar repeticiones. Se conserva una fila por indicador/bloque de actividades, sin cambiar su identidad ni separar automáticamente sus actividades.
+
+Durante `PLANNING` las columnas de seguimiento están visibles, vacías y deshabilitadas, con un aviso del período en que se diligencian. No se asigna NI ni 0 % automáticamente. Durante `FOLLOW_UP` solo se habilitan las filas autorizadas por el servidor y una fecha de control verificada; se elige un único estado con botones de opción y se guarda por fila. En `CLOSED` y `COMPLETED` los controles permanecen deshabilitados y conservan los valores guardados. El contexto del plan es siempre de consulta. La tabla utiliza la paleta SEM y tiene desplazamiento horizontal dentro de su contenedor, también en celular.
+
+Verificación: compilación Vue/TypeScript y ESLint correctos. El recorrido aislado en Chrome comprobó encabezados y celdas combinadas, ausencia de valores predeterminados o escrituras durante formulación, selección de un único estado, guardado por fila, finalización obligatoria y consulta bloqueada con valores conservados en períodos cerrados o seguimientos finalizados. A 390 px el desplazamiento horizontal queda dentro de la tabla. No se modificaron respuestas institucionales ni se enviaron PMI.
 
 ## Reglas y trazabilidad
 

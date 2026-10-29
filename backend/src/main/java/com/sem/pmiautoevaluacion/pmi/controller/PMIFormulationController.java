@@ -4,6 +4,7 @@ import com.sem.pmiautoevaluacion.auth.security.CustomUserDetails;
 import com.sem.pmiautoevaluacion.pmi.dto.ObjectiveRequest;
 import com.sem.pmiautoevaluacion.pmi.dto.PMIFormulationResponse;
 import com.sem.pmiautoevaluacion.pmi.service.PMIFormulationService;
+import com.sem.pmiautoevaluacion.pmi.service.PMIAccessService;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.users.entity.Secretary;
 import jakarta.validation.Valid;
@@ -18,14 +19,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/pmi/{year}/areas/{areaId}/formulation")
 public class PMIFormulationController {
     private final PMIFormulationService service;
+    private final PMIAccessService access;
 
-    public PMIFormulationController(PMIFormulationService service) { this.service = service; }
+    public PMIFormulationController(PMIFormulationService service, PMIAccessService access) { this.service = service; this.access = access; }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ESTABLISHMENT', 'SECRETARY')")
     public PMIFormulationResponse find(@AuthenticationPrincipal CustomUserDetails principal,
             @PathVariable int year, @PathVariable UUID areaId, @RequestParam(required = false) UUID establishmentId) {
-        return service.find(readEstablishmentId(principal, establishmentId), year, areaId);
+        return service.find(readEstablishmentId(principal, establishmentId, year, areaId), year, areaId);
     }
 
     @PostMapping("/objectives")
@@ -50,11 +52,12 @@ public class PMIFormulationController {
         service.deleteObjective(principal.getUser().getId(), year, areaId, objectiveId);
     }
 
-    private UUID readEstablishmentId(CustomUserDetails principal, UUID requestedId) {
+    private UUID readEstablishmentId(CustomUserDetails principal, UUID requestedId, int year, UUID areaId) {
         if (principal.getUser() instanceof Secretary) {
             if (requestedId == null) {
                 throw new BadRequestException("Secretaría debe indicar establishmentId de la institución a consultar");
             }
+            access.requireSubmitted(requestedId, year, areaId);
             return requestedId;
         }
         UUID ownId = principal.getUser().getId();

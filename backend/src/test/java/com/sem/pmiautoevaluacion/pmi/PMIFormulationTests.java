@@ -270,7 +270,7 @@ class PMIFormulationTests {
         var response = create(owner, objective(A, "Objetivo privado"));
         String id = read(response, "$.objectives[0].id");
         mvc.perform(get(path()).with(user(principal(secretary))).param("establishmentId", owner.getId().toString()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.objectives[0].description").value("Objetivo privado"));
+                .andExpect(status().isNotFound());
         mvc.perform(get(path()).with(user(principal(secretary)))).andExpect(status().isBadRequest());
         mvc.perform(get(path()).with(user(principal(other))).param("establishmentId", owner.getId().toString()))
                 .andExpect(status().isForbidden());

@@ -329,7 +329,7 @@ class PMIFollowUpTests {
         mvc.perform(get(path()).with(user(principal(other))).param("establishmentId", owner.getId().toString())).andExpect(status().isForbidden());
         mvc.perform(get(path()).with(user(principal(secretary)))).andExpect(status().isBadRequest());
         mvc.perform(get(path()).param("controlDate", DATE).with(user(principal(secretary))).param("establishmentId", owner.getId().toString()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.rows[0].observations").value("Observación de la institución"));
+                .andExpect(status().isNotFound());
         mvc.perform(put(savePath(DATE, rowId)).with(user(principal(secretary))).contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
         mvc.perform(put(savePath(DATE, rowId)).with(user(principal(other))).contentType(MediaType.APPLICATION_JSON).content("{}"))

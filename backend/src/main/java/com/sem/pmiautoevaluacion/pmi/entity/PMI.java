@@ -34,6 +34,9 @@ public class PMI {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "submitted_at")
+    private Instant submittedAt;
+
     protected PMI() {}
 
     public PMI(SelfEvaluation selfEvaluation, Area area, LocalDate filledOn, Instant now) {
@@ -52,5 +55,10 @@ public class PMI {
     public LocalDate getFilledOn() { return filledOn; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+    public Instant getSubmittedAt() { return submittedAt; }
+    public boolean isSubmitted() { return submittedAt != null; }
+    public void submit(Instant now) {
+        if (submittedAt == null) { submittedAt = now; updatedAt = now; }
+    }
     public void touch(Instant now) { updatedAt = now; }
 }

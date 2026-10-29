@@ -69,8 +69,9 @@ public class DeliveryService {
     private DeliveryResponse summary(SelfEvaluationAreaSubmission submission, PMI plan) {
         var evaluation = submission.getEvaluation();
         var institution = evaluation.getEstablishment();
+        PMI received = plan != null && plan.isSubmitted() ? plan : null;
         return new DeliveryResponse(institution.getId(), institution.getName(), institution.getDaneCode(),
                 evaluation.getYear(), submission.getArea().getId(), submission.getArea().getName(),
-                submission.getSubmittedAt(), plan == null ? null : plan.getId(), plan == null ? null : plan.getUpdatedAt());
+                submission.getSubmittedAt(), received == null ? null : received.getId(), received == null ? null : received.getUpdatedAt());
     }
 }

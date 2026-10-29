@@ -35,7 +35,7 @@ export interface PriorityMatrix {
   candidateStateLabel: string | null
   prioritizationComplete: boolean
   canFormulate: boolean
-  status: 'DRAFT'
+  status: 'DRAFT' | 'SUBMITTED'
   projectionYears: 1
   filledOn: string | null
   updatedAt: string | null

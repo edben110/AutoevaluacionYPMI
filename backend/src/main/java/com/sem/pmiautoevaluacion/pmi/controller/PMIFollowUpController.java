@@ -3,6 +3,7 @@ package com.sem.pmiautoevaluacion.pmi.controller;
 import com.sem.pmiautoevaluacion.auth.security.CustomUserDetails;
 import com.sem.pmiautoevaluacion.pmi.dto.*;
 import com.sem.pmiautoevaluacion.pmi.service.PMIFollowUpService;
+import com.sem.pmiautoevaluacion.pmi.service.PMIAccessService;
 import com.sem.pmiautoevaluacion.shared.exception.BadRequestException;
 import com.sem.pmiautoevaluacion.users.entity.Secretary;
 import jakarta.validation.Valid;
@@ -18,7 +19,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/pmi/{year}/areas/{areaId}/follow-ups")
 public class PMIFollowUpController {
     private final PMIFollowUpService service;
-    public PMIFollowUpController(PMIFollowUpService service) { this.service = service; }
+    private final PMIAccessService access;
+    public PMIFollowUpController(PMIFollowUpService service, PMIAccessService access) { this.service = service; this.access = access; }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ESTABLISHMENT', 'SECRETARY')")
@@ -26,7 +28,7 @@ public class PMIFollowUpController {
             @PathVariable int year, @PathVariable UUID areaId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate controlDate,
             @RequestParam(required = false) UUID establishmentId) {
-        return service.find(readEstablishmentId(principal, establishmentId), year, areaId, controlDate);
+        return service.find(readEstablishmentId(principal, establishmentId, year, areaId), year, areaId, controlDate);
     }
 
     @PutMapping("/{controlDate}/rows/{rowId}")
@@ -38,9 +40,10 @@ public class PMIFollowUpController {
         return service.save(principal.getUser().getId(), year, areaId, controlDate, rowId, request);
     }
 
-    private UUID readEstablishmentId(CustomUserDetails principal, UUID requestedId) {
+    private UUID readEstablishmentId(CustomUserDetails principal, UUID requestedId, int year, UUID areaId) {
         if (principal.getUser() instanceof Secretary) {
             if (requestedId == null) throw new BadRequestException("Secretaría debe indicar establishmentId de la institución a consultar");
+            access.requireSubmitted(requestedId, year, areaId);
             return requestedId;
         }
         UUID ownId = principal.getUser().getId();

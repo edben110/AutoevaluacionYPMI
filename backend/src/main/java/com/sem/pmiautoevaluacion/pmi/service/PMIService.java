@@ -92,6 +92,7 @@ public class PMIService {
         }
         PMI plan = plans.findBySelfEvaluation_IdAndArea_Id(evaluation.getId(), areaId).orElseGet(() ->
                 plans.save(new PMI(evaluation, area, LocalDate.now(clock), clock.instant())));
+        PMIAccessService.requireDraft(plan);
         List<PrioritaryComponent> saved = new ArrayList<>(priorities.findByPmi_Id(plan.getId()));
         PrioritaryComponent priority = saved.stream()
                 .filter(item -> item.getValuation().getId().equals(valuation.getId())).findFirst()
@@ -123,6 +124,7 @@ public class PMIService {
         }
         PMI plan = plans.findBySelfEvaluation_IdAndArea_Id(evaluation.getId(), areaId)
                 .orElseThrow(() -> new BadRequestException("Completa la priorización del área antes de seleccionar"));
+        PMIAccessService.requireDraft(plan);
         List<PrioritaryComponent> saved = priorities.findByPmi_Id(plan.getId());
         PMIResponse current = response(analysis, plan, saved);
         if (!current.prioritizationComplete()) {
@@ -220,12 +222,12 @@ public class PMIService {
                         analysis.candidateIds().contains(item.getId()), selectedIds.contains(item.getComponent().getId()))).toList();
         SelfEvaluation evaluation = analysis.evaluation();
         return new PMIResponse(plan == null ? null : plan.getId(), evaluation.getId(), evaluation.getYear(),
-                "DRAFT", plan == null ? 1 : plan.getProjectionYears(), plan == null ? null : plan.getFilledOn(),
+                plan != null && plan.isSubmitted() ? "SUBMITTED" : "DRAFT", plan == null ? 1 : plan.getProjectionYears(), plan == null ? null : plan.getFilledOn(),
                 plan == null ? null : plan.getUpdatedAt(), evaluation.getEstablishment().getName(), items,
                 highest, selected, needsReview, analysis.area().getId(), analysis.area().getName(), analysis.complete(),
                 analysis.activeIds().size(), analysis.valuedCount(), analysis.candidateLevel(),
                 stateLabel(analysis.candidateLevel()), prioritizationComplete,
-                prioritizationComplete && !selected.isEmpty() && !needsReview,
+                prioritizationComplete && !selected.isEmpty() && !needsReview && (plan == null || !plan.isSubmitted()),
                 analysis.submittedAt() != null, analysis.submittedAt(), evaluation.getPeriod() != null);
     }
 

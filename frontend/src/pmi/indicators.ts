@@ -27,6 +27,7 @@ export interface IndicatorSheet {
 }
 
 export interface PmiIndicators {
+  pmiSubmittedAt: string | null
   pmiId: string | null
   year: number
   areaId: string

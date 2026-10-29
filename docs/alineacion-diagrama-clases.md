@@ -21,6 +21,8 @@ Revisión del 6 de octubre de 2026. Fuentes: [diagrama de clases](https://github
 
 ## State según el diagrama
 
+**Extensión confirmada por Juan el 28 de octubre:** `PMI.submittedAt` y `PMISubmissionService` registran la entrega explícita por área. V19 conserva como borradores los planes existentes. El envío bloquea las ediciones de los anexos 2–4 y habilita la consulta de Secretaría; no sustituye el envío de autoevaluación ni la finalización de seguimiento. No altera las relaciones entre componentes, objetivos, metas, actividades e indicadores. Véase [envío del PMI por área](envio-pmi-por-area.md).
+
 | Estado | `isImprovementChance()` | `isStrength()` |
 | --- | --- | --- |
 | Existencia | true | false |

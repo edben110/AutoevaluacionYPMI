@@ -38,6 +38,7 @@ export interface FormulationObjective extends Omit<FormulationComponent, 'eligib
 }
 
 export interface FormulationResponse {
+  pmiSubmittedAt: string | null
   pmiId: string | null
   year: number
   areaId: string

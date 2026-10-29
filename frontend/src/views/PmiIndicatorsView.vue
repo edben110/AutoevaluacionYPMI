@@ -152,7 +152,7 @@ onUnmounted(() => { sequence++; request?.abort(); window.removeEventListener('be
           <p class="hint">Si agregas o cambias un nombre, guarda el plan en el Anexo 3 y actualiza esta lista.</p>
         </section>
         <p v-if="source.unnamedRows" class="notice warning">Hay {{ source.unnamedRows }} {{ source.unnamedRows === 1 ? 'fila sin nombre de indicador' : 'filas sin nombre de indicador' }} en el Anexo 3. Completa y guarda esos nombres para diligenciar sus fichas aquí.</p>
-        <p v-if="!source.canEdit" class="notice warning">Solo consulta: revisa el envío de la autoevaluación y la selección de componentes del Anexo 2 para continuar.</p>
+        <p v-if="!source.canEdit" class="notice warning">{{ source.pmiSubmittedAt ? 'PMI enviado a Secretaría. Sus fichas de indicadores están disponibles para consulta.' : 'Solo consulta: revisa el envío de la autoevaluación y la selección de componentes del Anexo 2 para continuar.' }}</p>
         <section v-if="sheets.length === 0 && !loading" class="empty-state">
           <h2>Aún no hay indicadores guardados</h2>
           <p>En el Anexo 3 escribe los nombres de los indicadores y pulsa Guardar este plan. Aquí aparecerá una tabla por cada uno.</p>
@@ -169,7 +169,7 @@ onUnmounted(() => { sequence++; request?.abort(); window.removeEventListener('be
           </header>
           <div class="sheet-body">
             <dl class="context"><div><dt>Objetivo del plan</dt><dd>{{ form.source.objectiveDescription || 'Pendiente en el Anexo 3' }}</dd></div><div><dt>Meta</dt><dd>{{ form.source.goalDescription || 'Pendiente en el Anexo 3' }}</dd></div></dl>
-            <p v-if="!form.source.editable" class="notice warning">Solo consulta: el componente ya no está seleccionado o su indicador necesita un nombre en el Anexo 3. La ficha se conserva.</p>
+            <p v-if="!form.source.editable" class="notice warning">{{ source.pmiSubmittedAt ? 'Ficha enviada, disponible para consulta.' : 'Solo consulta: el componente ya no está seleccionado o su indicador necesita un nombre en el Anexo 3. La ficha se conserva.' }}</p>
             <p class="sheet-status" role="status">{{ changed(form) ? 'Cambios sin guardar' : form.source.complete ? 'Ficha completa guardada' : 'Ficha con campos pendientes' }}</p>
             <form @submit.prevent="save(form)">
               <fieldset :disabled="loading || !verified || !form.source.editable || form.saving">

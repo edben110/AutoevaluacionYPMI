@@ -193,7 +193,7 @@ class PMIIndicatorTests {
         mvc.perform(get(path()).with(user(principal(other))).param("establishmentId", owner.getId().toString())).andExpect(status().isForbidden());
         mvc.perform(get(path()).with(user(principal(secretary)))).andExpect(status().isBadRequest());
         mvc.perform(get(path()).with(user(principal(secretary))).param("establishmentId", owner.getId().toString()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.indicators[0].name").value("Privado"));
+                .andExpect(status().isNotFound());
         mvc.perform(put(path() + "/" + id).with(user(principal(secretary))).contentType(MediaType.APPLICATION_JSON).content(json(definition())))
                 .andExpect(status().isForbidden());
         mvc.perform(put(path() + "/" + id).with(user(principal(other))).contentType(MediaType.APPLICATION_JSON).content(json(definition())))

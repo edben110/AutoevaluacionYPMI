@@ -10,4 +10,4 @@ public record PMIFormulationResponse(UUID pmiId, int year, String establishmentN
         List<FormulationComponentResponse> selectedComponents, List<ObjectiveResponse> objectives,
         FormulationTotalsResponse totals, UUID areaId, String areaName,
         boolean selfEvaluationComplete, boolean prioritizationComplete, boolean canFormulate,
-        boolean selfEvaluationSubmitted, Instant submittedAt) {}
+        boolean selfEvaluationSubmitted, Instant submittedAt, Instant pmiSubmittedAt) {}
