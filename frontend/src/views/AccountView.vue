@@ -47,6 +47,7 @@ onBeforeRouteLeave(() => saved.value || (!saving.value && (!dirty.value || windo
 
 <template>
   <main class="dashboard-page"><div class="dashboard-content account-content">
+    <RouterLink class="u-return-button" to="/dashboard">Volver a mi espacio</RouterLink>
     <h1>Datos de la cuenta</h1><p v-if="error" class="form-error" role="alert">{{ error }}</p>
     <section v-if="currentProfile" class="profile-card">
       <template v-if="!editing">

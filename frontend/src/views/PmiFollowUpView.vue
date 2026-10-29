@@ -197,7 +197,7 @@ onUnmounted(() => { sequence++; request?.abort(); window.removeEventListener('be
         <PmiSubmissionPanel :year="year" :area-id="areaId" @submitted="load()" />
         <p v-if="source.phase === 'PLANNING'" class="notice phase-notice" role="status">Este anexo está disponible para consulta durante la formulación del PMI {{ year }}. Su diligenciamiento se habilitará cuando Secretaría abra el período de autoevaluación {{ source.reviewYear }}.</p>
         <p v-else-if="source.phase === 'CLOSED'" class="notice warning" role="status">El período {{ source.reviewYear }} está cerrado. Secretaría debe habilitar sus fechas para continuar con el seguimiento.</p>
-        <section v-else-if="source.phase === 'COMPLETED'" class="summary-card completed-follow-up" role="status"><h2>Seguimiento del área finalizado</h2><p>Este Anexo 5 quedó para consulta. Finaliza las demás áreas pendientes para habilitar la autoevaluación {{ source.reviewYear }}.</p><RouterLink :to="{ name: 'dashboard' }">Volver a mi espacio →</RouterLink></section>
+        <section v-else-if="source.phase === 'COMPLETED'" class="summary-card completed-follow-up" role="status"><h2>Seguimiento del área finalizado</h2><p>Este Anexo 5 quedó para consulta. Finaliza las demás áreas pendientes para habilitar la autoevaluación {{ source.reviewYear }}.</p><RouterLink class="u-return-button" :to="{ name: 'dashboard' }">Volver a mi espacio</RouterLink></section>
         <p v-else class="notice" role="status">Antes de la autoevaluación {{ source.reviewYear }}, diligencia el estado, porcentaje y observaciones de cada fila y finaliza el seguimiento de esta área.</p>
 
         <form v-if="source.phase === 'FOLLOW_UP'" class="date-card" @submit.prevent="changeDate">

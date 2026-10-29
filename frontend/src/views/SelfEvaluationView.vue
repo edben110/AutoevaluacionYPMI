@@ -409,7 +409,7 @@ watch([areaId, () => route.query.year], ([selectedId, selectedYear]) => {
 <template>
   <main class="evaluation-page">
     <header class="evaluation-header">
-      <RouterLink to="/dashboard">← Volver a mi espacio</RouterLink>
+      <RouterLink class="u-return-button" to="/dashboard">Volver a mi espacio</RouterLink>
       <span v-if="currentProfile">{{ currentProfile.name }}</span>
     </header>
 
@@ -431,7 +431,7 @@ watch([areaId, () => route.query.year], ([selectedId, selectedYear]) => {
         <p v-if="period?.status === 'SCHEDULED'">Secretaría programó este período; podrás entrar cuando llegue la fecha de inicio.</p>
         <p v-else-if="period?.status === 'CLOSED'">El período de autoevaluación de {{ year }} terminó.</p>
         <p v-else>Secretaría aún no ha habilitado la autoevaluación de {{ year }}.</p>
-        <RouterLink class="secondary-button dashboard-action" to="/dashboard">Volver a mi espacio</RouterLink>
+        <RouterLink class="u-return-button" to="/dashboard">Volver a mi espacio</RouterLink>
       </section>
 
       <section v-else-if="!loading && !error && !selectedArea" class="evaluation-empty">

@@ -66,15 +66,15 @@ onUnmounted(() => { window.removeEventListener('keydown', keyboard); window.remo
   <div class="app-shell" :class="{ 'with-navigation': navigationOpen && !compact }">
     <a class="skip-link" href="#workspace">Saltar al contenido</a>
     <AppTopBar ref="topbar" :title="title" :navigation-open="navigationOpen" :account-open="accountOpen" :compact="compact" @toggle-navigation="navigationOpen = !navigationOpen; accountOpen = false" @toggle-account="accountOpen = !accountOpen; if (compact) navigationOpen = false" />
-    <button v-if="navigationOpen && compact" type="button" class="navigation-scrim" aria-label="Cerrar menú de navegación" @click="closeOverlays" />
+    <button v-if="navigationOpen && compact" type="button" class="u-focus-ring navigation-scrim" aria-label="Cerrar menú de navegación" @click="closeOverlays" />
     <aside v-show="navigationOpen" id="main-navigation" class="sem-sidebar" :inert="!navigationOpen">
       <nav aria-label="Navegación principal"><RouterLink v-for="link in links" :key="link.label" :to="link.to" :class="{ active: link.active }" :aria-current="link.active ? 'page' : undefined"><SemIcon :name="link.icon" :size="33" /><span>{{ link.label }}</span></RouterLink></nav>
       <div class="sidebar-brand"><InstitutionalBrand /></div>
     </aside>
     <section v-if="accountOpen" id="account-panel" ref="accountPanel" class="sem-account-panel" aria-label="Opciones de mi cuenta">
       <p class="account-name">{{ currentProfile?.name || 'Mi cuenta' }}</p>
-      <RouterLink :to="{ name: 'account' }"><SemIcon name="settings" :size="30" />Datos de la cuenta</RouterLink>
-      <button type="button" @click="logout"><SemIcon name="logout" :size="30" />Cerrar sesión</button>
+      <RouterLink class="u-menu-item" :to="{ name: 'account' }"><SemIcon name="settings" :size="30" />Datos de la cuenta</RouterLink>
+      <button class="u-menu-item u-menu-item--danger" type="button" @click="logout"><SemIcon name="logout" :size="30" />Cerrar sesión</button>
     </section>
     <div id="workspace" class="app-shell-content" tabindex="-1" :inert="compact && navigationOpen"><slot /></div>
     <SemWave v-if="route.name === 'dashboard'" class="home-wave" />

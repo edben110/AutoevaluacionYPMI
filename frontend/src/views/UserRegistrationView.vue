@@ -42,6 +42,7 @@ onBeforeRouteLeave(() => !saving.value && (!dirty.value || window.confirm('Hay d
 
 <template>
   <main class="dashboard-page"><div class="dashboard-content registration-content">
+    <RouterLink class="u-return-button" to="/dashboard">Volver a mi espacio</RouterLink>
     <h1>Registrar usuarios</h1><p>Crea las cuentas de las instituciones educativas o del personal de Secretaría.</p>
     <p v-if="error" class="form-error" role="alert">{{ error }}</p>
     <section v-if="created" class="status-card" role="status">

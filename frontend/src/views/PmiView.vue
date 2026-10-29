@@ -220,7 +220,7 @@ onUnmounted(() => window.removeEventListener('beforeunload', beforeUnload))
 
 <template>
   <main class="pmi-page">
-    <header class="pmi-header"><RouterLink :to="{ name: 'pmi-overview', params: { year } }">← Volver a los PMI por área</RouterLink><span>Ruta de Mejoramiento</span></header>
+    <header class="pmi-header"><RouterLink class="u-return-button" :to="{ name: 'dashboard' }">Volver a mi espacio</RouterLink><RouterLink :to="{ name: 'pmi-overview', params: { year } }">Volver a los PMI por área</RouterLink><span>Ruta de Mejoramiento</span></header>
     <div class="pmi-content">
       <span class="pmi-eyebrow">PLAN DE MEJORAMIENTO INSTITUCIONAL · ANEXO 2</span>
       <h1>Priorización de componentes</h1>
@@ -344,7 +344,7 @@ onUnmounted(() => window.removeEventListener('beforeunload', beforeUnload))
 <style scoped>
 .pmi-page { min-height: 100vh; background: var(--color-background); }
 .pmi-header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1.2rem clamp(1rem, 5vw, 5rem); border-bottom: 1px solid var(--color-background-mute); background: var(--color-background-top); }
-.pmi-header a { color: var(--color-text-highlight); font-weight: 700; text-decoration: none; }
+.pmi-header a:not(.u-return-button) { color: var(--color-text-highlight); font-weight: 700; text-decoration: none; }
 .pmi-header span { color: var(--color-text-disabled); }
 .pmi-content { width: min(100% - 3rem, 1300px); margin: 3rem auto 5rem; }
 .pmi-eyebrow { font-size: .74rem; color: var(--color-text-highlight); font-weight: 700; letter-spacing: .1em; }

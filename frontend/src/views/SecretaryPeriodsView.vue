@@ -127,7 +127,7 @@ onMounted(async () => {
 
 <template>
   <main class="evaluation-page">
-    <header class="evaluation-header"><RouterLink to="/dashboard">← Volver a mi espacio</RouterLink></header>
+    <header class="evaluation-header"><RouterLink class="u-return-button" to="/dashboard">Volver a mi espacio</RouterLink></header>
     <div class="evaluation-content">
       <span class="eyebrow eyebrow-dark">SECRETARÍA DE EDUCACIÓN</span>
       <h1>Períodos de autoevaluación</h1>

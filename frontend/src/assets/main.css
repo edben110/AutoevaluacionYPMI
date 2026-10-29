@@ -337,6 +337,124 @@ b {
   font-weight: 700;
 }
 
+/* Shared application-shell patterns */
+:root {
+  --shell-topbar-height: 58px;
+  --shell-sidebar-width: 240px;
+  --content-max-width: 1560px;
+  --content-inline-gap: 1.75rem;
+  --shell-control-radius: 5px;
+  --shell-panel-radius: 12px;
+  --shell-action-radius: 8px;
+  --shell-panel-shadow: 0 6px 24px rgb(32 33 36 / 12%);
+  --focus-ring: 3px solid var(--sem-yellow);
+  --focus-ring-offset: 2px;
+}
+
+.app-shell {
+  --topbar-height: var(--shell-topbar-height);
+  --sidebar-width: var(--shell-sidebar-width);
+}
+
+.sem-topbar,
+.u-shell-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--sem-blue);
+  color: var(--sem-white-top);
+}
+
+.shell-icon-button,
+.u-shell-icon-button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--sem-white-top);
+  cursor: pointer;
+}
+
+.shell-icon-button:hover,
+.u-shell-icon-button:hover {
+  background: rgb(255 255 255 / 12%);
+}
+
+.shell-icon-button:focus-visible,
+.u-shell-icon-button:focus-visible,
+.sem-sidebar a:focus-visible,
+.sem-account-panel a:focus-visible,
+.sem-account-panel button:focus-visible,
+.u-focus-ring:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.sem-sidebar,
+.u-shell-sidebar {
+  background: var(--sem-white-top);
+  border-right: 1px solid var(--sem-black-mute);
+}
+
+.sem-account-panel,
+.u-shell-account-panel {
+  background: var(--sem-white-top);
+  border: 1px solid var(--sem-black-mute);
+  border-radius: var(--shell-panel-radius);
+  box-shadow: var(--shell-panel-shadow);
+}
+
+.app-shell .app-shell-content :is(.dashboard-content, .evaluation-content, .page-content, .pmi-content, .formulation-content, .pmi-overview-content),
+.u-content-container {
+  width: calc(100% - (var(--content-inline-gap) * 2));
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  min-width: 0;
+}
+
+.app-shell .app-shell-content :is(.status-card, .profile-card, .evaluation-empty, .evaluation-area, .pmi-card, .formulation-card, .indicator-card, .package-card),
+.u-surface,
+.u-card,
+.u-panel {
+  border: 1px solid var(--color-background-mute);
+  border-radius: var(--radius-lg);
+  background: var(--color-background-top);
+}
+
+.app-shell .app-shell-content :is(.primary-button, .secondary-button, .submission-action, .pmi-button, .formulation-button),
+.u-action-button {
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+}
+
+.u-return-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: .7rem 1.1rem;
+  border: 1px solid var(--sem-red);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-white);
+  background: var(--sem-red);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), filter var(--transition-fast);
+}
+
+.u-return-button:hover {
+  filter: brightness(.94);
+}
+
+.u-return-button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
 /* TODO: Revisar todo este CSS para verificar cada uno de los estilos aplicados */
 /* He hecho algunos cambios de valores pero eso no quiere decir que las implementaciones sean correctas*/
 
@@ -411,7 +529,7 @@ button { cursor: pointer; }
 
 .evaluation-page { min-height: 100vh; background: var(--color-background); }
 .evaluation-header { display: flex; justify-content: space-between; gap: 1rem; padding: 1.1rem clamp(1.5rem, 6vw, 6rem); background: var(--color-background-top); border-bottom: 1px solid var(--color-background-mute); }
-.evaluation-header a { color: var(--sem-blue); font-weight: 700; text-decoration: none; }
+.evaluation-header a:not(.u-return-button) { color: var(--sem-blue); font-weight: 700; text-decoration: none; }
 .evaluation-content { width: min(100% - 3rem, 1050px); margin: 3rem auto 5rem; }
 .evaluation-content > h1 { margin: .55rem 0; font-size: clamp(2rem, 4vw, 3rem); color: var(--color-text-highlight); }
 .evaluation-content > p { color: var(--color-text-disabled); line-height: 1.6; }

@@ -55,17 +55,17 @@ async function submit(): Promise<void> {
         <p v-if="route.query.updated === '1'" class="account-updated" role="status">Tus datos se actualizaron. Inicia sesión con la información actualizada.</p>
         <p class="role-label">Soy:</p>
         <div class="role-selector" role="group" aria-label="Tipo de acceso">
-          <button type="button" class="role-option" :class="{ selected: isSecretary }" :aria-pressed="isSecretary" :disabled="submitting" @click="chooseRole('SECRETARY')"><SemIcon name="user" :size="28" />Secretaría</button>
-          <button type="button" class="role-option" :class="{ selected: !isSecretary }" :aria-pressed="!isSecretary" :disabled="submitting" @click="chooseRole('ESTABLISHMENT')"><SemIcon name="school" :size="32" />Institución</button>
+          <button type="button" class="u-button role-option" :class="{ selected: isSecretary }" :aria-pressed="isSecretary" :disabled="submitting" @click="chooseRole('SECRETARY')"><SemIcon name="user" :size="28" />Secretaría</button>
+          <button type="button" class="u-button role-option" :class="{ selected: !isSecretary }" :aria-pressed="!isSecretary" :disabled="submitting" @click="chooseRole('ESTABLISHMENT')"><SemIcon name="school" :size="32" />Institución</button>
         </div>
-        <form class="login-form" @submit.prevent="submit">
-          <div class="field">
-            <label for="identifier">{{ isSecretary ? 'Correo institucional:' : 'Código DANE:' }}</label>
-            <input id="identifier" v-model="identifier" :type="isSecretary ? 'email' : 'text'" autocomplete="username" :placeholder="isSecretary ? 'ejemplo@sempasto.gov.co' : 'Código DANE de la institución'" :disabled="submitting" required />
+        <form class="u-stack login-form" @submit.prevent="submit">
+          <div class="u-form-field field">
+            <label class="u-form-label" for="identifier">{{ isSecretary ? 'Correo institucional:' : 'Código DANE:' }}</label>
+            <input id="identifier" v-model="identifier" class="u-form-input" :type="isSecretary ? 'email' : 'text'" autocomplete="username" :placeholder="isSecretary ? 'ejemplo@sempasto.gov.co' : 'Código DANE de la institución'" :disabled="submitting" required />
           </div>
-          <div class="field"><label for="password">Contraseña:</label><input id="password" v-model="password" type="password" autocomplete="current-password" placeholder="Escribe tu contraseña" :disabled="submitting" required /></div>
+          <div class="u-form-field field"><label class="u-form-label" for="password">Contraseña:</label><input id="password" v-model="password" class="u-form-input" type="password" autocomplete="current-password" placeholder="Escribe tu contraseña" :disabled="submitting" required /></div>
           <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-          <button class="primary-button" type="submit" :disabled="submitting">{{ submitting ? 'Ingresando…' : 'Iniciar sesión' }}</button>
+          <button class="u-button u-button-primary primary-button" type="submit" :disabled="submitting">{{ submitting ? 'Ingresando…' : 'Iniciar sesión' }}</button>
         </form>
         <p class="access-note">Si necesitas recuperar tu acceso, contacta al responsable de las cuentas de la Secretaría de Educación.</p>
       </div>

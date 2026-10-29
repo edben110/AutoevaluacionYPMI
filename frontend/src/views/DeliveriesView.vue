@@ -56,7 +56,7 @@ onMounted(() => void load())
 
 <template>
   <main class="dashboard-page">
-    <header class="dashboard-header"><RouterLink to="/dashboard">Volver a mi espacio</RouterLink></header>
+    <header class="dashboard-header"><RouterLink class="u-return-button" to="/dashboard">Volver a mi espacio</RouterLink></header>
     <div class="dashboard-content">
       <h1>{{ secretary ? 'Paquetes de las instituciones' : 'Mis autoevaluaciones e historial' }}</h1>
       <p>Cada paquete reúne las autoevaluaciones enviadas y los PMI de una institución en un mismo año, organizados por área.</p>

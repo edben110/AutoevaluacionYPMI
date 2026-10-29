@@ -40,7 +40,7 @@ watch(() => route.params.year, () => { if (authorized.value) void load() })
 
 <template>
   <main class="pmi-overview-page">
-    <header><RouterLink :to="{ name: 'dashboard' }">← Volver a mi espacio</RouterLink></header>
+    <header><RouterLink class="u-return-button" :to="{ name: 'dashboard' }">Volver a mi espacio</RouterLink></header>
     <div class="pmi-overview-content">
       <h1>PMI por área · {{ year }}</h1>
       <p>Completa y envía la autoevaluación de un área para habilitar su plan de mejoramiento.</p>
