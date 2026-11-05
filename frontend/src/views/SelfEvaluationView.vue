@@ -4,6 +4,7 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate, RouterLink, useRoute, useRoute
 import ValuationTotals from '@/components/ValuationTotals.vue'
 import EvaluationPeriodNotice from '@/components/EvaluationPeriodNotice.vue'
 import ComponentGuidanceDialog from '@/components/ComponentGuidanceDialog.vue'
+import ComponentGuidancePageLink from '@/components/ComponentGuidancePageLink.vue'
 import FollowUpRequirement from '@/components/FollowUpRequirement.vue'
 import EvaluationAreaSteps from '@/components/EvaluationAreaSteps.vue'
 import type { FollowUpPrerequisite } from '@/selfEvaluation/prerequisites'
@@ -506,6 +507,7 @@ watch([areaId, () => route.query.year], ([selectedId, selectedYear]) => {
                     <option value="">Selecciona un estado</option>
                     <option v-for="state in valuationStates" :key="state.state" :value="state.level">{{ state.label }}</option>
                   </select>
+                  <ComponentGuidancePageLink :component-id="component.id" />
                 </label>
                 <label class="note-field">
                   Evidencias: enlaces o descripción (opcional)

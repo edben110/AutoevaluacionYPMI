@@ -131,12 +131,12 @@ class ComponentGuidanceAndEvidenceTests {
     @Test
     void financialHelpIsScopedToItsComponentWithItsActualGuidePages() throws Exception {
         mvc.perform(get(guidancePath(component(36))).with(user(principal(owner))))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.itemPages", hasItem(153)))
-                .andExpect(jsonPath("$.evidencePages", hasItem(174)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.itemPages", hasItem(154)))
+                .andExpect(jsonPath("$.evidencePages", hasItem(175)))
                 .andExpect(jsonPath("$.componentName", containsString("Fondo de Servicios Educativos")))
                 .andExpect(jsonPath("$.evidenceNotice", not(blankOrNullString())));
         mvc.perform(get(guidancePath(component(28))).with(user(principal(owner))))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.itemPages", hasItem(145)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.itemPages", hasItem(146)))
                 .andExpect(jsonPath("$.componentName", containsString("matrícula")));
     }
 

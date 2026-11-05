@@ -16,6 +16,7 @@ import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class ComponentGuidanceService {
+    private static final int SOURCE_PAGE_OFFSET = 1;
     private static final String DEFAULT_EVIDENCE_NOTICE =
             "Los ejemplos de evidencia son orientativos, no obligatorios ni exhaustivos.";
     private final ComponentRepository components;
@@ -61,7 +62,11 @@ public class ComponentGuidanceService {
                 .filter(example -> example != null).toList();
     }
 
-    private List<Integer> pages(List<Integer> values) { return values == null ? List.of() : List.copyOf(values); }
+    private List<Integer> pages(List<Integer> values) {
+        return values == null ? List.of() : values.stream()
+                .map(page -> page + SOURCE_PAGE_OFFSET)
+                .toList();
+    }
     private String normalize(String text) { return text == null || text.isBlank() ? null : text.trim(); }
 
     private record GuidanceCatalog(String sourceTitle, String sourceUrl, String evidenceNotice,

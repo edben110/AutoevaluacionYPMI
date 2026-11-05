@@ -23,6 +23,13 @@ const sourceUrl = computed(() => {
   } catch { return null }
 })
 
+function sourcePageUrl(page: number): string | null {
+  if (!sourceUrl.value || !Number.isInteger(page) || page < 1) return null
+  const url = new URL(sourceUrl.value)
+  url.hash = `page=${page}`
+  return url.href
+}
+
 async function load(): Promise<void> {
   const request = ++sequence
   controller?.abort()
@@ -87,7 +94,7 @@ onUnmounted(() => {
       <div><span class="guidance-eyebrow">AYUDA DEL COMPONENTE</span><h2 id="component-guidance-title">{{ componentName }}</h2></div>
       <button class="guidance-close" type="button" autofocus aria-label="Cerrar ayuda del componente" @click="dismiss">Cerrar ✕</button>
     </div>
-    <p id="component-guidance-intro" class="guidance-intro">Consulta qué evalúa este componente y ejemplos de evidencias, sin modificar tus respuestas.</p>
+    <p id="component-guidance-intro" class="guidance-intro">Este espacio presenta qué evalúa el componente y ejemplos de evidencias, sin modificar las respuestas registradas.</p>
     <p v-if="loading" class="guidance-message" role="status">Consultando la ayuda…</p>
     <section v-else-if="error" class="guidance-message guidance-error" role="alert"><p>{{ error }}</p><button class="guidance-button" type="button" @click="load">Reintentar consulta</button></section>
     <template v-else-if="guidance">
@@ -101,15 +108,21 @@ onUnmounted(() => {
         <ul v-if="guidance.evidenceExamples.length"><li v-for="(example, index) in guidance.evidenceExamples" :key="index">{{ example }}</li></ul>
         <p v-else>No hay ejemplos registrados para este componente.</p>
         <p class="guidance-notice">{{ guidance.evidenceNotice || 'Los ejemplos son orientadores, no obligatorios ni exhaustivos.' }}</p>
-        <p class="guidance-paper">Si la evidencia está en papel, puedes indicar el nombre del documento, su fecha y dónde se encuentra. No necesitas escanearlo para describirlo aquí.</p>
+        <p class="guidance-paper">Si la evidencia se encuentra en formato físico, la descripción puede incluir el nombre del documento, su fecha y dónde se encuentra. No es necesario escanearla para describirla aquí.</p>
       </section>
       <section class="guidance-source" aria-labelledby="guidance-source-title">
         <h3 id="guidance-source-title">Fuente y páginas</h3>
         <p v-if="guidance.sourceTitle">{{ guidance.sourceTitle }}</p>
         <p v-if="guidance.itemPages.length">Descripción del ítem: {{ guidance.itemPages.length === 1 ? 'página' : 'páginas' }} {{ guidance.itemPages.join(', ') }}.</p>
+        <p v-if="sourceUrl && guidance.itemPages.length" class="guidance-item-links">
+          Acceso directo a los descriptores del ítem:
+          <template v-for="(page, index) in guidance.itemPages" :key="page">
+            <span v-if="index">, </span><a :href="sourcePageUrl(page) ?? undefined" target="_blank" rel="noopener noreferrer">página {{ page }} ↗</a>
+          </template>
+        </p>
         <p v-if="guidance.evidencePages.length">Ejemplos de evidencias: {{ guidance.evidencePages.length === 1 ? 'página' : 'páginas' }} {{ guidance.evidencePages.join(', ') }}.</p>
         <p v-if="!guidance.sourceTitle && !guidance.itemPages.length && !guidance.evidencePages.length">Referencia documental pendiente.</p>
-        <a v-if="sourceUrl" :href="sourceUrl" target="_blank" rel="noopener noreferrer">Abrir fuente de consulta en otra pestaña ↗</a>
+        <a v-if="sourceUrl" :href="sourceUrl" target="_blank" rel="noopener noreferrer">Fuente de consulta disponible en otra pestaña ↗</a>
       </section>
     </template>
   </dialog>
